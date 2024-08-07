@@ -1,0 +1,45 @@
+Package: CroCoNet
+Title: Cross-species Comparison of Networks
+Version: 0.0.0.9000
+Authors@R: 
+    person("Anita", "Térmeg", , "anita.termeg@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0005-8872-9086"))
+Description: A tool to quantitatively compare gene regulatory networks across species and identify conserved and diverged modules.
+License: GPL (>= 3)
+Encoding: UTF-8
+RoxygenNote: 7.3.1
+Imports: 
+    ape,
+    BiocParallel,
+    data.table,
+    doParallel,
+    dplyr,
+    rlang,
+    foreach,
+    igraph,
+    inflection,
+    magrittr,
+    plyranges,
+    scran,
+    tibble,
+    tidyr,
+    stats,
+    rlist,
+    SummarizedExperiment,
+    Matrix,
+    tidytree,
+    ggplot2,
+    ggrepel,
+    colorspace,
+    ggtree,
+    patchwork,
+    tools,
+    SingleCellExperiment,
+    ggnewscale,
+    farver,
+    ggraph,
+    grDevices
+Depends: 
+    R (>= 2.10)
+LazyData: true
+LazyDataCompression: xz
