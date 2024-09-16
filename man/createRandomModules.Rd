@@ -4,21 +4,34 @@
 \alias{createRandomModules}
 \title{Create random modules}
 \usage{
-createRandomModules(pruned_modules, network_genes, seed = 0)
+createRandomModules(pruned_modules, network_genes, seed = 42)
 }
 \arguments{
-\item{pruned_modules}{Data frame of the pruned modules with columns 'regulator', 'target' and 'weight' containing the transcriptional regulators, their target genes and the edge weights between each regulator-target pair.}
+\item{pruned_modules}{Data frame of pruned modules, required columns:
+\describe{
+\item{regulator}{Character, transcriptional regulator.}
+\item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
+}}
 
-\item{network_genes}{Character vector of all genes in the network.
-Outputs a random module for each module in 'pruned_modules'. The random modules have the same regulators and contain the same number of target genes as the original modules, but these target genes are randomly drawn from 'network_genes'.}
+\item{network_genes}{Character vector of all genes in the network.}
 
-\item{seed}{Integer, the seed to use for the random sampling.}
+\item{seed}{Integer, the seed to use for the random sampling (default: 42).}
 }
 \value{
-Data frame of the random modules.
+Data frame of the random modules with the following columns:
+\describe{
+\item{regulator}{Character, transcriptional regulator.}
+\item{module_size}{Integer, the number of genes assigned to a regulator (only present if the column is also present in the input \code{pruned_modules}).}
+\item{target}{Character, member gene of the regulator's random module.}
+}
 }
 \description{
 Creates a matching random module for each actual module.
+}
+\details{
+The function outputs a random module for each module in \code{pruned_modules}. The random modules have the same regulators and contain the same number of target genes as the original modules, but these target genes are randomly drawn from \code{network_genes}.
+
+In the next steps of the pipeline, the actual modules are compared to these random modules in terms of the statistics calculated to check whether the 2 groups of modules behave in general differently (see \code{\link{plotPresStatDistributions}}, \code{\link{plotPresStats}}, \code{\link{plotTreeStatDistributions}} and \code{\link{plotTreeStats}}) and to remove those individual actual modules that show too similar characteristics to the random modules (see \code{\link{filterModuleTrees}}).
 }
 \examples{
 random_modules <- createRandomModules(pruned_modules, genes)

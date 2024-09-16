@@ -8,15 +8,20 @@
 #'
 #' If the aim is to plot distance matrices for several modules together, the input should be a named list of data frames, each containing the distances for one of the modules. The tile plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the names of the input list. All subplots have the same scale so that the distances are comparable across modules.
 #'
-#' @param dist_dfs Data frame or a named list of data frames containing the distance measures per clone pair for one or more modules.
+#' @param dist_dfs Data frame or a named list of data frames containing the distance measures per clone pair for one or more modules. Required columns for each data frame:
+#' \describe{
+#' \item{clone1, clone2}{Character the names of the clones compared.}
+#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{clone1} and \code{clone2}.}
+#' }
 #' @param colors Character vector, the colors to visualize the distances. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.
 #' @param font_size Numeric, font size (default: 14).
 #' @param ncol Integer, the number of columns the subplots should be organized into if several modules are input. If NULL (default), the dimensions of the grid will follow the default of \code{\link{wrap_plots}}.
 #'
-#' @return A \code{\link{ggplot}} object in case the argument \code{dist_dfs} is a single data frame and a \code{\link{patchwork}} object in case the argument \code{dist_dfs} is a list of data frames.
+#' @return A \code{\link{ggplot}} object in case \code{dist_dfs} is a single data frame and a \code{\link{patchwork}} object in case \code{dist_dfs} is a list of data frames.
 #' @export
 #'
-#' @examples plotDistMats(dist_jk[1:6])
+#' @examples plotDistMats(dist)
 plotDistMats <- function(dist_dfs, colors = NULL, font_size = 14, ncol = NULL) {
 
   if (inherits(dist_dfs, "list")) {
@@ -37,7 +42,7 @@ plotDistMats <- function(dist_dfs, colors = NULL, font_size = 14, ncol = NULL) {
   } else if (is.data.frame(dist_dfs)) {
 
     if (any(!c("clone1", "clone2", "species1", "species2", "dist") %in% colnames(dist_dfs)))
-      stop(paste0("The argument \"dist_dfs\" should contain the columns \"clone1\", \"clone2\", \"species1\", \"species2\" and \"dist\"."))
+      stop("The argument \"dist_dfs\" should contain the columns \"clone1\", \"clone2\", \"species1\", \"species2\" and \"dist\".")
 
   } else {
 
@@ -45,13 +50,13 @@ plotDistMats <- function(dist_dfs, colors = NULL, font_size = 14, ncol = NULL) {
 
   }
 
-  if (!is.null(colors) & (!inherits(colors, "character") || any(!areColors(colors))))
+  if (!is.null(colors) && (!inherits(colors, "character") || any(!areColors(colors))))
     stop("The argument \"colors\" should be a character vector of valid color representations.")
 
   if (!inherits(font_size, "numeric") || length(font_size) != 1 || font_size <= 0)
     stop("The argument \"font_size\" should be a positive numeric value.")
 
-  if (!is.null(ncol) && (length(ncol) != 1 || (!inherits(ncol, "integer") & !(inherits(ncol, "numeric") & ncol == round(ncol))) || ncol < 1))
+  if (!is.null(ncol) && (length(ncol) != 1 || (!inherits(ncol, "integer") && !(inherits(ncol, "numeric") && ncol == round(ncol))) || ncol < 1))
     stop("The argument \"ncol\" should be a positive integer.")
 
   if (is.null(colors))
@@ -92,7 +97,12 @@ plotDistMats <- function(dist_dfs, colors = NULL, font_size = 14, ncol = NULL) {
 #'
 #' Plots the pairwise distances between clones based on module connectivity patterns as a tile plot.
 #'
-#' @param dist_df Data frame containing the distance measures per clone pair.
+#' @param dist_df Data frame containing the distance measures per clone pair, required columns:
+#' \describe{
+#' \item{clone1, clone2}{Character the names of the clones compared.}
+#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{clone1} and \code{clone2}.}
+#' }.
 #' @param colors Character vector, the colors to visualize the distances. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.
 #' @param font_size Numeric, font size (default: 14).
 #'

@@ -16,8 +16,8 @@ Metadata columns:
 \item{n_genes}{Number of genes detected.}
 \item{perc_mito}{Percent of mitochondrial reads.}
 \item{sizeFactor}{Size factor for scaling normalization, calculated first per clone using [scran::computeSumFactors] and [scran::quickCluster], then adjusted by [batchelor::multiBatchNorm] to remove systematic differences in covergae across clones.}
-\item{cell_type}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
 \item{pseudotime}{Pseudotime inferred by [SCORPIUS::infer_trajectory].}
+\item{cell_type}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
 }
 Assays:
 \describe{

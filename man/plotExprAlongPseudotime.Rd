@@ -11,13 +11,14 @@ plotExprAlongPseudotime(
   cell_type_column = "cell_type",
   species_colors = NULL,
   cell_type_colors = NULL,
-  font_size = 14
+  font_size = 14,
+  ncol = 1
 )
 }
 \arguments{
 \item{genes}{Character vector, the names of the genes for which the expression profiles should be plotted.}
 
-\item{sce}{\code{\link{SingleCellExperiment-class}} object containing the expression data (raw counts, logcounts and metadata) for all network genes. Required metadata columns:
+\item{sce}{\code{\link{SingleCellExperiment}} object containing the expression data (raw counts, logcounts and metadata) for all network genes. Required metadata columns:
 \describe{
 \item{species}{Character, the name of the species.}
 \item{\{\{pseudotime_column\}\}}{Numeric, inferred pseudotime.}
@@ -26,23 +27,37 @@ plotExprAlongPseudotime(
 
 \item{pseudotime_column}{Character, the name of the pseudotime column in the metadata of \code{sce} (default: "pseudotime").}
 
-\item{cell_type_column}{Character, the name of the cell type annotation column in the metadata of \code{sce} (default: "cell_type", if there is no cell type annotation available or the user wants to omit the cell type rug plot, this argument should be set to NULL).}
+\item{cell_type_column}{Character, the name of the cell type annotation column in the metadata of \code{sce} (default: "cell_type", if there is no cell type annotation available or the user wants to omit the cell type rug plot, this parameter should be set to NULL).}
 
 \item{species_colors}{Character vector, colors per species.}
 
 \item{cell_type_colors}{Character vector, colors per cell type.}
 
 \item{font_size}{Numeric, font size (default: 14).}
+
+\item{ncol}{Integer, the number of columns the genes (facets) should be organized into (default: 1).}
 }
 \value{
-A \code{\link{ggplot}} object.
+A curve plot as a \code{\link{ggplot}} object showing the expression profiles of the genes along the pseudotime trajectory per species.
 }
 \description{
-Plots the expression profiles of one or more genes along a pseudotime trajectory per species, and thus allows the expression patterns to be visually compared across species.
+Plots the expression profiles of one or more genes along a pseudotime trajectory per species.
 }
 \details{
-The species, pseudotime and cell type information are taken from the metadata slot of the input \code{sce} object, and the expression data are taken from the logcounts assay of the input \code{sce} object. The smoothed expression profiles are fitted per species and gene using \code{\link{loess}} with the formula = "expression ~ pseusotime" and plotted as continuous lines colored by species and faceted by gene. The 95\% confidence intervals of the fitted lines are calculated using \code{\link{predict}} and shown as lightly colored areas around the lines. If a cell type column is specified by the argument \code{cell_type_column}, the cell are shown as a rug plot along the pseudotime axis colored by cell types.
+The function plots the expression profiles as smoothed curves colored by species and faceted by gene.
+
+The species, pseudotime and cell type information are taken from the metadata slot of the input \code{sce} object, and the expression data are taken from the logcounts assay of the input \code{sce} object.
+
+The smoothed expression profiles are fitted per species and gene using \code{\link{loess}} with the formula "expression ~ pseusotime". The 95\% confidence intervals of the fitted lines are calculated using \code{\link{predict}} and shown as lightly colored areas around the lines.
+
+If a cell type metadata column is specified by the parameter \code{cell_type_column}, the cell are shown as a rug plot along the pseudotime axis colored by cell types. The colors for the rug can be be controlled by the parameter \code{cell_type_colors}.
 }
 \examples{
 plotExprAlongPseudotime(regulators, sce)
 }
+\seealso{
+Other functions to plot gene expression profiles: 
+\code{\link{plotExprHeatmap}()},
+\code{\link{plotExprPerCellType}()}
+}
+\concept{functions to plot gene expression profiles}

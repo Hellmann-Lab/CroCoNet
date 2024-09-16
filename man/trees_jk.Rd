@@ -5,7 +5,7 @@
 \alias{trees_jk}
 \title{Trees of the original and jackknifed pruned modules}
 \format{
-A named list with 232 elements containing the neighbor-joining tree as a [phylo] objects.
+A named list with 232 elements containing the neighbor-joining trees as [phylo] objects.
 }
 \usage{
 trees_jk

@@ -4,17 +4,17 @@
 \alias{filterModuleTrees}
 \title{Filter modules based on their tree representations}
 \usage{
-filterModuleTrees(tree_stats_actual, tree_stats_random, p_adj_cutoff = 0.1)
+filterModuleTrees(tree_stats, random_tree_stats, p_adj_cutoff = 0.1)
 }
 \arguments{
-\item{tree_stats_actual}{Data frame of the tree-based statistics for the actual (pruned) modules containing (but not restricted to) the following columns:
+\item{tree_stats}{Data frame of the tree-based statistics for the actual (pruned) modules. Required columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{total_tree_length}{Numeric, total tree length per module (typically the median across all jackknife versions of a module.}
 \item{within_species_diversity}{Numeric, within-species diveristy per module (typically the median across all jackknife versions of a module.}
 }}
 
-\item{tree_stats_random}{Data frame of the tree-based statistics for the random modules containing (but not restricted to) the following columns:
+\item{random_tree_stats}{Data frame of the tree-based statistics for the random modules. Required columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{total_tree_length}{Numeric, total tree length per module (typically the median across all jackknife versions of a module).}

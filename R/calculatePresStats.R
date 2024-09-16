@@ -1,31 +1,53 @@
 #' Calculate preservation statistics
 #'
-#' Calculates one or more preservation statistics - correlation of adjacencies (cor_adj), correlation of regulator-target adjacencies (cor_adj_regulator), and/or correlation of intramodular connectivities (cor_kIM) - for all jackknifed versions of the modules and all clone pairs.
+#' Calculates one or more preservation statistics - correlation of adjacencies (cor_adj), correlation of regulator-target adjacencies (cor_adj_regulator), correlation of intramodular connectivities (cor_kIM) - for all modules and clone pairs with or without jackknifing.
 #'
-#' The function calculates one or more preservation statistics adapted from Langfelder et al. 2011 (cor_adj, cor_adj_regulator and cor_kIM) for module and each clone pair. All three statistics quantify how well the module topology is preserved between the networks of two clones. The statistic cor_adj is the correlation of all edge weights within the module in the network of clone1 VS all edge weights within the module in the network of clone2. The statistic cor_adj_regulator is the correlation of all edge weights between the regulator and its module members in the network of clone1 VS all edge weights between the regulator and its module members in the network of clone2. Finally, the statistic cor_kIM is the correlation of the intramodular connectivities per module member gene in the network of clone1 VS the intramodular connectivities per module member gene in the network of clone2.
+#' The function calculates one or more preservation statistics adapted from WGCNA (cor_adj, cor_adj_regulator and cor_kIM) for each module and each clone pair. All three statistics quantify how well the topology of a module is preserved between the networks of two clones. The statistic cor_adj is the correlation of all edge weights within the module in the network of clone1 VS in the network of clone2. The statistic cor_adj_regulator is the correlation of all edge weights between the regulator and its module members in the network of clone1 VS in the network of clone2. Finally, the statistic cor_kIM is the correlation of the intramodular connectivities per module member gene in the network of clone1 VS in the network of clone2.
 #'
-#' All statistics assume a joint module assignment (typically derived from the consensus network) but compared topological properties directly between the clonewise networks. In this approach, a module is always defined as the same set of genes (nodes), but the interaction strengths (adjacencies) among these genes could differ from clone to clone; poorly preserved modules are expected to have many, while well-preserved modules are expected to have few such topological differences.
+#' All statistics assume a joint module assignment (typically derived from the consensus network) but compare topological properties directly between the clonewise networks. In this approach, a module is always defined as the same set of genes, but the adjacencies/edge weights among these genes could differ from clone to clone; poorly preserved modules are expected to have many, while well-preserved modules are expected to have few such differences.
 #'
-#' If \code{jackknife} is set to TRUE, the function creates all possible jackknifed versions of each input module by removing each target gene assigned to that module (the regulator is never excluded), then it calculates the preservation statistics for all of these jackknifed module versions in addition to the original module. This way, a confidence interval can be calculated for each module and statistic (see \code{\link{summarizeJackknifeStats}}). Later on in the pipeline, jackknifing can also provide information about which target genes within a conserved/diverged module are particularly responsible for the conservation/divergence (see \code{\link{findConservedDivergedTargets}}). If jackknifing is not desired, please set \code{jackknife} to FALSE. This will also substantially reduce running times.
+#' If \code{jackknife} is set to TRUE (the default), the function creates all possible jackknifed versions of each input module by removing each target gene assigned to that module (the regulator is never excluded), then it calculates the preservation statistics for all of these jackknifed module versions in addition to the original module. This way, a confidence interval can be calculated for each module and statistic (see \code{\link{summarizeJackknifeStats}}). Later on in the pipeline, jackknifing can also provide information about which target genes within a conserved/diverged module are particularly responsible for the conservation/divergence (see \code{\link{findConservedDivergedTargets}}). If jackknifing is not desired, please set \code{jackknife} to FALSE. This will also substantially reduce running times.
 #'
-#' @param pruned_modules Data frame of the pruned modules with columns 'regulator', 'target' and 'weight' containing the transcriptional regulators, their target genes and the edge weights between each regulator-target pair.
-#' @param network_list A named list that contains the networks of each clone in an igraph format.
-#' @param stats Character or character vector specifying which preservation statistics to calculate (one or more of "cor_adj", "cor_adj_regulator", and "cor_kIM").
-#' @param clone2species A data frame with columns 'clone' and 'species' that specifies which species each clone belongs to. The names of clones should match the names of 'network_list'.
+#' @param pruned_modules Data frame of pruned modules, required columns:
+#'\describe{
+#' \item{regulator}{Character, transcriptional regulator.}
+#' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
+#' }
+#' @param network_list A named list of \code{\link{igraph}} objects containing the networks of all clones.
+#' @param stats Character or character vector specifying which preservation statistics to calculate (one or more of "cor_adj", "cor_adj_regulator", "cor_kIM", default: c("cor_adj", "cor_adj_regulator", "cor_kIM")).
+#' @param clone2species A data frame specifying which species each clone belongs to, required columns:
+#' \describe{
+#' \item{clone}{Character, name of the clone.}
+#' \item{species}{Character, name of the species.}
+#' }
+#' If NULL (default), the output will contain no species information.
 #' @param jackknife Logical specifying whether jackknifing should be performed or not (default: TRUE).
-#' @param n_cores Number of cores.
-#' @param corr_method The method for the calculation of correlation, one of "spearman" or "pearson".
+#' @param n_cores Integer, the number of cores (default: 1).
+#' @param corr_method Character, the method for the calculation of correlation, one of "spearman", "pearson", "kendall" (default: "spearman").
 #'
-#' @return Data frame of the preservation statistics.
+#' @return Data frame of the preservation statistics with the following columns:
+#' \describe{
+#' \item{regulator}{Character, transcriptional regulator.}
+#' \item{module_size}{Integer, the number of target genes assigned to a regulator (only present if the column is also present in \code{pruned_modules}).}
+#' \item{type}{Character, module type ("orig" = original or "jk" = jackknifed, only present if parameter \code{jackknife} is set to TRUE).}
+#' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type "jk" and nameOfRegulator_orig in case of module type "orig", only present if parameter \code{jackknife} is set to TRUE).}
+#' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type "orig", only present if parameter \code{jackknife} is set to TRUE).}
+#' \item{clone1, clone2}{Character, the names of the clones compared.}
+#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively (only present if \code{clone2species} is not NULL).}
+#' \item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the preservation statistics specified by the parameter \code{stats}.}
+#' }
 #' @export
 #' @examples pres_stats_jk <- calculatePresStats(pruned_modules, network_list, "cor_kIM", clone2species)
+#' @references
+#' Langfelder, P., Luo, R., Oldham, M. C., & Horvath, S. (2011). Is my network module preserved and reproducible? PLoS Computational Biology, 7(1), 1001057.
 calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj", "cor_adj_regulator", "cor_kIM"), clone2species = NULL, jackknife = TRUE, n_cores = 1L, corr_method = "spearman") {
 
+  # check input data
   if (!is.data.frame(pruned_modules))
     stop("The argument \"pruned_modules\" should be a data frame.")
 
-  if (any(!(c("regulator", "module_size", "target") %in% colnames(pruned_modules))))
-    stop("The argument \"pruned_modules\" should contain the columns \"regulator\", \"module_size\" and \"target\".")
+  if (any(!(c("regulator", "target") %in% colnames(pruned_modules))))
+    stop("The argument \"pruned_modules\" should contain the columns \"regulator\" and \"target\".")
 
   if (!inherits(network_list, "list"))
     stop("The argument \"network_list\" should be a named list.")
@@ -59,16 +81,17 @@ calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj"
   if (!inherits(jackknife, "logical"))
     stop("The argument \"jackknife\" should be a logical value.")
 
-  if (length(n_cores) != 1 || (!inherits(n_cores, "integer") & !(inherits(n_cores, "numeric") & n_cores == round(n_cores))) || n_cores < 1)
+  if (length(n_cores) != 1 || (!inherits(n_cores, "integer") && !(inherits(n_cores, "numeric") && n_cores == round(n_cores))) || n_cores < 1)
     stop("The argument \"n_cores\" should be a positive integer.")
 
   if (is.null(corr_method) || !corr_method %in% c("spearman", "pearson", "kendall"))
     stop("The argument \"corr_method\" should be one of \"spearman\", \"pearson\", \"kendall\".")
 
-  clone1 = clone2 = NULL
+  # avoid NSE notes in R CMD check
+  clone = module = clone1 = clone2 = NULL
 
   # clone names
-  clones <- names(network_list)
+  clone_names <- names(network_list)
 
   # convert igraphs to adjacency matrices
   adjMat_list <- lapply(network_list, function(network) {
@@ -77,108 +100,217 @@ calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj"
 
   })
 
+  # summarize module data frames (1 row - 1 module)
+  pruned_modules_sum <- pruned_modules %>%
+    dplyr::group_by(dplyr::across(dplyr::any_of(c("regulator", "module_size")))) %>%
+    dplyr::summarise(genes = list(c(.data[["target"]], unique(as.character(.data[["regulator"]]))))) %>%
+    dplyr::ungroup()
+
+  # if jackknife is TRUE, add all possible jackknifed versions of each module
+  if (jackknife) {
+
+    pruned_modules_sum <- dplyr::bind_rows(pruned_modules_sum %>%
+                                             # original modules
+                                             dplyr::mutate(type = "orig",
+                                                           id = paste0(.data[["regulator"]], "_orig")),
+                                           pruned_modules_sum %>%
+                                             # jackknifed module versions
+                                             dplyr::mutate(jk = mapply(addJk, r = .data[["regulator"]], g = .data[["genes"]], SIMPLIFY = F)) %>%
+                                             tidyr::unnest(.data[["jk"]]) %>%
+                                             dplyr::mutate(genes = .data[["genes_jk"]]) %>%
+                                             dplyr::select(dplyr::any_of(c("regulator", "module_size", "type", "id", "genes", "gene_removed")))) %>%
+      dplyr::arrange(.data[["regulator"]])
+
+  }
+
+  if ("id" %in% colnames(pruned_modules_sum)) {
+
+    id_column <- "id"
+
+  } else {
+
+    id_column <- "regulator"
+
+  }
+
+  module_names <- pruned_modules_sum[[id_column]]
+
+  module_gene_list <- pruned_modules_sum$genes
+  names(module_gene_list) <- module_names
+
+  pruned_modules_sum$genes <- NULL
+
+  if ("cor_adj" %in% stats) {
+
+    doParallel::registerDoParallel(n_cores)
+
+    adj_list <-
+
+      foreach::foreach(clone = clone_names) %:%
+
+      foreach::foreach(module = module_names,
+                       .combine = c) %dopar% {
+
+        adjMat <- adjMat_list[[clone]]
+        genes <- module_gene_list[[module]]
+        adj <- list(vectorize(adjMat[genes, genes]))
+        names(adj) <- module
+        adj
+
+                       }
+
+    names(adj_list) <- clone_names
+
+    doParallel::stopImplicitCluster()
+
+  }
+
+  if ("cor_adj_regulator" %in% stats) {
+
+    doParallel::registerDoParallel(n_cores)
+
+    adj_regulator_list <-
+
+      foreach::foreach(clone = clone_names) %:%
+
+      foreach::foreach(module = module_names,
+                       .combine = c) %dopar% {
+
+                         adjMat <- adjMat_list[[clone]]
+                         genes <- module_gene_list[[module]]
+                         targets <- genes[-length(genes)]
+                         regulator <- genes[length(genes)]
+                         adj_regulator <- list(adjMat[targets, regulator])
+                         names(adj_regulator) <- module
+                         adj_regulator
+
+                       }
+
+    names(adj_regulator_list) <- clone_names
+
+    doParallel::stopImplicitCluster()
+
+  }
+
+  if ("cor_kIM" %in% stats) {
+
+    doParallel::registerDoParallel(n_cores)
+
+    kIM_list <-
+
+      foreach::foreach(clone = clone_names) %:%
+
+      foreach::foreach(module = module_names,
+                       .combine = c) %dopar% {
+
+                         adjMat <- adjMat_list[[clone]]
+                         genes <- module_gene_list[[module]]
+                         kIM <- list(Matrix::rowSums(adjMat[genes, genes]))
+                         names(kIM) <- module
+                         kIM
+
+                       }
+
+    names(kIM_list) <- clone_names
+
+    doParallel::stopImplicitCluster()
+
+  }
+
+
+  # calculate preservation statistics between all possible pairs of clones for all modules
   doParallel::registerDoParallel(n_cores)
 
   pres_stats <-
 
-    foreach::foreach(clone1 = clones[1:(length(clones) - 1)],
+    foreach::foreach(clone1 = clone_names[1:(length(clone_names) - 1)],
                      .combine = rbind) %:%
 
-    foreach::foreach(clone2 = clones[(which(clones == clone1) + 1):length(clones)],
+    foreach::foreach(clone2 = clone_names[(which(clone_names == clone1) + 1):length(clone_names)],
                      .combine = rbind) %dopar%
 
     {
 
-      message(paste0("Comparing ", clone1, " and ", clone2))
-
-      adjMat1 <- adjMat_list[[clone1]]
-      adjMat2 <- adjMat_list[[clone2]]
-
-      pruned_modules_sum <- pruned_modules %>%
-        dplyr::group_by(.data[["regulator"]], .data[["module_size"]]) %>%
-        dplyr::summarise(genes = list(c(.data[["target"]], unique(as.character(.data[["regulator"]]))))) %>%
-        dplyr::ungroup()
-
-      if (jackknife) {
-
-        pres_stats_clone1_clone2 <- dplyr::bind_rows(pruned_modules_sum %>%
-                                                       # original modules
-                                                       dplyr::mutate(type = "orig",
-                                                                     id = paste0(.data[["regulator"]], "_orig")),
-                                                     pruned_modules_sum %>%
-                                                       # jackknifed module versions
-                                                       dplyr::mutate(jk = mapply(addJk, r = .data[["regulator"]], g = .data[["genes"]], SIMPLIFY = F)) %>%
-                                                       tidyr::unnest(.data[["jk"]]) %>%
-                                                       dplyr::transmute(.data[["regulator"]],
-                                                                        .data[["module_size"]],
-                                                                        .data[["type"]],
-                                                                        .data[["id"]],
-                                                                        genes = .data[["genes_jk"]],
-                                                                        .data[["gene_removed"]])) %>%
-          dplyr::arrange(.data[["regulator"]]) %>%
-          # add clone info
+      # add clone info
+      pres_stats_clone1_clone2 <- pruned_modules_sum %>%
           dplyr::mutate(clone1 = clone1,
                         clone2 = clone2)
-
-      } else {
-
-        pres_stats_clone1_clone2 <- pruned_modules_sum %>%
-          # add clone info
-          dplyr::mutate(clone1 = clone1,
-                        clone2 = clone2)
-
-      }
-
-      if(!is.null(clone2species)) {
-
-        species1 <- clone2species$species[clone2species$clone == clone1]
-        species2 <- clone2species$species[clone2species$clone == clone2]
-
-        pres_stats_clone1_clone2 <- pres_stats_clone1_clone2 %>%
-          dplyr::mutate(species1 = species1,
-                        species2 = species2)
-
-      }
 
       # calculate preservation statistics
       if ("cor_adj" %in% stats) {
 
+        adj_clone1 <- adj_list[[clone1]]
+        adj_clone2 <- adj_list[[clone2]]
+
         pres_stats_clone1_clone2 <- pres_stats_clone1_clone2 %>%
-          dplyr::mutate(cor_adj = sapply(.data[["genes"]], calculateCorAdj, mat1 = adjMat1, mat2 = adjMat2, corr_method = corr_method))
+          dplyr::mutate(cor_adj = unname(sapply(.data[[id_column]], function(id) {
+
+            stats::cor(adj_clone1[[id]],
+                       adj_clone2[[id]],
+                       method = corr_method)
+
+          })))
 
       }
 
       if ("cor_adj_regulator" %in% stats) {
 
+        adj_regulator_clone1 <- adj_regulator_list[[clone1]]
+        adj_regulator_clone2 <- adj_regulator_list[[clone2]]
+
         pres_stats_clone1_clone2 <- pres_stats_clone1_clone2 %>%
-          dplyr::mutate(cor_adj_regulator = sapply(.data[["genes"]], calculateCorAdjRegulator, mat1 = adjMat1, mat2 = adjMat2, corr_method = corr_method))
+          dplyr::mutate(cor_adj_regulator = unname(sapply(.data[[id_column]], function(id) {
+
+            stats::cor(adj_regulator_clone1[[id]],
+                       adj_regulator_clone2[[id]],
+                       method = corr_method)
+
+          })))
 
       }
 
       if ("cor_kIM" %in% stats) {
 
+        kIM_clone1 <- kIM_list[[clone1]]
+        kIM_clone2 <- kIM_list[[clone2]]
+
         pres_stats_clone1_clone2 <- pres_stats_clone1_clone2 %>%
-          dplyr::mutate(cor_kIM = sapply(.data[["genes"]], calculateCorKIM, mat1 = adjMat1, mat2 = adjMat2, corr_method = corr_method))
+          dplyr::mutate(cor_kIM = unname(sapply(.data[[id_column]], function(id) {
+
+            stats::cor(kIM_clone1[[id]],
+                       kIM_clone2[[id]],
+                       method = corr_method)
+
+          })))
 
       }
 
-      pres_stats_clone1_clone2 %>%
-        dplyr::select(-.data[["genes"]])
+      pres_stats_clone1_clone2
 
     }
 
   doParallel::stopImplicitCluster()
 
-  pres_stats$clone1 <- factor(pres_stats$clone1, clones)
-  pres_stats$clone2 <- factor(pres_stats$clone2, clones)
-
+  # if clone2species is provided, add species info
   if(!is.null(clone2species)) {
 
+    suppressMessages(
+      pres_stats <- pres_stats %>%
+        dplyr::left_join(clone2species %>% dplyr::rename(clone1 = clone, species1 = species)) %>%
+        dplyr::left_join(clone2species %>% dplyr::rename(clone2 = clone, species2 = species)) %>%
+        dplyr::relocate(.data[["species1"]], .data[["species2"]], .after = "clone2")
+    )
+
+    # factor species to keep the order fixed in later functions
     species <- unique(c(pres_stats$species1, pres_stats$species2))
     pres_stats$species1 <- factor(pres_stats$species1, species)
     pres_stats$species2 <- factor(pres_stats$species2, species)
 
   }
+
+  # factor clones to keep the order fixed in later functions
+  pres_stats$clone1 <- factor(pres_stats$clone1, clone_names)
+  pres_stats$clone2 <- factor(pres_stats$clone2, clone_names)
 
   pres_stats
 
@@ -205,7 +337,13 @@ vectorize <- function(mat) {
 #' @param r Character, the name of the transcriptional regulator.
 #' @param g Character vector, the names of the all genes in the module.
 #'
-#' @return A data frame with columns 'type', 'id', 'gene_removed' and 'target' containing the module type (orig = original or jk = jackknifed), the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig'), the name of the gene removed (NA in case of module type 'orig') and the remaining target genes.
+#' @return A data frame with the following columns:
+#' \describe{
+#' \item{type}{Character, module type ("orig" = original or "jk" = jackknifed, only present if parameter \code{jackknife} is set to TRUE).}
+#' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type "jk" and nameOfRegulator_orig in case of module type "orig", only present if parameter \code{jackknife} is set to TRUE).}
+#' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type "orig", only present if parameter \code{jackknife} is set to TRUE).}
+#' \item{genes_jk}{A list containing a character vector, the remaining target genes of the transcriptional regulator.}
+#' }
 #' @noRd
 addJk <- function(r, g) {
 
@@ -224,7 +362,7 @@ addJk <- function(r, g) {
 #' @param g Character vector, the genes of the module (regulator and targets) for which the correlation needs to be calculated.
 #' @param mat1 Adjacency matrix of clone1.
 #' @param mat2 Adjacency matrix of clone2.
-#' @param corr_method The method for the calculation of correlation, one of "spearman" or "pearson".
+#' @param corr_method Character, the method for the calculation of correlation, one of "spearman", "pearson", "kendall".
 #'
 #' @return Numeric, the correlation coefficient of the intramodular adjacencies between clone1 and clone2.
 #' @noRd
@@ -242,7 +380,7 @@ calculateCorAdj <- function(g, mat1, mat2, corr_method = corr_method) {
 #' @param g Character vector, the genes of the module (regulator and targets) for which the correlation needs to be calculated.
 #' @param mat1 Adjacency matrix of clone1.
 #' @param mat2 Adjacency matrix of clone2.
-#' @param corr_method The method for the calculation of correlation, one of "spearman" or "pearson".
+#' @param corr_method Character, the method for the calculation of correlation, one of "spearman", "pearson", "kendall".
 #'
 #' @return Numeric, the correlation coefficient of the intramodular regulator-target adjacencies between clone1 and clone2.
 #' @noRd
@@ -263,7 +401,7 @@ calculateCorAdjRegulator <- function(g, mat1, mat2, corr_method = corr_method) {
 #' @param g Character vector, the genes of the module (regulator and targets) for which the correlation needs to be calculated.
 #' @param mat1 Adjacency matrix of clone1.
 #' @param mat2 Adjacency matrix of clone2.
-#' @param corr_method The method for the calculation of correlation, one of "spearman" or "pearson".
+#' @param corr_method Character, the method for the calculation of correlation, one of "spearman", "pearson", "kendall".
 #'
 #' @return Numeric, the correlation coefficient of the intramodular connectivites between clone1 and clone2.
 #' @noRd

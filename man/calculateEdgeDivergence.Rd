@@ -27,7 +27,7 @@ calculateEdgeDivergence(
 
 \item{network_list}{A list of \code{\link{igraph}} objects containing the networks per clone.}
 
-\item{clone2species}{A data frame that specifies which clone belongs to which species, required columns:
+\item{clone2species}{A data frame that specifies which species each clone belongs to, required columns:
 \describe{
 \item{clone}{Character, name of the clone.}
 \item{species}{Character, name of the species.}
@@ -41,7 +41,7 @@ calculateEdgeDivergence(
 A data frame of the selected edges with 5 columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
-\item{to}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
+\item{from, to}{Character, the 2 member genes of the regulator's module that form the edge.}
 \item{consensus_weight}{Numeric, consensus edge weight/adjacency (the weighted average of clonewise adjacencies).}
 \item{f_statistic}{Numeric, measue of edge divergence. It is calculated as the F-statistic from the ANOVA of edge weights with species as groups.}
 \item{p-value}{Numeric, the p-value of the F-statistic.}

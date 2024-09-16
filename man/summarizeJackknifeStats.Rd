@@ -2,6 +2,7 @@
 % Please edit documentation in R/summarizeJackknifeStats.R
 \name{summarizeJackknifeStats}
 \alias{summarizeJackknifeStats}
+\alias{summariseJackknifeStats}
 \title{Summarize jackknife statistics}
 \usage{
 summarizeJackknifeStats(

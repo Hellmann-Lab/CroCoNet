@@ -14,15 +14,15 @@ A data frame with 232 rows and 16 columns:
 \item{gene_removed}{The name of the gene removed by jackknifing (NA in case of module type 'orig').}
 \item{within_species_diversity}{Numeric, the sum of the human, gorilla and cynomolgus diversity.}
 \item{total_tree_length}{Numeric, the sum of all branch lengths in the tree.}
-\item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
-\item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
 \item{human_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the human tips.}
-\item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
-\item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
+\item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
+\item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
 \item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human clones.}
-\item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monophyletic for the cynomolgus clones.}
-\item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monophyletic for the gorilla clones.}
+\item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
+\item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
 \item{human_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the human clones to the subtree of all other clones. NA if the tree is not monophyletic for the human clones.}
+\item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monophyletic for the gorilla clones.}
+\item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monophyletic for the cynomolgus clones.}
 }
 }
 \usage{

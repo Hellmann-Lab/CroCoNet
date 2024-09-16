@@ -7,15 +7,41 @@
 calculateTreeStats(tree_list, n_cores = 1L)
 }
 \arguments{
-\item{tree_list}{A list of trees per module as \code{\link{phylo}} objects with clones as tips. All trees are expected to have a component 'species' that specifies which species each tip belongs to.}
+\item{tree_list}{A named list of \code{\link{phylo}} objects containing the tree representations of all modules/jackknifed module versions, with the tips of the trees corresponding to clones. All trees are expected to have a component \code{species} that specifies which species each tip belongs to. The trees can also contain a component \code{info} that stores metadata of the module/jackknifed module version in a data frame format.}
 
-\item{n_cores}{Number of cores.}
+\item{n_cores}{Integer, the number of cores (default: 1).}
 }
 \value{
-A data frame of tree statistics.
+A data frame of tree statistics with the following columns:
+\describe{
+\item{regulator}{Character, transcriptional regulator.}
+\item{module_size}{Module size, the number of target genes assigned to a regulator (only present if the column is also present in the component \code{info} of the trees).}
+\item{type}{Character, module type (orig = original or jk = jackknifed, only present if the input trees were reconstructed with jackknifing).}
+\item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig', only present if the input trees were reconstructed with jackknifing).}
+\item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig', only present if the input trees were reconstructed with jackknifing).}
+\item{within_species_diversity}{Numeric, the sum of the species-wise diversities.}
+\item{total_tree_length}{Numeric, the total length of all branches in the tree.}
+\item{\{\{species\}\}_diversity}{Numeric, as many columns as there are species, each of them containing the the total length of the branches connecting the clones of the given species.}
+\item{\{\{species\}\}_monophyl}{Logical, as many columns as there are species, each of them indicating whether the tree is monophyletic for the clones of the given species.}
+\item{\{\{species\}\}_to_other_branch_length}{Numeric, as many columns as there are species, each of them containing the length of the internal branch that connects the subtree of the clones belonging to the given species and the subtree of all other clones. NA if the tree is not monophyletic for the clones of the given species.}
+}
 }
 \description{
-Calculates various tree statistics (total tree length, total diversity, diversity within each species, monophyleticity for each species and branch length between each species and all others) for all modules based on a list of trees. The tips of the trees should correspond to clones and the branch lengths of the trees should correspond to dissimilarity of module topology between the clones.
+Calculates various tree statistics (total tree length, total within-species diversity, diversity within each species, monophyleticity for each species and branch length between each species and all others) for all modules/jackknifed module versions based on a list of tree representations.
+}
+\details{
+As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) and neighbor-joining trees are reconstructed based on these preservation scores per module (see \code{\link{convertPresToDist}} and \code{\link{reconstructTrees}}). The tips of the resulting tree represent the clones and the branch lengths represent the dissimilarity of module connectivity patterns between the networks of 2 clones.
+
+Various useful statistics can be defined based on these module trees:
+\itemize{
+ \item{Total tree length: The total length of all branches in the tree; measures module variability both within and across species.}
+ \item{Diversity of a species: The total length of the branches connecting the clones of the given species; measures module variability within this particular species.}
+ \item{Within-species diversity: The sum of the diversity values across all species; measures module variability within species in general.}
+ \item{Monophyleticity of a species: Indicates whether the tree is monophyletic for the clones of the given species. Only if a module tree is monophyletic for a species of inteerst can the module be tested for divergence between this species and all others.}
+ \item{Species-to-other branch length: The length of the internal branch that connects the subtree of the clones belonging to the given species and the subtree of all other clones; measures module variability between this species and all others. Undefined if the tree is not monophyletic for the species of interest.}
+}
+
+In the later steps of the pipeline, these tree-based statistics can be used to 1) identify modules that are conserved, diverged overall or diverged between a species and all others (see \code{\link{findConservedDivergedModules}}), and 2) pinpoint individual target genes within these modules that contribute the most to the conservation/divergence (see \code{\link{findConservedDivergedTargets}}).
 }
 \examples{
 tree_stats_jk <- calculateTreeStats(trees_jk)

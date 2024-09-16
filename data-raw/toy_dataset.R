@@ -8,26 +8,6 @@ library(SingleCellExperiment)
 library(foreach)
 
 
-library(igraph)
-
-library(DescTools)
-library(foreach)
-library(igraph)
-library(data.table)
-
-library(plyranges)
-library(BiocParallel)
-library(doParallel)
-library(scran)
-library(inflection)
-library(stats)
-library(Matrix)
-library(caper)
-library(ggtree)
-library(tidytree)
-library(ggrepel)
-
-
 
 ## Genes ----------------------------------------------------------
 
@@ -36,10 +16,34 @@ regulators <- sort(c("SOX2", "POU5F1", "ONECUT2", "TCF4", "BNC2", "TEAD1", "SMAD
 usethis::use_data(regulators, compress = "bzip2", overwrite = T)
 
 # genes in the modules of 7 famous TFs (and all other TFs excluded)
-genes <- readRDS("/data/share/htp/hack_GRN/NPC_diff_network_analysis/additional_scripts/toy_data_playaround4/gene9_cell15/RDS/genes.rds")
+genes <- readRDS("/data/share/htp/hack_GRN/NPC_diff_network_analysis/additional_scripts/toy_data_playaround2/gene8_cell1/RDS/genes.rds")
 usethis::use_data(genes, compress = "bzip2", overwrite = T)
 
+# list of TRs
+jaspar_core_TRs <- data.table::fread("grep '>' data-raw/intermediate_files/JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt",
+                                     col.names = c("motif_id","SYMBOL")) %>%
+  separate_rows(SYMBOL, sep="::") %>%
+  pull(SYMBOL) %>%
+  unique() %>%
+  sort() %>%
+  toupper()
+usethis::use_data(jaspar_core_TRs, compress = "bzip2", overwrite = T)
 
+jaspar_unvalidated_TRs <- data.table::fread("grep '>' data-raw/intermediate_files/JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt",
+                                            col.names = c("motif_id","SYMBOL")) %>%
+  separate_rows(SYMBOL, sep="::") %>%
+  pull(SYMBOL) %>%
+  unique() %>%
+  sort() %>%
+  toupper()
+usethis::use_data(jaspar_unvalidated_TRs, compress = "bzip2", overwrite = T)
+
+image_TRs <- data.table::fread("data-raw/intermediate_files/IMAGE_motifs.txt",
+                               col.names = c("SYMBOL", "motif_id", "Evidence")) %>%
+  pull(SYMBOL) %>%
+  unique() %>%
+  sort()
+usethis::use_data(image_TRs, compress = "bzip2", overwrite = T)
 
 ## Clone 2 species --------------------------------------------------------
 
@@ -55,10 +59,97 @@ clone_names <- clone2species$clone
 ## SCE object -----------------------------------------------------------
 
 # randomly select 100 cells per clone
-sce <- readRDS("/data/share/htp/hack_GRN/NPC_diff_network_analysis/additional_scripts/toy_data_playaround4/gene9_cell15/RDS/sce.rds")
-counts(sce)["FOS", c( "TAGGCATGGGCAGC", "TAGGCATGATTAAG", "CAGAGAGGCTTTAA", "GGAGCTACTTATAC", "GGAGCTACGTATAA", "TAGCGCTCAGACCT",  "ATCTCAGGTACTAT", "CGGAGCCTCAGGCC", "AAGAGGCAGCCAGG", "AAGAGGCAGGCCAC", "TACGCTGCGGCACG", "TACGCTGCTAACAA", "CAGAGAGGACAATA", "TAGGCATGCACGCG", "GTAGAGGACTATAT",  "CTCTCTACGAGGGC")] <- c(2, 3, 3, 1, 1, 0, 1,  1, 1, 0,  1, 1, 1, 1, 1, 1)
+sce <- readRDS("/data/share/htp/hack_GRN/NPC_diff_network_analysis/additional_scripts/toy_data_playaround2/gene8_cell1/RDS/sce.rds")
+
+sce_list <- foreach(clone_name = clone_names,
+                    .final = function(x) setNames(x, clone_names)) %do% {
+
+                      # subset genes and cells
+                      sce[, sce$clone == clone_name]
+
+                    }
+
+cells_sox2 <- lapply(clone2species$clone[clone2species$species %in% c("human", "cynomolgus")], function(clone) {
+
+  set.seed(0)
+  sample(colData(sce_list[[clone]]) %>% as.data.frame() %>% arrange(desc(pseudotime)) %>% rownames() %>% .[1:15], 13)
+
+}) %>% unlist()
+counts(sce)["SOX2", cells_sox2] <- counts(sce)["SOX2", cells_sox2] + 1
+
+
+cells_sox2_big <- lapply(clone2species$clone[clone2species$species %in% c("human", "cynomolgus")], function(clone) {
+
+  sce_clone <- sce[,sce$clone == clone]
+  colnames(sce_clone)[counts(sce_clone)["SOX2", ] >= 8]
+
+}) %>% unlist()
+
+counts(sce)["SOX2", cells_sox2_big] <- counts(sce)["SOX2", cells_sox2_big] - round((counts(sce)["SOX2", cells_sox2_big] - 2) / 2)
+
+cells_FOS <- lapply(clone2species$clone[clone2species$species %in% c("gorilla", "human")], function(clone) {
+
+  set.seed(0)
+  c <- colData(sce_list[[clone]]) %>% as.data.frame() %>% filter(pseudotime < 0.5) %>% rownames()
+  sample(c, length(c) - 10)
+
+}) %>% unlist()
+counts(sce)["FOS", cells_FOS] <- counts(sce)["FOS", cells_FOS] - round((counts(sce)["FOS", cells_FOS]) / 3 * 2)
+
+cells_FOS_small <- lapply(clone2species$clone[clone2species$species %in% c( "human")], function(clone) {
+
+  set.seed(0)
+  c <- colData(sce_list[[clone]]) %>% as.data.frame() %>% filter(pseudotime > 0.75) %>% rownames()
+  sample(c, round(length(c) /8 ))
+
+}) %>% unlist()
+counts(sce)["FOS", cells_FOS_small] <- counts(sce)["FOS", cells_FOS_small] + 1
+
+cells_SMAD2_small <- lapply(clone2species$clone[clone2species$species %in% c( "human", "gorilla")], function(clone) {
+
+  set.seed(0)
+  c <- colData(sce_list[[clone]]) %>% as.data.frame() %>% filter(pseudotime > 0.6) %>% rownames()
+  sample(c, round(length(c) /3 ))
+
+}) %>% unlist()
+cells_SMAD2_small2 <- lapply(clone2species$clone[clone2species$species %in% c("cynomolgus")], function(clone) {
+
+  set.seed(0)
+  c <- colData(sce_list[[clone]]) %>% as.data.frame() %>% filter(pseudotime > 0.6) %>% rownames()
+  sample(c, round(length(c) /7 ))
+
+}) %>% unlist()
+counts(sce)["SMAD2", c(cells_SMAD2_small, cells_SMAD2_small2)] <- counts(sce)["SMAD2", c(cells_SMAD2_small,cells_SMAD2_small2)] + 1
+
+cells_TEAD1_small <- lapply(clone2species$clone[clone2species$species %in% c( "gorilla")], function(clone) {
+
+  set.seed(0)
+  c <- colData(sce_list[[clone]]) %>% as.data.frame() %>% filter(pseudotime > 0.65) %>% rownames()
+  sample(c, round(length(c) /4 ))
+
+}) %>% unlist()
+counts(sce)["TEAD1", cells_TEAD1_small] <- counts(sce)["TEAD1", cells_TEAD1_small] + 1
+
+cells_ZNF701 <- lapply(clone2species$clone[clone2species$species %in% c("gorilla", "human")], function(clone) {
+
+  set.seed(0)
+  c <- colData(sce_list[[clone]]) %>% as.data.frame() %>% filter(pseudotime < 0.5) %>% rownames()
+  sample(c, length(c) / 4)
+
+}) %>% unlist()
+counts(sce)["ZNF701", cells_ZNF701] <- counts(sce)["ZNF701", cells_ZNF701] + 1
+
+cells_ZNF701 <- lapply(clone2species$clone[clone2species$species %in% c("cynomolgus")], function(clone) {
+
+  set.seed(0)
+  c <- colData(sce_list[[clone]]) %>% as.data.frame() %>% filter(pseudotime > 0.5) %>% rownames()
+  sample(c, length(c) - 10)
+
+}) %>% unlist()
+counts(sce)["ZNF701", cells_ZNF701] <- counts(sce)["ZNF701", cells_ZNF701] - round((counts(sce)["ZNF701", cells_ZNF701]) / 3 * 2)
+
 sce <- computeSumFactors(sce)
-preclusters <- quickCluster(sce)
+preclusters <- quickCluster(sce, min.size = 50)
 sce <- computeSumFactors(sce, clusters = preclusters)
 sce <- logNormCounts(sce)
 usethis::use_data(sce, compress = "xz", overwrite = T)
@@ -83,11 +174,11 @@ sce_list <- foreach(clone_name = clone_names,
 
                       # log normalisation
                       sce_clone <- computeSumFactors(sce_clone)
-                      preclusters <- quickCluster(sce_clone)
+                      preclusters <- quickCluster(sce_clone, min.size = 50)
                       sce_clone <- computeSumFactors(sce_clone, clusters = preclusters)
                       sce_clone <- logNormCounts(sce_clone)
 
-                      mat <- read_csv(paste0("/data/share/htp/hack_GRN/NPC_diff_network_analysis/additional_scripts/toy_data_playaround4/gene9_cell15/GRNBoost2_files/count_matrices/", clone_name, ".csv"))
+                      mat <- read_csv(paste0("/data/share/htp/hack_GRN/NPC_diff_network_analysis/additional_scripts/toy_data_playaround2/gene8_cell1/GRNBoost2_files/count_matrices/", clone_name, ".csv"))
                       coln <- mat[[1]]
                       mat <- mat[, 2:ncol(mat)] %>% t()
                       colnames(mat) <- coln
@@ -105,15 +196,11 @@ writeTableForGRNBoost2(sce_list, "rand_quantile_res", "data-raw/intermediate_fil
 
 # # run GRNBoost2
 # system('sbatch data-raw/grnboost2_per_clone.sh "data-raw/intermediate_files/count_matrices" "data-raw/intermediate_files/regulators.txt" "inst/extdata"', wait = T)
-system('cp "/data/share/htp/hack_GRN/NPC_diff_network_analysis/additional_scripts/toy_data_playaround4/gene9_cell15/GRNBoost2_files/output/"/* "inst/extdata"')
+system('cp "/data/share/htp/hack_GRN/NPC_diff_network_analysis/additional_scripts/toy_data_playaround2/gene8_cell1/GRNBoost2_files/output/"/* "inst/extdata"')
 
 # load networks
-network_list_raw <- loadGRNBoost2output("inst/extdata", clone_names)
+network_list_raw <- loadNetworks("inst/extdata", clone_names, rep = 10)
 usethis::use_data(network_list_raw, compress = "xz", overwrite = T)
-
-# rescale interaction scores
-network_list_scaled <- rescaleEdgeWeights(network_list_raw)
-usethis::use_data(network_list_scaled, compress = "xz", overwrite = T)
 
 # load gtfs
 gtf_list <- list(human = plyranges::read_gff("/data/share/htp/hack_GRN/NPC_diff_network_analysis/01.mapping/genomes/hg38/genes.gtf"),
@@ -133,9 +220,12 @@ gtf_list <- foreach(gtf = gtf_list,
                     }
 usethis::use_data(gtf_list, compress = "xz", overwrite = T)
 
+# rescale interaction scores
 # remove gene pairs that overlap in any of the genomes
-network_list_scaled_filt <- removeOverlappingGenePairs(network_list_scaled, gtf_list, clone2species, "gene_name")
-usethis::use_data(network_list_scaled_filt, compress = "xz", overwrite = T)
+network_list <- network_list_raw %>%
+  removeOverlappingGenePairs(gtf_list, clone2species, "gene_name") %>%
+  normalizeEdgeWeights()
+usethis::use_data(network_list, compress = "xz", overwrite = T)
 
 # phylogenetic tree
 tree <- read.tree("/data/share/htp/TRNP1/paper_data/Co-evolution-TRNP1-and-GI/protein/trees/mammaltree.txt") %>%
@@ -144,24 +234,10 @@ tree$tip.label <- c("cynomolgus", "gorilla", "human")
 usethis::use_data(tree, compress = "bzip2", overwrite = T)
 
 # consensus network
-consensus_network <- createConsensus(network_list_scaled_filt, clone2species, tree)
-
-# add consensus to network list
-network_list_scaled_filt_withCons <- network_list_scaled_filt
-network_list_scaled_filt_withCons[["consensus"]] <- consensus_network
-usethis::use_data(network_list_scaled_filt_withCons, compress = "xz", overwrite = T)
-
-# add directionality
-network_list_scaled_filt_withCons_withDir <- addDirectionality(network_list_scaled_filt_withCons, sce_list, assay = "logcounts")
-usethis::use_data(network_list_scaled_filt_withCons_withDir, compress = "xz", overwrite = T)
-
-# save consensus network
-consensus_network <- network_list_scaled_filt_withCons_withDir[["consensus"]]
+consensus_network <- network_list %>%
+  createConsensus(clone2species, tree) %>%
+  addDirectionality(sce)
 usethis::use_data(consensus_network, compress = "xz", overwrite = T)
-
-# save network list without consensus
-network_list <- network_list_scaled_filt_withCons_withDir[names(network_list_scaled_filt_withCons_withDir) != "consensus"]
-usethis::use_data(network_list, compress = "xz", overwrite = T)
 
 
 ## Module assignment ----------------------------------------------------
@@ -171,7 +247,7 @@ initial_modules <- assignInitialModules(consensus_network, regulators, N = 250)
 usethis::use_data(initial_modules, compress = "xz", overwrite = T)
 
 # pruned modules
-pruned_modules <- pruneModules(initial_modules, consensus_network, "UIK_adj_kIM")
+pruned_modules <- pruneModules(initial_modules, "UIK_adj_kIM", consensus_network)
 usethis::use_data(pruned_modules, compress = "xz", overwrite = T)
 
 # random modules
@@ -185,7 +261,6 @@ usethis::use_data(random_modules, compress = "bzip2", overwrite = T)
 eigengenes <- calculateEigengenes(regulators, pruned_modules, sce)
 usethis::use_data(eigengenes, compress = "xz", overwrite = T)
 plotEigengeneHeatmap(eigengenes)
-
 
 # calculate eigengenes per species
 eigengenes_per_species <- calculateEigengenes(regulators, pruned_modules, sce, per_species = T)
@@ -215,11 +290,33 @@ usethis::use_data(dist_jk, compress = "xz", overwrite = T)
 random_dist_jk <- convertPresToDist(random_pres_stats_jk, "cor_kIM")
 usethis::use_data(random_dist_jk, compress = "xz", overwrite = T)
 
+# distances of the original modules
+dist <- dist_jk[paste0(regulators, "_orig")]
+names(dist) <- regulators
+dist <- lapply(dist, function(df) {
+
+  df$type = df$id = df$gene_removed <- NULL
+  df
+
+})
+usethis::use_data(dist, compress = "xz", overwrite = T)
+
 # reconstruct neighbour-joining trees
 trees_jk <- reconstructTrees(dist_jk)
 usethis::use_data(trees_jk, compress = "xz", overwrite = T)
 random_trees_jk <- reconstructTrees(random_dist_jk)
 usethis::use_data(random_trees_jk, compress = "xz", overwrite = T)
+
+# trees of the original modules
+trees <- trees_jk[paste0(regulators, "_orig")]
+names(trees) <- regulators
+trees <- lapply(trees, function(tree) {
+
+  tree$info$type = tree$info$id = tree$info$gene_removed <- NULL
+  tree
+
+})
+usethis::use_data(trees, compress = "xz", overwrite = T)
 
 # calculate tree-based statistics
 tree_stats_jk <- calculateTreeStats(trees_jk)
@@ -243,6 +340,6 @@ module_conservation_overall <- findConservedDivergedModules(tree_stats, lm_overa
 usethis::use_data(module_conservation_overall, compress = "xz", overwrite = T)
 plotConservedDivergedModules(module_conservation_overall)
 
-target_conservation_POU5F1 <- findConservedDivergedTargets(tree_stats_jk, lm_overall, "POU5F1")
-usethis::use_data(target_conservation_POU5F1, compress = "xz", overwrite = T)
-plotConservedDivergedTargets(target_conservation_POU5F1)
+POU5F1_target_conservation <- findConservedDivergedTargets("POU5F1", tree_stats_jk, lm_overall)
+usethis::use_data(POU5F1_target_conservation, compress = "xz", overwrite = T)
+plotConservedDivergedTargets(POU5F1_target_conservation)

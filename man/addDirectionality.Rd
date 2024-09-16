@@ -4,34 +4,37 @@
 \alias{addDirectionality}
 \title{Add directionality of interactions}
 \usage{
-addDirectionality(network_list, sce_list, n_cores = 1L, assay = "logcounts")
+addDirectionality(network, sce, assay = "logcounts", n_cores = 1L)
 }
 \arguments{
-\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks per clone and potentially the consensus network. The list element containing the consensus network should have the name 'consensus'.}
+\item{network}{An \code{\link{igraph}} object containing the consensus network or the network of a clone.}
 
-\item{sce_list}{A named list of \code{\link{SingleCellExperiment-class}} objectd containing the expression data (raw counts, normaized counts and metadata) for all network genes per clone.}
+\item{sce}{A \code{\link{SingleCellExperiment}} object containing the expression data either for all clones (in case \code{network} is the consensus network) or for the clone of interest (in case \code{network} is a clonewise network). If \code{sce} contains the expression data of all clones, it is also expected to have a metadata column "clone" specifying which clone each cell belongs to; this will be used to define the blocking levels.}
+
+\item{assay}{Character, the name of the assay in \code{sce} that should be used for the calculation of gene-gene correlations (default: "logcounts").}
 
 \item{n_cores}{Integer, the number of cores (default: 1).}
-
-\item{assay}{Character, the name of the assay in the SingleCellExperiment objects that should be used for the calculation of gene-gene correlations (default: "logcounts").}
 }
 \value{
-A named list of \code{\link{igraph}} objects after adding the information about the direction of interactions. In addition to the edge attributes in the input \code{network_list}, it contains 3 new attributes in each network:
+An \code{\link{igraph}} object, the input \code{network} extended by the information about the direction of interactions. In addition to the original edge attributes, it contains 3 new attributes:
 \describe{
-\item{rho}{Numeric, the approximate Spearman's correlation coefficient of the 2 genes' expression profiles that form the edge.}
+\item{rho}{Numeric, the approximate Spearman's correlation coefficient between the expression profiles of the 2 genes that form the edge.}
 \item{p.adj}{Numeric, BH-corrected approximate p-value of rho.}
-\item{direction}{Character, the direction of the interaction between the 2 genes that form the edge ("+" or "-").}
+\item{direction}{Character, the direction of the interaction between the 2 genes that form the edge ("+" = positively correlated/coexpressed or "-" = negatively correlated/anti-coexpressed).}
 }
 }
 \description{
-Determines the directionality of each network connection based on a modified Spearman's correlation between the 2 genes' expression profiles (positive expression correlation - activating interaction, negative expression correlation - repressing interaction).
+Determines the directionality of each network edge (positively correlated/coexpressed or negatively correlated/anti-coexpressed) based on a modified Spearman's correlation between the expression profiles of the 2 genes that form the edge.
 }
 \details{
-If the networks were inferred using a method that cannot distinguish positive and negative regulatory interactions, it might be useful to add this information for lines of analysis where it makes sense to separate the activated and repressed target genes of a regulator (e.g. for the calculation of eigengenes).
+If the networks were inferred using a method that does not distinguish coexpressed and anti-coexpressed gene pairs, it might be useful to add this information for lines of analysis where it makes sense to separate the activated and repressed target genes of a regulator (e.g. for the calculation of eigengenes, see \code{\link{calculateEigengenes}}). If the network inference method output edges with both positive and negative edge weights in the first place (e.g. correlation-based methods), the edge attribute "direction" is already created during the step \code{\link{normalizeEdgeWeights}} and does not have to be calculated again.
 
-The calculation relies on the approximate version of the Spearman's rho, significance testing and blocking implemented by [scran::correlatePairs]. The results are summarized as 3 new edge attributes in the igraph objects: rho (approximate Spearman's correlation coefficient), p.adj (BH-corrected approximate p-value) and direction (+ or -).
+Here the directionality of a geneA-geneB edge refers to the characteristic whether geneA and geneB are coexpressed or anti-coexpressed and NOT whether geneA regulates geneB or geneB regulates geneA. The network remains undirected in a graph theoretical sense.
+
+The calculation of directionality relies on the approximate version of the Spearman's rho, significance testing and blocking implemented by \code{\link{correlatePairs}}. The results are summarized as 3 new edge attributes in the \code{\link{igraph}} object: rho (approximate Spearman's correlation coefficient), p.adj (BH-corrected approximate p-value) and direction ("+" or "-").
 }
 \examples{
-network_list_scaled_filt_withCons_withDir <- addDirectionality(network_list_scaled_filt_withCons,
-                                                               sce_list)
+consensus_network <- network_list \%>\%
+ createConsensus(clone2species, tree) \%>\%
+ addDirectionality(sce)
 }

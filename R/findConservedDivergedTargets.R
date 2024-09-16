@@ -4,14 +4,14 @@
 #'
 #' To determine whether a module as whole is conserved, diverged overall or diverged on a specific lineage, the CroConet approach relies on module trees reconstrcuted from pairwise preservation scores between clones and statistics calculated based on these trees (total tree length, diversity, species-to-other branch length). To identify individual genes that contribute the most to conservation/divergence, the same statistics can be used in combination with jackknifing.
 #'
-#' During jackknifing, each member gene of a module is removed and all statistics are recalculated, including the tree-based statistics that inform us about cross-species conservation (see the argument "jackknife" in the functions \code{\link{calculatePresStats}}, \code{\link{reconstructTrees}} and \code{\link{calculateTreeStats}}. Our working hypothesis is that if removing a target from a diverged module makes that module more conserved, then that target was responsible for divergence in the original module, and vice versa, if removing a target from a conserved module makes that module more diverged, then that target was responsible for conservation in the original module.
+#' During jackknifing, each member gene of a module is removed and all statistics are recalculated, including the tree-based statistics that inform us about cross-species conservation (see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). Our working hypothesis is that if removing a target from a diverged module makes that module more conserved, then that target was responsible for divergence in the original module, and vice versa, if removing a target from a conserved module makes that module more diverged, then that target was responsible for conservation in the original module.
 #'
 #' To quantify these effects, the function takes use of the linear models that were fitted across all modules between the total tree length and within-species diversity (in case the focus of interest is conservation and overall divergence) or between the species-to-other branch length and the diversity within that species (in case the focus of interest is the species-specific divergence), similarly to how the conserved and diverged modules were identified in the first place. However, in this case it is not the aggregate statistic for a module as a whole that is compared to the regression line, but the statistic of each jackknife module version separately. The jackknife version that has the highest residual is the most diverged, therefore the corresponding target gene is the most conserved, while the jackknife version that has the lowest residual is the most conserved, therefore the corresponding target gene is the most diverged.
 #'
 #' It is important to note, that in most cases the divergence/conservation of a module cannot be contributed to a single target gene, but it is rather the combined signal of all targets together. For example, it is expected that most jackknife versions of a diverged module will still fall into the diverged region above the prediction interval of the regression line, even when the most diverged target genes are removed. This also means that the "most conserved" target gene of diverged module is still most likely diverged, just to a lesser extent than the others. Therefore, it mainly makes sense to investigate the most diverged targets of the diverged modules and the most conserved targets of the conserved modules, not the other way around.
 #'
 #' Based on the linear model provided, the function calculates the predicted value and its prediction interval at the diversity value of each jackknife module version as well as the residual of each jackknife module version. The width of the prediction interval is assumed to be constant for the entire range of diversity values across all jackknife versions of the same module and it is calculated based on the aggregate diversity value and (in case of a weighted linear model) the aggregate weight of the module as a whole (i.e. the same data that was used for fitting \code{lm_tree_stats}).
-#' @param module Character, the name of the module of interest.
+#' @param module_name Character, the name of the module of interest.
 #' @param tree_stats_jk Data frame of tree statistics per jackknife module version across all modules.
 #'
 #' Columns required in case the focus of interest is conservation and overall divergence:
@@ -49,7 +49,7 @@
 #' @export
 #'
 #' @examples POU5F1_target_conservation <- findConservedDivergedTargets("POU5F1", tree_stats_jk, lm_overall)
-findConservedDivergedTargets <- function(module, tree_stats_jk, lm_tree_stats, conf_level = 0.95) {
+findConservedDivergedTargets <- function(module_name, tree_stats_jk, lm_tree_stats, conf_level = 0.95) {
 
   if (!is.data.frame(tree_stats_jk))
     stop("The argument \"tree_stats_jk\" should be a data frame.")
@@ -83,16 +83,16 @@ findConservedDivergedTargets <- function(module, tree_stats_jk, lm_tree_stats, c
   }
 
   if (any(!c("regulator", "module_size", "type", "id", "gene_removed") %in% colnames(tree_stats_jk)))
-    stop(paste0("The argument \"tree_stats_jk\" should contain the columns \"regulator\", \"module_size\", \"type\", \"id\" and \"gene_removed\"."))
+    stop("The argument \"tree_stats_jk\" should contain the columns \"regulator\", \"module_size\", \"type\", \"id\" and \"gene_removed\".")
 
   if (any(!(c(x_var, y_var) %in% colnames(tree_stats_jk))))
     stop(paste0("The argument \"tree_stats_jk\" should contain the columns corresponding to the dependent and independent variables in \"lm_tree_stats\" (\"", x_var, "\" and \"", y_var, "\"). Please include these in the data frame or rerun the function \"fitTreeStatsLm()\" with the variables of interest."))
 
-  if (!inherits(module, "character") || length(module) != 1)
-    stop("The argument \"module\" should be a string specifying a single module in which the conserved and diverged target genes should be identified.")
+  if (!inherits(module_name, "character") || length(module_name) != 1)
+    stop("The argument \"module_name\" should be a string specifying a single module in which the conserved and diverged target genes should be identified.")
 
-  if (!module %in% unique(tree_stats_jk$regulator))
-    stop("Tree statistics for the specified module cannot be found in \"tree_stats_jk\". Please make sure that the argument \"module\" is present in the column \"regulator\" of \"tree_stats_jk\".")
+  if (!module_name %in% unique(tree_stats_jk$regulator))
+    stop("Tree statistics for the specified module cannot be found in \"tree_stats_jk\". Please make sure that the argument \"module_name\" is present in the column \"regulator\" of \"tree_stats_jk\".")
 
   if (!inherits(conf_level, "numeric") || length(conf_level) != 1 || conf_level < 0 || conf_level >= 1)
     stop("The argument \"conf_level\" should be a numeric value between 0 and 1.")
@@ -106,13 +106,13 @@ findConservedDivergedTargets <- function(module, tree_stats_jk, lm_tree_stats, c
 
   # subset module
   tree_stats_jk_mod <- tree_stats_jk %>%
-    dplyr::filter(.data[["regulator"]] == module) %>%
+    dplyr::filter(.data[["regulator"]] == module_name) %>%
     dplyr::select(.data[["regulator"]], .data[["module_size"]], .data[["type"]], .data[["id"]], .data[["gene_removed"]], .data[[x_var]], .data[[y_var]]) %>%
     dplyr::bind_rows(lm_tree_stats$model %>%
-                       dplyr::filter(.data[["regulator"]] == module) %>%
+                       dplyr::filter(.data[["regulator"]] == module_name) %>%
                        dplyr::transmute(.data[["regulator"]],
                                         type = "summary",
-                                        id = paste0(module, "_summary"),
+                                        id = paste0(module_name, "_summary"),
                                         .data[["module_size"]],
                                         gene_removed = NA,
                                         .data[[x_var]],
@@ -127,7 +127,7 @@ findConservedDivergedTargets <- function(module, tree_stats_jk, lm_tree_stats, c
   if (!is.null(lm_tree_stats$weight)) {
 
     # get weight for original module
-    weight <- lm_tree_stats$weights[lm_tree_stats$model$regulator == module]
+    weight <- lm_tree_stats$weights[lm_tree_stats$model$regulator == module_name]
 
     # 95%  prediction interval of the fit
     pred_interval <- stats::predict(lm_tree_stats,

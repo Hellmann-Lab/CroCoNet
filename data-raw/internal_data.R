@@ -1,16 +1,16 @@
 setwd("data-raw/intermediate_files/")
 
-# download JASPAR2024 vertebrate core
-download.file("https://jaspar.elixir.no/download/data/2024/CORE/JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt", "JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt")
-
-# download JASPAR2024 vertebrate unvalidated
-download.file("https://jaspar.elixir.no/download/data/2024/collections/JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt", "JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt")
-
-# download IMAGE motifs
-download.file("http://bioinformatik.sdu.dk/solexa/webshare/IMAGE/IMAGE_v1.1.tar.gz", "IMAGE_v1.1.tar.gz")
-system("tar -xf IMAGE_v1.1.tar.gz")
-system("mv IMAGE/utils/Genename_Motif.txt IMAGE_motifs.txt")
-system("rm -r IMAGE IMAGE_v1.1.tar.gz")
+# # download JASPAR2024 vertebrate core
+# download.file("https://jaspar.elixir.no/download/data/2024/CORE/JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt", "JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt")
+#
+# # download JASPAR2024 vertebrate unvalidated
+# download.file("https://jaspar.elixir.no/download/data/2024/collections/JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt", "JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt")
+#
+# # download IMAGE motifs
+# download.file("http://bioinformatik.sdu.dk/solexa/webshare/IMAGE/IMAGE_v1.1.tar.gz", "IMAGE_v1.1.tar.gz")
+# system("tar -xf IMAGE_v1.1.tar.gz")
+# system("mv IMAGE/utils/Genename_Motif.txt IMAGE_motifs.txt")
+# system("rm -r IMAGE IMAGE_v1.1.tar.gz")
 
 # list of TRs
 jaspar_core_TRs <- data.table::fread("grep '>' JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt",
@@ -36,7 +36,7 @@ image_TRs <- data.table::fread("IMAGE_motifs.txt",
   sort()
 
 # color scales
-eigengene_colors <- rev(c( "#73001a", "#84001e", "#940022","#A50026", "#D73027", "#F46D43", "#FDAE61", "#FEE090", "#FFFFBF", "#E0F3F8", "#ABD9E9", "#74ADD1", "#4575B4" ,"#313695", "#2c3086", "#272b77", "#000A6B", "#00055A"))
+eigengene_colors <- rev(c("#650015", "#84001e", "#940022","#A50026", "#D73027", "#F46D43", "#FDAE61", "#FEE090", "#FFFFBF", "#DAF9D9", "#AFEEEE", "#84C7C8", "#5AA1A3", "#307B7D", "#065558", "#044B4E", "#024244", "#013436"))
 pseudotime_colors <- c("#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF", "#1F9E89FF", "#35B779FF", "#6DCD59FF", "#B4DE2CFF", "#FDE725FF")
 species_color_ramp <- scales::colour_ramp(c("#07beb8", "steelblue3", "#2E4172", "#256F5C", "forestgreen", "#83AA3E", "#FFB600",  "#E28100"))
 cell_type_color_ramp <- scales::colour_ramp(c("indianred2", "#B24141", "maroon", "palevioletred", "grey65", "grey40", "peachpuff4", "tan"))

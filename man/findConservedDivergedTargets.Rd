@@ -5,14 +5,14 @@
 \title{Find conserved and diverged target genes within a module}
 \usage{
 findConservedDivergedTargets(
-  module,
+  module_name,
   tree_stats_jk,
   lm_tree_stats,
   conf_level = 0.95
 )
 }
 \arguments{
-\item{module}{Character, the name of the module of interest.}
+\item{module_name}{Character, the name of the module of interest.}
 
 \item{tree_stats_jk}{Data frame of tree statistics per jackknife module version across all modules.
 
@@ -58,7 +58,7 @@ Finds target genes within a conserved/diverged module that are particularly resp
 \details{
 To determine whether a module as whole is conserved, diverged overall or diverged on a specific lineage, the CroConet approach relies on module trees reconstrcuted from pairwise preservation scores between clones and statistics calculated based on these trees (total tree length, diversity, species-to-other branch length). To identify individual genes that contribute the most to conservation/divergence, the same statistics can be used in combination with jackknifing.
 
-During jackknifing, each member gene of a module is removed and all statistics are recalculated, including the tree-based statistics that inform us about cross-species conservation (see the argument "jackknife" in the functions \code{\link{calculatePresStats}}, \code{\link{reconstructTrees}} and \code{\link{calculateTreeStats}}. Our working hypothesis is that if removing a target from a diverged module makes that module more conserved, then that target was responsible for divergence in the original module, and vice versa, if removing a target from a conserved module makes that module more diverged, then that target was responsible for conservation in the original module.
+During jackknifing, each member gene of a module is removed and all statistics are recalculated, including the tree-based statistics that inform us about cross-species conservation (see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). Our working hypothesis is that if removing a target from a diverged module makes that module more conserved, then that target was responsible for divergence in the original module, and vice versa, if removing a target from a conserved module makes that module more diverged, then that target was responsible for conservation in the original module.
 
 To quantify these effects, the function takes use of the linear models that were fitted across all modules between the total tree length and within-species diversity (in case the focus of interest is conservation and overall divergence) or between the species-to-other branch length and the diversity within that species (in case the focus of interest is the species-specific divergence), similarly to how the conserved and diverged modules were identified in the first place. However, in this case it is not the aggregate statistic for a module as a whole that is compared to the regression line, but the statistic of each jackknife module version separately. The jackknife version that has the highest residual is the most diverged, therefore the corresponding target gene is the most conserved, while the jackknife version that has the lowest residual is the most conserved, therefore the corresponding target gene is the most diverged.
 

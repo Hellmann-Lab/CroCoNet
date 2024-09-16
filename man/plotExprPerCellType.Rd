@@ -15,7 +15,7 @@ plotExprPerCellType(
 \arguments{
 \item{genes}{Character vector, the names of the genes for which the expression profiles should be plotted.}
 
-\item{sce}{\code{\link{SingleCellExperiment-class}} object containing the expression data (raw counts, logcounts and metadata) for all network genes. Required metadata columns:
+\item{sce}{\code{\link{SingleCellExperiment}} object containing the expression data (raw counts, logcounts and metadata) for all network genes. Required metadata columns:
 \describe{
 \item{species}{Character, the name of the species.}
 \item{\{\{cell_type_column\}\}}{Character, cell type annotation.}
@@ -28,14 +28,22 @@ plotExprPerCellType(
 \item{font_size}{Numeric, font size (default: 14).}
 }
 \value{
-A \code{\link{ggplot}} object.
+A violin plot as a \code{\link{ggplot}} object showing the expression levels of the genes per cell type and species.
 }
 \description{
-Plots the expression profiles of one or more genes per cell type and species, and thus allows the expression patterns to be visually compared across species.
+Plots the expression levels of one or more genes per cell type and species, and thus allows the expression patterns to be visually compared across species.
 }
 \details{
+The function produces a violin plot of expression levels per cell type and species, faceted by gene. The colors for the species can be controlled by the parameter \code{species_colors}.
+
 The species and cell type information are taken from the metadata slot of the input \code{sce} object, and the expression data are taken from the logcounts assay of the input \code{sce} object.
 }
 \examples{
 plotExprPerCellType(regulators, sce)
 }
+\seealso{
+Other functions to plot gene expression profiles: 
+\code{\link{plotExprAlongPseudotime}()},
+\code{\link{plotExprHeatmap}()}
+}
+\concept{functions to plot gene expression profiles}

@@ -16,7 +16,7 @@ plotModuleSizeDistribution(modules, font_size = 14)
 \item{font_size}{Numeric, font size (default: 14).}
 }
 \value{
-A \code{\link{ggplot}} object showing a histogram of module sizes.
+A histogram as a \code{\link{ggplot}} object showing the distribution of module sizes.
 }
 \description{
 Plots the distribution of module sizes (i.e. the number of target genes assigned to each regulator) as a histogram.

@@ -61,16 +61,16 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
   if (any(!c("focus", "regulator", "fit", "lwr_fit", "upr_fit", "residual", "t_score", "conservation") %in% colnames(module_conservation)))
     stop(paste0("The argument \"module_conservation\" should contain the columns \"focus\", \"regulator\", \"fit\", \"lwr_fit\", \"upr_fit\", \"residual\", \"t_score\" and \"conservation\"."))
 
-  if (length(N) != 1 || (!inherits(N, "integer") & !(inherits(N, "numeric") & N == round(N))) || N < 0)
+  if (length(N) != 1 || (!inherits(N, "integer") && !(inherits(N, "numeric") && N == round(N))) || N < 0)
     stop("The argument \"N\" should be a positive integer or 0.")
 
   if (is.null(rank_by) || !rank_by %in% c("residual", "t_score"))
     stop("The argument \"rank_by\" should be one of \"residual\", \"t_score\".")
 
-  if (!is.null(colors) & (!inherits(colors, "character") || any(!areColors(colors)) || length(colors) == 2))
+  if (!is.null(colors) && (!inherits(colors, "character") || any(!areColors(colors)) || length(colors) == 2))
     stop("The argument \"colors\" should be a character vector of valid color representations.")
 
-  if (!is.null(names(colors)) & any(sort(names(colors)) != c("conserved", "diverged")))
+  if (!is.null(names(colors)) && any(sort(names(colors)) != c("conserved", "diverged")))
     stop("The names of \"colors\" should be \"conserved\" and \"diverged\".")
 
   if (!inherits(font_size, "numeric") || length(font_size) != 1 || font_size <= 0)
@@ -116,19 +116,10 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
       ggplot2::geom_point(ggplot2::aes(color = .data[["conservation"]], size = .data[["conservation"]])) +
       ggplot2::theme_bw(base_size = font_size) +
       ggplot2::scale_color_manual(values = colors, breaks = c("diverged", "conserved")) +
-      ggplot2::scale_size_manual(values = c(diverged = 0.5, conserved = 0.5, not_significant = 0.2), guide = "none") +
+      ggplot2::scale_size_manual(values = c(diverged = 0.5, conserved = 0.5, not_significant = 0.05), guide = "none") +
       ggplot2::xlab("within-species diversity") +
       ggplot2::ylab("total tree length") +
-      ggrepel::geom_label_repel(data = dplyr::bind_rows(module_conservation %>%
-                                                          dplyr::filter(.data[["conservation"]] == "diverged") %>%
-                                                          dplyr::slice_max(order_by = .data[[rank_by]], n = N),
-                                                        module_conservation %>%
-                                                          dplyr::filter(.data[["conservation"]] == "conserved") %>%
-                                                          dplyr::slice_min(order_by = .data[[rank_by]], n = N)),
-                                ggplot2::aes(label = .data[["regulator"]], color = .data[["conservation"]]),
-                                fill = "white", size = 2, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20, show.legend = FALSE) +
-      ggplot2::theme(legend.title = ggplot2::element_blank()) +
-      ggplot2::ggtitle("Overall module conservation")
+      ggplot2::theme(legend.title = ggplot2::element_blank())
 
     if (all(c("lwr_total_tree_length", "upr_total_tree_length", "lwr_within_species_diversity", "upr_within_species_diversity") %in% colnames(module_conservation))) {
 
@@ -138,6 +129,16 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
 
     }
 
+    p <- p +
+      ggrepel::geom_label_repel(data = dplyr::bind_rows(module_conservation %>%
+                                                          dplyr::filter(.data[["conservation"]] == "diverged") %>%
+                                                          dplyr::slice_max(order_by = .data[[rank_by]], n = N),
+                                                        module_conservation %>%
+                                                          dplyr::filter(.data[["conservation"]] == "conserved") %>%
+                                                          dplyr::slice_min(order_by = .data[[rank_by]], n = N)),
+                                ggplot2::aes(label = .data[["regulator"]], color = .data[["conservation"]]),
+                                fill = "white", size = 2.5, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20, show.legend = FALSE)
+
   } else {
 
     p <- module_conservation %>%
@@ -145,18 +146,12 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
       ggplot2::geom_line(ggplot2::aes(y = .data[["fit"]]), color = "grey30", linewidth = 0.5) +
       ggplot2::geom_ribbon(ggplot2::aes(ymin = .data[["lwr_fit"]], ymax = .data[["upr_fit"]]), fill = "grey80", alpha = 0.5) +
       ggplot2::geom_point(ggplot2::aes(color = .data[["conservation"]], size = .data[["conservation"]])) +
-      ggplot2::theme_bw(base_size = 17) +
+      ggplot2::theme_bw(base_size = font_size) +
       ggplot2::scale_color_manual(values = colors, breaks = "diverged", labels = paste0("diverged between\n", focus, " and other")) +
-      ggplot2::scale_size_manual(values = c(diverged = 0.5, not_significant = 0.2), guide = "none") +
+      ggplot2::scale_size_manual(values = c(diverged = 0.5, not_significant = 0.05), guide = "none") +
       ggplot2::xlab(paste0(focus, " diversity")) +
       ggplot2::ylab(paste0(focus, "-to-other branch length")) +
-      ggrepel::geom_label_repel(data = module_conservation %>%
-                                  dplyr::filter(.data[["conservation"]] == "diverged") %>%
-                                  dplyr::slice_max(order_by = .data[[rank_by]], n = N),
-                                ggplot2::aes(label = .data[["regulator"]], color = .data[["conservation"]]),
-                                fill = "white", size = 2, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20, show.legend = FALSE) +
-      ggplot2::theme(legend.title = ggplot2::element_blank()) +
-      ggplot2::ggtitle(paste0(tools::toTitleCase(focus), "-specific module divergence"))
+      ggplot2::theme(legend.title = ggplot2::element_blank())
 
     if (sum(c(paste0("lwr_", focus, "_to_other_branch_length"), paste0("upr_", focus, "_to_other_branch_length"), paste0("lwr_", focus, "_diversity"), paste0("upr_", focus, "_diversity")) %in% colnames(module_conservation)) == 4) {
 
@@ -165,6 +160,13 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
         ggplot2::geom_errorbar(ggplot2::aes(ymin = .data[[paste0("lwr_", focus, "_to_other_branch_length")]], ymax = .data[[paste0("upr_", focus, "_to_other_branch_length")]], color = .data[["conservation"]]), linewidth = 0.2)
 
     }
+
+    p <- p +
+      ggrepel::geom_label_repel(data = module_conservation %>%
+                                  dplyr::filter(.data[["conservation"]] == "diverged") %>%
+                                  dplyr::slice_max(order_by = .data[[rank_by]], n = N),
+                                ggplot2::aes(label = .data[["regulator"]], color = .data[["conservation"]]),
+                                fill = "white", size = 2.5, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20, show.legend = FALSE)
 
   }
 

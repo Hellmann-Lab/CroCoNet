@@ -21,6 +21,6 @@ A named list with 232 elements containing the distance measures per (original or
 dist_jk
 }
 \description{
-Distance measures per clone pair for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \eqn{dist = \fraq{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknife module version and contains the distance measures between all possible pairs of clones for this module version.
+Distance measures per clone pair for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \eqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknifed/original module version and contains the distance measures between all possible pairs of clones for this module version.
 }
 \keyword{datasets}

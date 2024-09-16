@@ -5,7 +5,7 @@
 \alias{random_trees_jk}
 \title{Trees of the original and jackknifed random modules}
 \format{
-A named list with 232 elements containing the neighbor-joining tree as a [phylo] objects.
+A named list with 232 elements containing the neighbor-joining trees as [phylo] objects.
 }
 \usage{
 random_trees_jk

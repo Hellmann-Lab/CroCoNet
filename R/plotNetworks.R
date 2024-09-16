@@ -19,8 +19,8 @@
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
 #' }
 #' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and clones.
-#' @param network_list A list of \code{\link{igraph}} objects containing the networks per clone.
-#' @param clone2species A data frame that specifies which clone belongs to which species, required columns:
+#' @param network_list A named list of \code{\link{igraph}} objects containing the networks of all clones.
+#' @param clone2species A data frame that specifies which species each clone belongs to, required columns:
 #' \describe{
 #' \item{clone}{Character, name of the clone.}
 #' \item{species}{Character, name of the species.}
@@ -34,7 +34,7 @@
 #' @param edge_width Numeric vector of length 2, the range of edge widths for plotting the graph edges (default: c(0.2, 1.2)).
 #' @param ncol Integer, the number of columns the subplots should be organized into if several modules are input. If NULL (default), the dimensions of the grid will follow the default of \code{\link{wrap_plots}}.
 #'
-#' @return A \code{\link{ggraph}} object in case the argument \code{module_names} is a single module name and a \code{\link{patchwork}} object in case the argument \code{module_names} is a vector of module names.
+#' @return A \code{\link{ggraph}} object in case \code{module_names} is a single module name and a \code{\link{patchwork}} object in case \code{module_names} is a vector of module names.
 #' @export
 #'
 #' @examples plotNetworks("POU5F1", pruned_modules, consensus_network, network_list, clone2species)
@@ -46,7 +46,7 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
   if (!inherits(seed, "numeric"))
     stop("The argument \"seed\" should be a numeric.")
 
-  if (!is.null(colors) & (!inherits(colors, "character") || any(!areColors(colors))))
+  if (!is.null(colors) && (!inherits(colors, "character") || any(!areColors(colors))))
     stop("The argument \"colors\" should be a character vector of valid color representations.")
 
   if (!inherits(font_size, "numeric") || length(font_size) != 1 || font_size <= 0)
@@ -55,7 +55,7 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
   if (!inherits(edge_width, "numeric") || length(edge_width) != 2 || any(edge_width <= 0))
     stop("The argument \"edge_width\" should be a numeric vector of length 2 with positive values.")
 
-  if (!is.null(ncol) && (length(ncol) != 1 || (!inherits(ncol, "integer") & !(inherits(ncol, "numeric") & ncol == round(ncol))) || ncol < 1))
+  if (!is.null(ncol) && (length(ncol) != 1 || (!inherits(ncol, "integer") && !(inherits(ncol, "numeric") && ncol == round(ncol))) || ncol < 1))
     stop("The argument \"ncol\" should be a positive integer.")
 
   # get edges
@@ -112,7 +112,7 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
 #' }
 #' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and clones.
 #' @param network_list A list of \code{\link{igraph}} objects containing the networks per clone.
-#' @param clone2species A data frame that specifies which clone belongs to which species, required columns:
+#' @param clone2species A data frame that specifies which species each clone belongs to, required columns:
 #' \describe{
 #' \item{clone}{Character, name of the clone.}
 #' \item{species}{Character, name of the species.}
@@ -123,7 +123,7 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
 #' @return A data frame of the selected edges with 5 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
-#' \item{to}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
+#' \item{from, to}{Character, the 2 member genes of the regulator's module that form the edge.}
 #' \item{consensus_weight}{Numeric, consensus edge weight/adjacency (the weighted average of clonewise adjacencies).}
 #' \item{f_statistic}{Numeric, measue of edge divergence. It is calculated as the F-statistic from the ANOVA of edge weights with species as groups.}
 #' \item{p-value}{Numeric, the p-value of the F-statistic.}
@@ -164,17 +164,17 @@ calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_netw
   if (any(!(c("clone", "species") %in% colnames(clone2species))))
     stop("The argument \"clone2species\" should contain the columns \"clone\" and \"species\".")
 
-  if (length(N) != 1 || (!inherits(N, "integer") & !(inherits(N, "numeric") & N == round(N))) || N < 1)
+  if (length(N) != 1 || (!inherits(N, "integer") && !(inherits(N, "numeric") && N == round(N))) || N < 1)
     stop("The argument \"N\" should be a positive integer.")
 
-  if (length(n_cores) != 1 || (!inherits(n_cores, "integer") & !(inherits(n_cores, "numeric") & n_cores == round(n_cores))) || n_cores < 1)
+  if (length(n_cores) != 1 || (!inherits(n_cores, "integer") && !(inherits(n_cores, "numeric") && n_cores == round(n_cores))) || n_cores < 1)
     stop("The argument \"n_cores\" should be a positive integer.")
 
-  module = NULL
+  module = . = clone = consensus_weight = from = module = p.value = species = statistic = to = weight = NULL
 
-  consensus_edges <- igraph::as_data_frame(consensus_network)
-  clonewise_edges <- lapply(network_list, igraph::as_data_frame) %>%
-    dplyr::bind_rows(.id = "clone")
+  consensus_edges <- data.table::as.data.table(igraph::as_data_frame(consensus_network))
+  clonewise_edges <- lapply(network_list, function(network) data.table::as.data.table(igraph::as_data_frame(network))) %>%
+    data.table::rbindlist( idcol = "clone")
 
   doParallel::registerDoParallel(n_cores)
 
@@ -194,22 +194,22 @@ calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_netw
                                           warning(paste0("The following genes in module ", module, " were not found in the provided consensus network: ", paste(module_genes_not_found, collapse = ", "), "."))
 
                                         # get consensus edges
-                                        consensus_module_edges <- consensus_edges %>%
-                                          dplyr::filter(.data[["from"]] %in% module_genes & .data[["to"]] %in% module_genes) %>%
-                                          dplyr::slice_max(order_by = .data[["weight"]], n = N) %>%
-                                          dplyr::select(.data[["from"]], .data[["to"]], consensus_weight = .data[["weight"]]) %>%
-                                          tidyr::expand_grid(clone2species)
+                                        consensus_module_edges <- consensus_edges[
+                                          from %in% module_genes & to %in% module_genes
+                                        ][order(-weight)][1:min(N, .N), .(from, to, consensus_weight = weight)]
+
+                                         consensus_module_edges <- data.table::as.data.table(clone2species)[
+                                           , (consensus_module_edges), by = .(clone, species)]
 
                                         # get the adjacencies for all interactions between these genes in each clone
-                                        clonewise_edges %>%
-                                          dplyr::right_join(consensus_module_edges, by = c("clone", "from", "to")) %>%
-                                          dplyr::select(.data[["species"]], .data[["clone"]], .data[["from"]], .data[["to"]], .data[["weight"]], .data[["consensus_weight"]]) %>%
-                                          dplyr::mutate(weight = tidyr::replace_na(.data[["weight"]], 0)) %>%
-                                          # calculate f statistic
-                                          dplyr::group_by(.data[["from"]], .data[["to"]], .data[["consensus_weight"]]) %>%
-                                          dplyr::summarise(stats::oneway.test(.data[["weight"]] ~ .data[["species"]], var.equal = T)[c("statistic", "p.value")] %>%  as.data.frame(col.names = c("f_statistic", "p_value"))) %>%
-                                          dplyr::ungroup() %>%
-                                          dplyr::mutate(regulator = module)
+                                        clonewise_edges[
+                                          consensus_module_edges, on = .(clone, from, to)][
+                                            , .(species, clone, from, to, weight = data.table::fifelse(is.na(weight), 0, weight), consensus_weight)][
+                                              , stats::oneway.test(weight ~ species, var.equal = TRUE)[c("statistic", "p.value")] %>% as.list(),
+                                              by = .(from, to, consensus_weight)][
+                                                order(from, to)][
+                                                  , .(from, to, consensus_weight, f_statistic = statistic, p_value = p.value, regulator = module)] %>%
+                                          as.data.frame()
 
                                       }
 
@@ -248,7 +248,14 @@ plotNetwork <- function(edges, layout = "kk", seed = 0, colors, font_size = 14, 
   graph <- igraph::graph_from_data_frame(edges)
 
   # set seed and schedule the restoration of the old seed
-  restoreOldSeed()
+  old_seed <- globalenv()$.Random.seed
+  on.exit(suspendInterrupts({
+    if (is.null(old_seed)) {
+      rm(".Random.seed", envir = globalenv(), inherits = FALSE)
+    } else {
+      assign(".Random.seed", value = old_seed, envir = globalenv(), inherits = FALSE)
+    }
+  }), add = TRUE)
   set.seed(seed)
 
   # layout

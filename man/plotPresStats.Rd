@@ -6,6 +6,7 @@
 \usage{
 plotPresStats(
   pres_stats,
+  random_pres_stats = NULL,
   stats,
   colors = NULL,
   font_size = 14,
@@ -17,15 +18,23 @@ plotPresStats(
 \item{pres_stats}{Data frame of the preservation statistics for the actual (pruned) modules. Required columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
-\item{module_size}{Integer, the numer of target genes assigned to a regulator.}
+\item{module_size}{Integer, the numer of target genes assigned to a regulator (only needed if the data points are desired to be colored by module size).}
 \item{clone1, clone2}{Character, the names of the clones compared.}
-\item{species1, species2}{Character, the names of the species 'clone1' and 'clone2' belongs to, respectively.}
+\item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belongs to, respectively.}
 \item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the preservation statistic of interest per module and clone pair.}
+}}
+
+\item{random_pres_stats}{Data frame of the preservation statistics for the random modules (optional). If provided, the following columns are required:
+\describe{
+\item{regulator}{Character, transcriptional regulator.}
+\item{clone1, clone2}{The names of the clones compared.}
+\item{species1, species2}{The names of the species \code{clone1} and \code{clone2} belongs to, respectively.}
+\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the preservation statistic(s) of interest per module and clone pair.}
 }}
 
 \item{stats}{Character or character vector, the name(s) of the column(s) containing the statistics of interest.}
 
-\item{colors}{Character vector, the colors to visualize the module sizes. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.}
+\item{colors}{Character vector, either the colors to visualize the module sizes (if only \code{pres_stats} is provided), or the colors to visualize the actual and random modules (if both \code{pres_stats} and \code{random_pres_stats} are provided). In the first case, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}. In the second case, the vector should contain 2 colors for the actual and random modules.}
 
 \item{font_size}{Numeric, font size (default: 14).}
 
@@ -34,18 +43,31 @@ plotPresStats(
 \item{point_alpha}{Numeric, the opacity of the points (default: 0.7).}
 }
 \value{
-A \code{\link{ggplot}} object.
+A scatterplot as a \code{\link{ggplot}} object showing the cross-species VS within-species preservation scores per species pair for all pruned modules and if provided, all random modules.
 }
 \description{
-Plots the cross-species VS within-species preservation scores for all possible species pairs. If a statistic is a good measure of module preservation, the within-species scores are expected to be higher than the cross-species scores for all pairs, and the difference is expected to increase with increasing phylogenetic distance between the two species compared.
+Plots the cross-species VS within-species preservation scores for all possible species pairs. If a statistic is a good measure of module preservation, the within-species scores are expected to be higher than the cross-species scores for all species pairs, and the difference is expected to increase with increasing phylogenetic distance between the two species compared.
 }
 \details{
-As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module connectivity patterns are preserved between the networks of two clones.
+As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module topology is preserved between the networks of two clones.
 
-For each possible speciesA-speciesB pair in the data, the function first subsets the within-species scores for speciesA, the within-species scores for speciesB and the cross-species scores between speciesA and speciesB, then calculates the mean of the within-species scores as well as the mean of the cross-species scores per module. For example, if there are 2 species, human and gorilla, with 3 human clones (\emph{h1}, \emph{h2} and \emph{h3}), and 2 gorilla clones (\emph{g1} and \emph{g2}), for a single module there will be 3 preservation scores within the human clones (\eqn{p_{h1-h2}}, \eqn{p_{h1-h3}} and \eqn{p_{h2-h3}}), 1 preservation score within the gorilla clones (\eqn{p_{g1-g2}}) and 6 preservation scores across the 2 species (\eqn{p_{h1-g1}}, \eqn{p_{h1-g2}}, \eqn{p_{h2-g1}}, \eqn{p_{h2-g2}}, \eqn{p_{h3-g1}} and \eqn{p_{h3-g2}}). For this module and the human-gorilla species pair, the summarized within-species score will then be the mean of the 4 within-species scores (\eqn{mean(p_{h1-h2}, p_{h1-h3}, p_{h2-h3}, p_{g1-g2})}) and the cross-species score will be the mean of the 6 cross-species scores (\eqn{mean(p_{h1-g1}, p_{h1-g2}, p_{h2-g1}, p_{h2-g2}, p_{h3-g1}, p_{h3-g2})}).
+For each possible speciesA-speciesB pair in the data, the function first subsets the within-species scores for speciesA, the within-species scores for speciesB and the cross-species scores between speciesA and speciesB, then calculates the mean of the within-species scores as well as the mean of the cross-species scores per module.
 
-After calculating the summarized within-species and cross-species scores for all modules and species pairs, the data points are shown faceted by species pair and colored by module size. The within-species scores are expected to be higher than the cross-species scores, thus the data points are expected to fall under the diagonal in all facets. However, the more phylogenetically distant two species are, the bigger deviation we expect from the diagonal. If several different statistics are input, these will be shown as the rows of the faceted plot. When it comes to choosing the best statistic, it is recommended to take the one that follow the most these expected trends.
+For example, if there are 2 species, human and gorilla, with 3 human clones (\emph{h1}, \emph{h2} and \emph{h3}), and 2 gorilla clones (\emph{g1} and \emph{g2}), for a single module there will be 3 preservation scores within the human clones (\eqn{p_{h1-h2}}, \eqn{p_{h1-h3}} and \eqn{p_{h2-h3}}), 1 preservation score within the gorilla clones (\eqn{p_{g1-g2}}) and 6 preservation scores across the 2 species (\eqn{p_{h1-g1}}, \eqn{p_{h1-g2}}, \eqn{p_{h2-g1}}, \eqn{p_{h2-g2}}, \eqn{p_{h3-g1}} and \eqn{p_{h3-g2}}). For this module and the human-gorilla species pair, the summarized within-species score will then be the mean of the 4 within-species scores (\eqn{mean(p_{h1-h2}, p_{h1-h3}, p_{h2-h3}, p_{g1-g2})}) and the cross-species score will be the mean of the 6 cross-species scores (\eqn{mean(p_{h1-g1}, p_{h1-g2}, p_{h2-g1}, p_{h2-g2}, p_{h3-g1}, p_{h3-g2})}).
+
+After calculating the summarized scores for all modules and species pairs, the cross-species scores are plotted against the within-species scores faceted by species pair. The within-species scores are expected to be higher than the cross-species scores, thus the data points are expected to fall under the diagonal in all facets. However, the more phylogenetically distant two species are, the bigger deviation we expect from the diagonal.
+
+If \code{random_pres_stats} is provided, the actual and the random modules are plotted together, shown in 2 different colors. The actual modules are expected to better preserved than the random modules (especially within species), therefore the 2 sets of modules are expected to cluster separately on the plot, with the actual modules located towards the higher (within-species) scores.
+
+If \code{random_pres_stats} is not provided, only the actual modules in \code{pres_stats} are shown on the plot. In this case, if the column "module_size" is present in \code{pres_stats}, the data points are colored by module size.
+
+If several different statistics are input, these will be shown as the rows of the faceted plot. When it comes to choosing the best statistic, it is recommended to take the one that follows the most the expected trends in terms of within-species VS cross-species scores, phylogeny, and actual VS random modules.
 }
 \examples{
-plotPresStats(pres_stats, "cor_kIM")
+plotPresStats(pres_stats, stats = "cor_kIM")
 }
+\seealso{
+Other functions to plot preservation statistics: 
+\code{\link{plotPresStatDistributions}()}
+}
+\concept{functions to plot preservation statistics}

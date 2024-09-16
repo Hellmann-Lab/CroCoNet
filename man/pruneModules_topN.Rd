@@ -7,16 +7,41 @@
 pruneModules_topN(initial_modules, N = 50L)
 }
 \arguments{
-\item{initial_modules}{Data frame of the initial modules with columns 'regulator', 'target' and 'weight' containing the transcriptional regulators, their target genes and the edge weights between each regulator-target pair.}
+\item{initial_modules}{Data frame of initial modules, required columns:
+\describe{
+\item{regulator}{Character, transcriptional regulator.}
+\item{target}{Character, member gene of the regulator's initial module.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+}}
 
-\item{N}{Either an integer specifying a single desired pruned module size for all modules or a named integer vector specifying the desired pruned module size for each regulator.}
+\item{N}{Either an integer specifying a single desired pruned module size for all modules or a named integer vector specifying the desired pruned module size for each regulator (default: 50).}
 }
 \value{
-Data frame of the pruned modules.
+Data frame of the pruned modules with the following columns:
+\describe{
+\item{regulator}{Character, transcriptional regulator.}
+\item{module_size}{Integer, the numer of genes assigned to a regulator.}
+\item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+}
+Additional columns present in \code{initial_modules} will also be preserved in \code{pruned_modules}.
 }
 \description{
-Prunes the initial modules by keeping a fixed number of targets per transcriptional regulator with the highest regulator-target adjacencies
+Prunes the initial modules by keeping a fixed number of targets per transcriptional regulator with the highest regulator-target adjacencies.
+}
+\details{
+Each pruned module output by the function contains the regulator and its \code{N} best target genes. When choosing the best targets, the genes are ranked based on how strongly they are connected to the regulator (regulator-target edge weight/adjacency).
+
+Based on prior biological knowledge, \code{N} can be set to a different value for different regulators, however, in most cases it will just be the same desired module size for all modules. Fixing the sizes of all modules to the same number is a simple but widespread approach.
+
+The modules are allowed to overlap, and in addition to having its own module, a regulator can be assigned to another regulator's module as well, in line with the notion that genes can be multifunctional and gene regulation can be combinatorial.
 }
 \examples{
 pruned_modules_top50 <- pruneModules_topN(initial_modules, 50)
 }
+\seealso{
+Other methods to prune modules: 
+\code{\link{pruneModules_UIK_adj}()},
+\code{\link{pruneModules_UIK_adj_kIM}()}
+}
+\concept{methods to prune modules}

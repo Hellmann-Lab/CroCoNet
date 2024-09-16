@@ -4,16 +4,12 @@
 \alias{assignInitialModules}
 \title{Assign initial modules}
 \usage{
-assignInitialModules(
-  network,
-  regulators = intersect(V(network)$name, jaspar_core_TRs),
-  N = 3000L
-)
+assignInitialModules(consensus_network, regulators = NULL, N = 3000L)
 }
 \arguments{
-\item{network}{\code{\link{igraph}} object, the consensus network across all species and clones.}
+\item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and clones.}
 
-\item{regulators}{Character vector of transcriptional regulators.}
+\item{regulators}{Character vector of transcriptional regulators (default: transcriptional regulators with at least 1 annotated motif in the JASPAR 2024 vertebrate core collection that are present as network nodes in the consensus network).}
 
 \item{N}{Integer, the initial module size, i.e. the number of target genes to keep for each regulator.}
 }
@@ -22,19 +18,19 @@ A data frame of initial modules with 3 core columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{target}{Character, member gene of the regulator's initial module.}
-\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise adjacencies.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise edge weights.}
 }
-If the input \code{network} had more edge attributes, those appear as additional columns in the data frame.
+If the input \code{consensus_network} had more edge attributes, those appear as additional columns in the data frame.
 }
 \description{
-Assigns initial modules by taking the top targets of each provided transcriptional regulator.
+Assigns initial modules by taking the top \code{N} target genes of each provided transcriptional regulator.
 }
 \details{
-In the CroCoNet approach, modules are centered around transcriptional regulators and assigned in 2 main steps: 1) large initial modules are created by selecting a fixed number of target genes per regulator (performed by this function), and 2) the initial modules are pruned to keep only the best targets of each regulator (performed by \code{\link{pruneModules}}).
+In the CroCoNet approach, the center of each network module is a transcriptional regulator. The modules are assigned in 2 main steps: 1) large initial modules are created by selecting a fixed number of target genes per regulator (performed by this function), and 2) the initial modules are pruned to keep only the best targets of each regulator (performed by \code{\link{pruneModules}}).
 
-The module assignment is recommended to be done based on the consensus network. The regulators that provide the starting point of the module assignment can be selected based on prior biological knowledge, or the combination of prior biological knowledge and the data (see also \code{\link{getRegulators}}). As the default, all transcription factors with at least 1 annotated motif in the JASPAR 2024 vertebrate core collection are used.
+The module assignment is recommended to be done based on the consensus network. The regulators that provide the starting point of the module assignment can be selected based on prior biological knowledge, or the combination of prior biological knowledge and the data (see also \code{\link{getRegulators}}). As the default, the function takes all transcriptional regulators that have at least 1 annotated motif in the JASPAR 2024 vertebrate core collection (and appear in the provided \code{consensus_network}).
 
-The function creates as many modules as there are regulators, each containing the regulator and its \code{N} best target genes. When choosing the best targets, the genes are ranked based on how strongly they are connected to the regulator (regulator-target adjecency/edge weight). The parameter \code{N} should be greater than or equal to the minimum number of targets per regulator across all regulators.
+The function creates as many modules as there are regulators, each containing the regulator and its \code{N} best target genes. When choosing the best targets, the genes are ranked based on how strongly they are connected to the regulator (regulator-target edge weight/adjacency). \code{N} should be greater than or equal to the minimum number of targets per regulator across all regulators.
 }
 \examples{
 initial_modules <- assignInitialModules(consensus_network, regulators, N = 250)

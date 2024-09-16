@@ -7,7 +7,12 @@
 plotDistMats(dist_dfs, colors = NULL, font_size = 14, ncol = NULL)
 }
 \arguments{
-\item{dist_dfs}{Data frame or a named list of data frames containing the distance measures per clone pair for one or more modules.}
+\item{dist_dfs}{Data frame or a named list of data frames containing the distance measures per clone pair for one or more modules. Required columns for each data frame:
+\describe{
+\item{clone1, clone2}{Character the names of the clones compared.}
+\item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+\item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{clone1} and \code{clone2}.}
+}}
 
 \item{colors}{Character vector, the colors to visualize the distances. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.}
 
@@ -16,7 +21,7 @@ plotDistMats(dist_dfs, colors = NULL, font_size = 14, ncol = NULL)
 \item{ncol}{Integer, the number of columns the subplots should be organized into if several modules are input. If NULL (default), the dimensions of the grid will follow the default of \code{\link{wrap_plots}}.}
 }
 \value{
-A \code{\link{ggplot}} object in case the argument \code{dist_dfs} is a single data frame and a \code{\link{patchwork}} object in case the argument \code{dist_dfs} is a list of data frames.
+A \code{\link{ggplot}} object in case \code{dist_dfs} is a single data frame and a \code{\link{patchwork}} object in case \code{dist_dfs} is a list of data frames.
 }
 \description{
 Plots the pairwise distances between clones based on module connectivity patterns for one or more modules.
@@ -29,5 +34,5 @@ This function plots the distance measures as a tile plot where each tile corresp
 If the aim is to plot distance matrices for several modules together, the input should be a named list of data frames, each containing the distances for one of the modules. The tile plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the names of the input list. All subplots have the same scale so that the distances are comparable across modules.
 }
 \examples{
-plotDistMats(dist_jk[1:6])
+plotDistMats(dist)
 }

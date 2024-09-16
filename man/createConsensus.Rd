@@ -7,18 +7,36 @@
 createConsensus(network_list, clone2species, tree = NULL)
 }
 \arguments{
-\item{network_list}{A named list that contains the networks of each clone in an igraph format.}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones.}
 
-\item{clone2species}{A data frame with columns 'clone' and 'species' that specifies which species each clone belongs to. The names of clones and species should match the names of 'network_list' and the tip labels of 'tree', respectively.}
+\item{clone2species}{A data frame specifying which species each clone belongs to, required columns:
+\describe{
+\item{clone}{Character, name of the clone.}
+\item{species}{Character, name of the species.}
+}}
 
-\item{tree}{Object of class 'phylo' that gives the phylogenetic tree of the species.}
+\item{tree}{Object of class \code{\link{phylo}}, the phylogenetic tree of the species.}
 }
 \value{
-Consensus network in an igraph format.
+Consensus network in an \code{\link{igraph}} format with the following edge attributes:
+\describe{
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise edge weights.}
+\item{n_supporting_clones}{Integer, the number of clones where the edge was detected.}
+\item{supporting_clones}{Character, the list of clones where the edge was detected.}
+}
 }
 \description{
-Integrates networks across different clones and different species into a single consensus network. The input networks should all contain the same nodes (genes). For each edge, the consensus adjacencies are calculated as the weighted average of clonewise adjacencies using weights that correct for 1) the phylogenetic distances between species (if the phylogenetic tree is provided) and 2) the different numbers of clones per species.
+Integrates networks across different clones and different species into a single consensus network in a phylogeny-aware manner.
+}
+\details{
+The input networks should all contain the same nodes (genes). The output consensus network contains the same nodes and all edges that were detected in at least 1 of the clones.
+
+For each edge, the consensus edge weight (adjacency) is calculated as the weighted mean of clonewise edge weights. The weighted mean corrects for 1) the phylogenetic distances between species (if the phylogenetic tree is provided) and 2) the different numbers of clones per species. As a result, the approach downweighs the edge weights of the clones that 1) belong to closely related species or 2) belong to species with many clones, so that an imbalanced sampling across the phylogenetic tree does not bias the consensus network.
+
+If an edge is not present in one of the clones, the edge weight in that clone is regarded as 0 for the calculation of the weighted mean. The number of clones and the names of clone where an edge was detected are saved as 2 new edge attributes ("n_supporting_clones" and "supporting_clones", respectively) in the output consensus network.
+
+In the next steps of the pipeline, this consensus network can be used to assign modules jointly for all species while avoiding species bias (see \code{\link{assignInitialModules}} and \code{\link{pruneModules}}).
 }
 \examples{
-consensus_network <- createConsensus(network_list_scaled_filt, clone2species, tree)
+consensus_network <- createConsensus(network_list, clone2species, tree)
 }

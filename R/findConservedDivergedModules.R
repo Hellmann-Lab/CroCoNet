@@ -2,7 +2,7 @@
 #'
 #' Finds conserved and diverged network modules based on a (weighted) linear model between the total tree length and within-species diversity (in case the focus of interest is conservation and overall divergence) or between the species-to-other branch length and diversity of a species (in case the focus of interest is species-specific divergence) of the module trees. Modules are considered conserved or diverged if they fall outside the 95\% prediction interval of the regression line.
 #'
-#'  As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) and neighbor-joining trees are reconstructed based on these preservation scores per module (see \code{\link{reconstructTrees}}). The tips of the resulting tree represent the clones and the branch lengths represent the dissimilarity of module connectivity patterns between the networks of 2 clones.
+#'  As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) and neighbor-joining trees are reconstructed based on these preservation scores per module (see \code{\link{convertPresToDist}} and \code{\link{reconstructTrees}}). The tips of the resulting tree represent the clones and the branch lengths represent the dissimilarity of module connectivity patterns between the networks of 2 clones.
 #'
 #' Various useful statistics can be defined based on these trees (see also \code{\link{calculateTreeStats}}). The total tree length is the sum of all branch lengths in the tree and it measures module variability both within and across species. The diversity of a species is the sum of the branches connecting the clones of this species and it measures module variability within this particular species. The within-species diversity is the sum of the diversity values across all species and it measures module variability within species in general. The species-to-other branch length is defined as the length of the internal branch that connects the subtree of the clones from the species of interest to the subtree of all other clones and it measures module variability between this species and all others.
 #'
@@ -16,7 +16,7 @@
 #'
 #' The degree of conservation/divergence can be further compared between the modules categorized as conserved/diverged. We recommend 2 measures: 1) the residual, which is the absolute difference between the observed and expected total tree lengths/species-to-other branch lengths at a given diversity value, and 2) the t-score, which is the residual normalized by the standard error of the total tree length/species-to-other brnach length prediction at a given diversity value.
 #'
-#' The linear regression can be weighted by the error of the data points. To gain this information, we can use jackknifing: each member gene of a module is removed and all statistics are recalculated (see the argument "jackknife" in the functions \code{\link{calculatePresStats}}, \code{\link{reconstructTrees}} and \code{\link{calculateTreeStats}}. The weight of a module in the regression is then defined to be inversely proportional to the variance of the dependent variable (total tree length/species-to-other branch length) across all jackknife versions.
+#' The linear regression can be weighted by the error of the data points. To gain this information, we can use jackknifing: each member gene of a module is removed and all statistics are recalculated (see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). The weight of a module in the regression is then defined to be inversely proportional to the variance of the dependent variable (total tree length/species-to-other branch length) across all jackknife versions.
 #' @param tree_stats Data frame of the tree-based statistics for the pruned modules.
 #'
 #' Columns required in case the focus of interest is conservation and overall divergence:
@@ -94,7 +94,7 @@ findConservedDivergedModules <- function(tree_stats, lm_tree_stats, conf_level =
   }
 
   if (!"regulator" %in% colnames(tree_stats))
-   stop(paste0("The argument \"tree_stats\" should contain the column \"regulator\"."))
+   stop("The argument \"tree_stats\" should contain the column \"regulator\".")
 
   if (any(!(c(x_var, y_var) %in% colnames(tree_stats))))
     stop(paste0("The argument \"tree_stats\" should contain the columns corresponding to the dependent and independent variables in \"lm_tree_stats\" (\"", x_var, "\" and \"", y_var, "\"). Please include these in the data frame or rerun the function \"fitTreeStatsLm()\" with the variables of interest."))
@@ -112,7 +112,8 @@ findConservedDivergedModules <- function(tree_stats, lm_tree_stats, conf_level =
 
   # subset data
   tree_stats <- tree_stats[, colnames(tree_stats) %in% c("regulator", "module_size", x_var, paste0("lwr_", x_var), paste0("upr_", x_var), y_var, paste0("lwr_", y_var), paste0("upr_", y_var))] %>%
-    dplyr::mutate(focus = focus, .before = 1)
+    dplyr::mutate(focus = focus, .before = 1) %>%
+    tidyr::drop_na(.data[[x_var]], .data[[y_var]])
 
   # get residuals and t-scores for weighted fit
   if (!is.null(lm_tree_stats$weight)) {

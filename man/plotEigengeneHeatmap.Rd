@@ -10,6 +10,7 @@ plotEigengeneHeatmap(
   order_by = "pseudotime",
   heatmap_colors = NULL,
   annotation_colors = NULL,
+  clip = 3,
   font_size = 14
 )
 }
@@ -26,9 +27,11 @@ plotEigengeneHeatmap(
 
 \item{order_by}{Character specifying which column of \code{eigengenes} by which the cells should be ordered on the plot. This column typically contains the inferred pseudotime (default: "pseudotime"), or the cell type labels.}
 
-\item{heatmap_colors}{Character vector, the heatmap colors for the variable specified by \code{expr_column}. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.}
+\item{heatmap_colors}{Character vector, the heatmap colors for the variable specified by \code{expr_column}. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.}
 
-\item{annotation_colors}{Character vector, the colors for the variable specified by \code{order_by}. If the variable is discrete, the vector should contain as many colors as there are unique values of the variable, if the variable is continuous, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.}
+\item{annotation_colors}{Character vector, the colors for the variable specified by \code{order_by}. If the variable is discrete, the vector should contain as many colors as there are unique values of the variable, if the variable is continuous, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.}
+
+\item{clip}{Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. The default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.}
 
 \item{font_size}{Numeric, font size (default: 14).}
 }
@@ -41,14 +44,25 @@ Plots the eigengenes (or other types of summarized module expression profiles) a
 \details{
 A concept adapted from WGCNA, the eigengene summarizes the expression profile of an entire module, and it is calculated as the first principal component of the module expression data (see also \code{\link{calculateEigengenes}}). Other possible ways of representing the expression profile of a module include the mean expression and the regulator expression.
 
-The function takes a data frame containing any of these summarized module expression profiles as input (normally the output of \code{\link{calculateEigengenes}}) and plots it as a heatmap, with columns corresponding to cells, rows corresponding to modules and colors corresponding to expression levels.
+The function takes a data frame containing any of these summarized module expression profiles as input (normally the output of \code{\link{calculateEigengenes}}) and plots it as a heatmap, with columns corresponding to cells, rows corresponding to modules and colors corresponding to scaled and centered expression levels.
 
-The column of the data frame containing the module expression profiles can be specified by the argument \code{expr_column} (default: "eigengene"). The colors to represent the expression levels can be controlled by the argument \code{heatmap_colors}.
+The column of the data frame containing the chosen type of summarized expression profile can be specified by the parameter \code{expr_column} (default: "eigengene"). The colors to represent the expression levels can be controlled by the parameter \code{heatmap_colors}.
 
-The cells can be order by pseudotime, cell type or any other variable that makes sense in the given context, the name of the column containing the desired cell property can be specified by the argument \code{order_by} (default: "pseudotime"). The colors to represent this cell property can be controlled by the argument \code{annotation_colors}.
+The cells can be order by pseudotime, cell type or any other variable that makes sense in the given context, the name of the column containing the desired cell property can be specified by the parameter \code{order_by} (default: "pseudotime").  This cell property is visualized as a rug plot under the heatmap, the colors for the rug can be be controlled by the parameter \code{annotation_colors}.
 
-If the eigengene (or mean expression) has been calculated for positively and negatively regulated targets separately, then these will appear as separate rows in the heatmap.
+If the eigengene (or mean expression) has been calculated for positively and negatively regulated targets separately, then these will appear as separate rows of the heatmap.
+
+Expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene, this can be changed via the parameter \code{clip}. Clipping aids visualization by preventing the outlier data points from squishing the rest of the data into a small color range. If clipping is not desired, please set \code{clip} to Inf.
 }
 \examples{
 plotEigengeneHeatmap(eigengenes)
 }
+\references{
+Zhang, B., & Horvath, S. (2005). A general framework for weighted gene co-expression network analysis. Statistical Applications in Genetics and Molecular Biology, 4, 17-60. https://doi.org/10.2202/1544-6115.1128
+}
+\seealso{
+Other functions to plot eigengene profiles: 
+\code{\link{plotEigengenesAlongPseudotime}()},
+\code{\link{plotEigengenesPerCellType}()}
+}
+\concept{functions to plot eigengene profiles}

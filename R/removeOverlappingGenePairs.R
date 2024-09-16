@@ -1,22 +1,37 @@
 #' Remove gene pairs with overlapping annotations
 #'
-#' Removes gene pairs that have overlapping annotations in any of the species' genomes from all networks.
-#' @param network_list A named list that contains the networks of each clone in an igraph format.
-#' @param gtf_list A named list that contains the genome annotation of each species in a GenomicRanges format.
-#' @param clone2species A data frame with columns 'clone' and 'species' that specifies which species each clone belongs to. The names of clones and species should match the names of 'network_list' and gtf_list'.
-#' @param gene_col One of 'gene_name' or 'gene_id', specifies what type of identifier the network nodes have.
-#' @param n_cores Number of cores.
+#' Removes the gene pairs (edges) that have overlapping annotations in the genomes of at least 1 species from all networks.
 #'
-#' @return A named list of networks after the removal of gene pairs with overlapping annotations.
+#' Mapping and counting is problematic for overlapping genomic features: it is difficult to tell apart which read belongs to which gene. Often parts of the reads from one gene are assigned to the other gene, leading to correlated expression profiles simply due to genomic position. This only has a marginal effect on the results of a DE analysis, but can cause false positive edges with very high edge weights in case of a network analysis.
+#'
+#' This functions circumvents such potential artefacts by removing all edges between overlapping genes. As the first step, the positions of the network genes are determined in the genome of each species. Depending on the value of \code{gene_col}, the names of the network nodes are matched to the entries in either the "gene_name" or the "gene_id" column of the provided GTF files. As the second step, gene pairs with overlapping annotations are identified in each genome. Finally, these gene pairs are removed from all networks (not just from the networks of the species where they were found to overlap!).
+#'
+#' For all remaining edges of the networks, the function adds the genomic distance between the 2 genes that form the edge as the edge attribute "genomic_dist". If the genes are annotated on different chromosomes, the distance is set to \code{Inf}. This information can be used for further sanity checking, e.g. to check the relationship between edge weight and genomic proximity.
+#'
+#' @param network_list A named list of \code{\link{igraph}} objects containing the networks of all clones.
+#' @param gtf_list A named list of GRanges objects containing the genome annotations of all species.
+#' @param clone2species A data frame specifying which species each clone belongs to, required columns:
+#' \describe{
+#' \item{clone}{Character, name of the clone.}
+#' \item{species}{Character, name of the species.}
+#' }
+#' @param gene_col Character specifying the type of identifier the network nodes have, one of "gene_name", "gene_id". The function looks for the names of the network nodes in the corresponding column of the GTF files.
+#' @param n_cores Integer, the number of cores (default: 1).
+#'
+#' @return A named list of \code{\link{igraph}} objects containing the networks of all clones, after the removal of gene pairs with overlapping annotations. A new edge attribute is added to all \code{\link{igraph}} objects:
+#' \describe{
+#' \item{genomic_dist}{Numeric, the genomic distance of the 2 genes that form the edge (\code{Inf} if the 2 genes are annotated on different chromosomes/contigs).}
+#' }
 #' @export
 #'
 #' @examples
-#' network_list_scaled_filt <- removeOverlappingGenePairs(network_list_scaled,
-#'                                                        gtf_list,
-#'                                                        clone2species,
-#'                                                        "gene_name")
+#' network_list_filt <- removeOverlappingGenePairs(network_list_raw,
+#'                                                 gtf_list,
+#'                                                 clone2species,
+#'                                                 "gene_name")
 removeOverlappingGenePairs <- function(network_list, gtf_list, clone2species, gene_col = c("gene_name", "gene_id"), n_cores = 1L) {
 
+  # check input data
   if (!inherits(network_list, "list"))
     stop("The argument \"network_list\" should be a named list.")
 
@@ -50,16 +65,20 @@ removeOverlappingGenePairs <- function(network_list, gtf_list, clone2species, ge
   if (is.null(gene_col) || !gene_col %in% c("gene_name", "gene_id"))
     stop("The argument \"gene_col\" should be one of \"gene_name\", \"gene_id\".")
 
-  if (length(n_cores) != 1 || (!inherits(n_cores, "integer") & !(inherits(n_cores, "numeric") & n_cores == round(n_cores))) || n_cores < 1)
+  if (length(n_cores) != 1 || (!inherits(n_cores, "integer") && !(inherits(n_cores, "numeric") && n_cores == round(n_cores))) || n_cores < 1)
     stop("The argument \"n_cores\" should be a positive integer.")
 
+  # avoid NSE notes in R CMD check
+  species_name = seqnames = start = end = gene = type = gene.x = gene.y = from = to = seqnames.from = seqnames.to = start.from = start.to = end.from = end.to = weight = n_supporting_edges = clone = genomic_dist = . = NULL
 
-  species_name = seqnames = start = end = gene = type = gene.x = gene.y = from = to = seqnames.from = seqnames.to = start.from = start.to = end.from = end.to = weight = n_supporting_edges = clone = distance = . = NULL
-
+  # convert igraphs to data tables
   dt_list <- convertToDT(network_list)
+  column_names <- colnames(dt_list[[1]])
 
-  network_genes <- V(network_list[[1]])$name # assuming that all networks have the same set of vertices
+  # get all network genes (assumes that all networks have the same set of vertices, if the networks were originally loaded by loadNetworks this will be fulfilled)
+  network_genes <- V(network_list[[1]])$name
 
+  # get all gene pairs that overlap in any of the genomes
   doParallel::registerDoParallel(n_cores)
 
   dt_with_dist <- foreach::foreach(species_name = names(gtf_list)) %dopar% {
@@ -68,9 +87,11 @@ removeOverlappingGenePairs <- function(network_list, gtf_list, clone2species, ge
     gtf_filt <- gtf_list[[species_name]] %>%
       plyranges::select(gene = .data[[gene_col]], .data[["type"]]) %>%
       plyranges::filter(gene %in% network_genes & type == "gene")
+
+    # convert to data table
     gtf_filt_dt <- data.table::as.data.table(gtf_filt)[, .(seqnames, start, end, gene)]
 
-    # find overlapping genes
+    # find overlapping gene pairs
     ovlp <- data.table::as.data.table(
       plyranges::join_overlap_intersect(gtf_filt,
                                         gtf_filt)
@@ -88,10 +109,17 @@ removeOverlappingGenePairs <- function(network_list, gtf_list, clone2species, ge
     dist <- data.table::setnames(gtf_filt_dt, c("seqnames.to", "start.to", "end.to", "to"))[dist, on = "to"]
 
     # calculate genomic distance of from and to (if they overlap, distance = 0, if they are different chromosomes, distance = Inf)
-    dist <- dist[, .(from, to, seqnames.from, seqnames.to, weight, n_supporting_edges, clone, distance = as.double(pmin(abs(start.from - end.to), abs(start.to - end.from))))][
-      ovlp, distance := 0, on = .(from = gene.x, to = gene.y)][
-        seqnames.from != seqnames.to, distance := Inf][
-          , .(clone, from, to, weight, n_supporting_edges, distance)]
+    dist <- dist[, genomic_dist := as.double(pmin(abs(start.from - end.to), abs(start.to - end.from)))][
+      ovlp, genomic_dist := 0, on = .(from = gene.x, to = gene.y)][
+        seqnames.from != seqnames.to, genomic_dist := Inf][
+          , c("clone", column_names, "genomic_dist"), with = FALSE]
+
+    # if a gene name had 2 gene IDs, summarise the genomic positions into a single line
+    if (gene_col == "gene_name") {
+
+      dist <- dist[, .(genomic_dist = min(genomic_dist)), by = c("clone", column_names)]
+
+    }
 
     dist
 
@@ -99,18 +127,16 @@ removeOverlappingGenePairs <- function(network_list, gtf_list, clone2species, ge
 
   doParallel::stopImplicitCluster()
 
-  # remove gene pairs that are overlapping in any of the genomes
+  # remove overlapping gene pairs
   dt_with_dist_filt <- dt_with_dist %>%
     dplyr::group_by(.data[["from"]], .data[["to"]]) %>%
-    dplyr::filter(sum(.data[["distance"]] == 0) == 0) %>%
+    dplyr::filter(sum(.data[["genomic_dist"]] == 0) == 0) %>%
     dplyr::ungroup() %>%
     data.table::as.data.table()
 
-  # print how many gene pairs/entries will be removed
-  message("Number of gene pairs that overlap in any of the species:")
+  # print how many gene pairs will be removed
+  message("Number of gene pairs that overlap in any of the genomes:")
   message(nrow(dplyr::distinct(dt_with_dist, .data[["from"]], .data[["to"]])) - nrow(dplyr::distinct(dt_with_dist_filt, .data[["from"]], .data[["to"]])))
-  message("Number of entries removed (same gene pair but different clone = different entries):")
-  message(nrow(dt_with_dist) - nrow(dt_with_dist_filt))
 
   # convert to list format again
   split.data.table <- utils::getFromNamespace("split.data.table", "data.table")
@@ -119,6 +145,7 @@ removeOverlappingGenePairs <- function(network_list, gtf_list, clone2species, ge
   # reorder
   dt_list_with_dist_filt <- dt_list_with_dist_filt[names(network_list)]
 
+  # convert data tables back to igraphs
   convertToGraph(dt_list_with_dist_filt, network_genes, n_cores)
 
 }

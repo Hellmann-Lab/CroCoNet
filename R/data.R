@@ -14,6 +14,30 @@
 "genes"
 
 
+#' JASPAR 2024 vertebrate core transcriptional regulators
+#'
+#' Transcriptional regulators that have at least 1 annotated motif in the JASPAR 2024 vertebrate core collection.
+#'
+#' @format A character vector of 784 elements.
+"jaspar_core_TRs"
+
+
+#' JASPAR 2024 unvalidated transcriptional regulators
+#'
+#' Transcriptional regulators that have at least 1 annotated motif in the JASPAR 2024 unvalidated collection.
+#'
+#' @format A character vector of 590 elements.
+"jaspar_unvalidated_TRs"
+
+
+#' IMAGE transcriptional regulators
+#'
+#' Transcriptional regulators that have at least 1 annotated motif in the IMAGE database (Madsen et al. 2018).
+#'
+#' @format A character vector of 1351 elements.
+"image_TRs"
+
+
 #' Clone-species conversion
 #'
 #' A data frame that specifies which clone belongs to which species.
@@ -41,8 +65,8 @@
 #' \item{n_genes}{Number of genes detected.}
 #' \item{perc_mito}{Percent of mitochondrial reads.}
 #' \item{sizeFactor}{Size factor for scaling normalization, calculated first per clone using [scran::computeSumFactors] and [scran::quickCluster], then adjusted by [batchelor::multiBatchNorm] to remove systematic differences in covergae across clones.}
-#' \item{cell_type}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
 #' \item{pseudotime}{Pseudotime inferred by [SCORPIUS::infer_trajectory].}
+#' \item{cell_type}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
 #' }
 #' Assays:
 #' \describe{
@@ -67,8 +91,8 @@
 #' \item{n_genes}{Number of genes detected.}
 #' \item{perc_mito}{Percent of mitochondrial reads.}
 #' \item{sizeFactor}{Size factor for scaling normalization, calculated per clone using [scran::computeSumFactors] and [scran::quickCluster].}
-#' \item{celltype_rhodes}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
-#' \item{scorpius_pt}{Pseudotime inferred by [SCORPIUS::infer_trajectory].}
+#' \item{pseudotime}{Pseudotime inferred by [SCORPIUS::infer_trajectory].}
+#' \item{cell_type}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
 #' }
 #' Assays:
 #' \describe{
@@ -97,24 +121,6 @@
 "network_list_raw"
 
 
-#' List of scaled networks
-#'
-#' List of networks per clone with edge weights re-scaled between 0 and 1. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all clones.
-#'
-#' @format A named list of 9 [igraph] objects. Each network contains 300 nodes, and has 1 node and 2 edge attributes:
-#'
-#' Node attributes:
-#' \describe{
-#' \item{name}{Name of the node (gene).}
-#' }
-#' Edge attributes:
-#' \describe{
-#' \item{weight}{Edge weight, the importance score calculate by GRNBoost2 rescaled between 0 and 1.}
-#' \item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
-#' }
-"network_list_scaled"
-
-
 #' List of genomic annotations
 #'
 #' List of genomic annotations per species as GRanges objects. The human annotation is the GTF of Hg38 GENCODE release 32 primary assembly, while the gorilla and cynomolgus macaque annotations were created by transferring the human annotation onto the gorGor6 and macFas6 genomes via the tool Liftoff (https://github.com/agshumate/Liftoff). Each annotation was subsetted for the 300 genes that feature in this example dataset.
@@ -141,7 +147,7 @@
 "gtf_list"
 
 
-#' List of scaled and filtered networks
+#' List of networks
 #'
 #' List of networks per clone with edge weights re-scaled between 0 and 1, and gene pairs (edges) with overlapping annotations removed. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all clones. Gene pairs that have overlapping annotations in any of the species' genomes were removed from all networks.
 #'
@@ -155,9 +161,9 @@
 #' \describe{
 #' \item{weight}{Edge weight, the importance score calculate by GRNBoost2 rescaled between 0 and 1.}
 #' \item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
-#' \item{distance}{Genomic distance of the 2 genes that form the edge. If the genes are on different chromosomes/contigs, the distance is Inf.}
+#' \item{genomic_dist}{Numeric, the genomic distance of the 2 genes that form the edge (Inf if the 2 genes are annotated on different chromosomes/contigs).}
 #' }
-"network_list_scaled_filt"
+"network_list"
 
 
 #' Phylogenetic tree
@@ -167,51 +173,6 @@
 #' @format A [phylo] object with 4 edges and 3 nodes.
 #' @source Olaf R. P. Bininda-Emonds, Marcel Cardillo, Kate E. Jones, Ross D. E. MacPhee, Robin M. D. Beck, Richard Grenyer, Samantha A. Price, Rutger A. Vos, John L. Gittleman & Andy Purvis. "The delayed rise of present-day mammals" Nature 446, 507-512(29 March 2007). doi:10.1038/nature05634
 "tree"
-
-
-#' List of scaled and filtered networks with the consensus network included
-#'
-#' List of networks per clone with edge weights re-scaled between 0 and 1, gene pairs (edges) with overlapping annotations removed and the consensus network across all clones added. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all clones. Gene pairs that have overlapping annotations in any of the species' genomes were removed from all networks. A phylogeny-aware consensus network was calculated across all clones and added to the list.
-#'
-#' @format A named list of 10 [igraph] objects. Each network contains 300 nodes, and has 1 node attribute and 3 edge attributes (the set of edge attributes is different between the clonewise networks and the consensus network).
-#'
-#' Node attributes:
-#' \describe{
-#' \item{name}{Name of the node (gene).}
-#' }
-#' Edge attributes:
-#' \describe{
-#' \item{weight}{Edge weight, the importance score calculate by GRNBoost2 rescaled between 0 and 1.}
-#' \item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
-#' \item{distance}{Genomic distance of the 2 genes that form the edge. If the genes are on different chromosomes/contigs, the distance is Inf.}
-#' \item{n_supporting_clones}{The number of clones where the edge was detected.}
-#' \item{supporting_clones}{The list of clones where the edge was detected.}
-#' }
-"network_list_scaled_filt_withCons"
-
-
-#' List of scaled and filtered networks with the consensus network included and edge directionality calculated
-#'
-#' List of networks per clone with edge weights re-scaled between 0 and 1, gene pairs (edges) with overlapping annotations removed, the consensus network across all clones added and the directionality of each edge calculated. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all clones. Gene pairs that have overlapping annotations in any of the species' genomes were removed from all networks. A phylogeny-aware consensus network was calculated across all clones and added to the list. The directionality of each edge was determined based on a modified Spearman's correlation between the corresponding 2 genes' expression profiles (positive expression correlation - activating interaction, negative expression correlation - repressing interaction). For the consensus network, the correlations were calculated per clone, then the mean correlation was taken across all clones.
-#'
-#' @format A named list of 10 [igraph] objects. Each network contains 300 nodes, and has 1 node attribute and 6 edge attributes (the set of edge attributes is different between the clonewise networks and the consensus network).
-#'
-#' Node attributes:
-#' \describe{
-#' \item{name}{Name of the node (gene).}
-#' }
-#' Edge attributes:
-#' \describe{
-#' \item{weight}{Edge weight, the importance score calculate by GRNBoost2 rescaled between 0 and 1.}
-#' \item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
-#' \item{distance}{Genomic distance of the 2 genes that form the edge. If the genes are on different chromosomes/contigs, the distance is Inf.}
-#' \item{n_supporting_clones}{The number of clones where the edge was detected.}
-#' \item{supporting_clones}{The list of clones where the edge was detected.}
-#' \item{rho}{Approximate Spearman's correlation coefficient of the 2 genes' expression profiles that form the edge.}
-#' \item{p.adj}{BH-corrected approximate p-value of rho.}
-#' \item{direction}{Direction of the interaction between the 2 genes that form the edge ("+" or "-").}
-#' }
-"network_list_scaled_filt_withCons_withDir"
 
 
 #' Consensus network
@@ -234,28 +195,6 @@
 #' \item{direction}{Direction of the interaction between the 2 genes that form the edge ("+" or "-").}
 #' }
 "consensus_network"
-
-
-#' List of scaled and filtered networks with edge directionality
-#'
-#' List of networks per clone with edge weights re-scaled between 0 and 1, gene pairs (edges) with overlapping annotations removed, and the directionality of each edge calculated. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all clones. Gene pairs that have overlapping annotations in any of the species' genomes were removed from all networks. The directionality of each edge was determined based on a modified Spearman's correlation between the corresponding 2 genes' expression profiles (positive expression correlation - activating interaction, negative expression correlation - repressing interaction).
-#'
-#' @format A named list of 9 [igraph] objects. Each network contains 300 nodes, and has 1 node attribute and 6 edge attributes.
-#'
-#' Node attributes:
-#' \describe{
-#' \item{name}{Name of the node (gene).}
-#' }
-#' Edge attributes:
-#' \describe{
-#' \item{weight}{Edge weight, the importance score calculate by GRNBoost2 rescaled between 0 and 1.}
-#' \item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
-#' \item{distance}{Genomic distance of the 2 genes that form the edge. If the genes are on different chromosomes/contigs, the distance is Inf.}
-#' \item{rho}{Approximate Spearman's correlation coefficient of the 2 genes' expression profiles that form the edge.}
-#' \item{p.adj}{BH-corrected approximate p-value of rho.}
-#' \item{direction}{Direction of the interaction between the 2 genes that form the edge ("+" or "-").}
-#' }
-"network_list"
 
 
 #' Initial modules
@@ -283,8 +222,8 @@
 #' @format A data frame with 225 rows and 9 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
-#' \item{target}{Target gene of the transcriptional regulator (member of the regulator's pruned module).}
-#' \item{weight}{Consensus edge weight/adjacency, the weighted average of clonewise adjacencies.}
+#' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise adjacencies.}
 #' \item{n_supporting_clones}{The number of clones where the edge was detected.}
 #' \item{supporting_clones}{The list of clones where the edge was detected.}
 #' \item{rho}{Approximate Spearman's correlation coefficient of the 2 genes' expression profiles that form the edge.}
@@ -382,7 +321,7 @@
 
 #' Distance measures of the original and jackknifed pruned modules
 #'
-#' Distance measures per clone pair for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \eqn{dist = \fraq{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknife module version and contains the distance measures between all possible pairs of clones for this module version.
+#' Distance measures per clone pair for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \eqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknifed/original module version and contains the distance measures between all possible pairs of clones for this module version.
 #'
 #' @format A named list with 232 elements containing the distance measures per (original or jackknifed) module version. Each element is a data frame with 72 rows and 10 columns:
 #' \describe{
@@ -398,9 +337,28 @@
 "dist_jk"
 
 
+#' Distance measures of the pruned modules
+#'
+#' Distance measures per clone pair for the original (i.e. not jackknifed) pruned modules.
+#'
+#' The distance measures were calculated based on the correlation of intramodular connectivities: \deqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds to a module and contains the distance measures between all possible pairs of clones for this module.
+#'
+#' @format A named list with 12 elements containing the distance measures per module. Each element is a data frame with 72 rows and 7 columns:
+#' \describe{
+#' \item{regulator}{Character, transcriptional regulator.}
+#' \item{module_size}{Integer, the numer of target genes assigned to a regulator.}
+#' \item{clone1, clone2}{Character the names of the clones compared.}
+#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the correlation of intramodular connectivities.}
+#' }
+"dist"
+
+
 #' Distance measures of the the original and jackknifed random modules
 #'
-#' Distance measures per clone pair for the original and all jackknifed versions of the random modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \eqn{dist = \fraq{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknife module version and contains the distance measures between all possible pairs of clones for this module version.
+#' Distance measures per clone pair for the original and all jackknifed versions of the random modules.
+#'
+#' The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \deqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknife module version and contains the distance measures between all possible pairs of clones for this module version.
 #'
 #' @format A named list with 232 elements containing the distance measures per (original or jackknifed) module version. Each element is a data frame with 72 rows and 10 columns:
 #' \describe{
@@ -415,17 +373,25 @@
 #' }
 "random_dist_jk"
 
+
 #' Trees of the original and jackknifed pruned modules
 #'
 #' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate clones for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). For each of these module versions, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible clone pairs, then they were converted into a distance matrix of clones, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree for each original or jackknife module where the tips represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between these clones.
-#' @format A named list with 232 elements containing the neighbor-joining tree as a [phylo] objects.
+#' @format A named list with 232 elements containing the neighbor-joining trees as [phylo] objects.
 "trees_jk"
+
+
+#' Trees of the pruned modules
+#'
+#' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate clones for the original (i.e. not jackknifed) pruned modules. For each of the modules, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible clone pairs, then they were converted into a distance matrix of clones, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree per module where the tips represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between these clones.
+#' @format A named list with 12 elements containing the neighbor-joining trees as [phylo] objects.
+"trees"
 
 
 #' Trees of the original and jackknifed random modules
 #'
 #' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate clones for the original and all jackknifed versions of the random modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). For each of these module versions, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible clone pairs, then they were converted into a distance matrix of clones, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree for each original or jackknife module where the tips represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between these clones.
-#' @format A named list with 232 elements containing the neighbor-joining tree as a [phylo] objects.
+#' @format A named list with 232 elements containing the neighbor-joining trees as [phylo] objects.
 "random_trees_jk"
 
 
@@ -441,15 +407,15 @@
 #' \item{gene_removed}{The name of the gene removed by jackknifing (NA in case of module type 'orig').}
 #' \item{within_species_diversity}{Numeric, the sum of the human, gorilla and cynomolgus diversity.}
 #' \item{total_tree_length}{Numeric, the sum of all branch lengths in the tree.}
-#' \item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
-#' \item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
 #' \item{human_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the human tips.}
-#' \item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
-#' \item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
+#' \item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
+#' \item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
 #' \item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human clones.}
-#' \item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monophyletic for the cynomolgus clones.}
-#' \item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monophyletic for the gorilla clones.}
+#' \item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
+#' \item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
 #' \item{human_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the human clones to the subtree of all other clones. NA if the tree is not monophyletic for the human clones.}
+#' \item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monophyletic for the gorilla clones.}
+#' \item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monophyletic for the cynomolgus clones.}
 #' }
 "tree_stats_jk"
 
@@ -466,15 +432,15 @@
 #' \item{gene_removed}{The name of the gene removed by jackknifing (NA in case of module type 'orig').}
 #' \item{within_species_diversity}{Numeric, the sum of the human, gorilla and cynomolgus diversity.}
 #' \item{total_tree_length}{Numeric, the sum of all branch lengths in the tree.}
-#' \item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
-#' \item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
 #' \item{human_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the human tips.}
-#' \item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
-#' \item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
+#' \item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
+#' \item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
 #' \item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human clones.}
-#' \item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monphyletic for the cynomolgus clones.}
-#' \item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monphyletic for the gorilla clones.}
-#' \item{human_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the human clones to the subtree of all other clones. NA if the tree is not monphyletic for the human clones.}
+#' \item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
+#' \item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
+#' \item{human_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the human clones to the subtree of all other clones. NA if the tree is not monophyletic for the human clones.}
+#' \item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monophyletic for the gorilla clones.}
+#' \item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monophyletic for the cynomolgus clones.}
 #' }
 "random_tree_stats_jk"
 

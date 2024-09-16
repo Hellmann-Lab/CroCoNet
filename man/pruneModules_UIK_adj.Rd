@@ -7,29 +7,59 @@
 pruneModules_UIK_adj(
   initial_modules,
   min_module_size = 20L,
-  min_median_module_size = 20L,
   max_frac_modules_lost = 0.02,
   exponent = 1L
 )
 }
 \arguments{
-\item{initial_modules}{Data frame of the initial modules with columns 'regulator', 'target' and 'weight' containing the transcriptional regulators, their target genes and the edge weights between each regulator-target pair.}
+\item{initial_modules}{Data frame of initial modules, required columns:
+\describe{
+\item{regulator}{Character, transcriptional regulator.}
+\item{target}{Character, member gene of the regulator's initial module.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+}}
 
-\item{min_module_size}{Integer, the lower treshold of module size. Modules with a smaller size than this threshold are removed after each pruning step.}
+\item{min_module_size}{Integer, the lower threshold of module size. Modules with a smaller size than this threshold are removed after each pruning step (default: 20).}
 
-\item{min_median_module_size}{Integer, the lower threshold of median module size.}
+\item{max_frac_modules_lost}{Numeric, the upper threshold of the fraction of removed modules (default: 0.02).}
 
-\item{max_frac_modules_lost}{Numeric, the upper threshold of the fraction of removed modules.}
-
-\item{exponent}{Integer, the exponent the regulator-target adjacency and intramodular connectivity is raised to the power of during the cumulative sum curve calculation.
-The initial module members are filtered in successive steps based on their adjacency to the regulator. In each step, the cumulative sum curves of the regulator-target adjacencies are calculated per module, the knee point of the curve is identified using the Unit Invariant Knee (UIK) method, then only the targets that rank higher than the knee point are kept. If 'exponent' is set higher than 1, the adjacencies are raised to the equivalent power when calculating the cumulative sum curves and its knee point. The modules containing less target genes than 'min_module_size' are removed after each pruning step. The steps continue until the median module size becomes as small as possible without falling below 'min_median_module_size' OR until the fraction of removed modules becomes higher than 'max_frac_modules_lost'.}
+\item{exponent}{Integer, the exponent the regulator-target adjacency and intramodular connectivity is raised to the power of during the cumulative sum curve calculation (default: 1, i.e. the regulator-target adjacencies and intramodular connectivities stay unchanged).}
 }
 \value{
-Data frame of the pruned modules.
+Data frame of the pruned modules with the following columns:
+\describe{
+\item{regulator}{Character, transcriptional regulator.}
+\item{module_size}{Integer, the numer of genes assigned to a regulator.}
+\item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+}
+Additional columns present in \code{initial_modules} will also be preserved in \code{pruned_modules}.
 }
 \description{
 Prunes the initial modules by applying a dynamic stepwise pruning based on the regulator-target adjacencies.
 }
+\details{
+For each module, the initial module members are filtered in successive steps based on their regulator-target edge weight/adjacency, which quantifies how strongly a target is connected to the regulator. In each step, the cumulative sum curve of the regulator-target adjacencies is calculated per module, the knee point of the curve is identified using the Unit Invariant Knee (UIK) method (see \code{\link{uik}}), then only the targets that rank higher than the knee point are kept.
+
+The modules containing less target genes than \code{min_module_size} are removed after each pruning step. The steps continue until the fraction of removed modules becomes higher than \code{max_frac_modules_lost}.
+
+It is recommended to set \code{min_module_size} to at least 20, because the correlation-based preservation statistics in the next steps might be coupled with high uncertainty for modules smaller than this (see \code{\link{calculatePresStats}}). If you would like to keep all modules for further analysis, please set \code{max_frac_modules_lost} to 0.
+
+If \code{exponent} is set higher than 1, the adjacencies are raised to the equivalent power when calculating the cumulative sum curves and their knee points.
+
+While setting the parameter \code{min_module_size} prevents the modules from becoming too small, the exact number of target genes per regulator does not have to be pre-defined, in line with the notion that different regulators can have an effect on different numbers of genes. There is also no hard cutoff applied to the regulator-target adjacencies, but by using knee point detection the target genes are filtered in a data-driven way.
+
+The modules are allowed to overlap, and in addition to having its own module, a regulator can be assigned to another regulator's module as well, in line with the notion that genes can be multifunctional and gene regulation can be combinatorial.
+}
 \examples{
 pruned_modules_UIK_adj <- pruneModules_UIK_adj(initial_modules)
 }
+\references{
+Christopoulos, D. (2016). Introducing Unit Invariant Knee (UIK) As an Objective Choice for Elbow Point in Multivariate Data Analysis Techniques. SSRN Electronic Journal. https://doi.org/10.2139/SSRN.3043076
+}
+\seealso{
+Other methods to prune modules: 
+\code{\link{pruneModules_UIK_adj_kIM}()},
+\code{\link{pruneModules_topN}()}
+}
+\concept{methods to prune modules}

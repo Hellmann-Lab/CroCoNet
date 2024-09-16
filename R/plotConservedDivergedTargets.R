@@ -60,18 +60,18 @@ plotConservedDivergedTargets <- function(target_conservation, N = 5, label = "au
     stop("The argument \"target_conservation\" should be a data frame.")
 
   if (any(!c("focus", "regulator", "type", "id", "gene_removed", "fit", "lwr_fit", "upr_fit", "residual") %in% colnames(target_conservation)))
-    stop(paste0("The argument \"target_conservation\" should contain the columns \"focus\", \"regulator\", \"type\", \"id\", \"gene_removed\", \"fit\", \"lwr_fit\", \"upr_fit\" and \"residual\"."))
+    stop("The argument \"target_conservation\" should contain the columns \"focus\", \"regulator\", \"type\", \"id\", \"gene_removed\", \"fit\", \"lwr_fit\", \"upr_fit\" and \"residual\".")
 
-  if (length(N) != 1 || (!inherits(N, "integer") & !(inherits(N, "numeric") & N == round(N))) || N < 0)
+  if (length(N) != 1 || (!inherits(N, "integer") && !(inherits(N, "numeric") && N == round(N))) || N < 0)
     stop("The argument \"N\" should be a positive integer or 0.")
 
   if (is.null(label) || !all(label %in% c("auto", "diverged", "conserved", "both")))
     stop("The argument \"label\" should be one or more of \"auto\", \"diverged\", \"conserved\", \"both\".")
 
-  if (label == "auto" & all(target_conservation$type != "summary"))
+  if (label == "auto" && all(target_conservation$type != "summary"))
     stop("If the argument \"label\" is set to \"auto\", a row of type \"summary\" is expected to be present in \"target_conservation\". This row should contain the median/mean tree statistics across all jackknife version of the module which is needed to determin whether the module as a whole is conserved or diverged. Please add this information to the \"target_conservation\" object or set \"label\" to a different value.")
 
-  if (!is.null(colors) & (!inherits(colors, "character") || any(!areColors(colors))))
+  if (!is.null(colors) && (!inherits(colors, "character") || any(!areColors(colors))))
     stop("The argument \"colors\" should be a character vector of valid color representations.")
 
   if (!inherits(font_size, "numeric") || length(font_size) != 1 || font_size <= 0)
@@ -116,20 +116,21 @@ plotConservedDivergedTargets <- function(target_conservation, N = 5, label = "au
   if (label == "conserved") {
 
     target_conservation <- target_conservation %>%
-      dplyr::mutate(to_label = ifelse(.data[["residual"]] %in% sort(.data[["residual"]], decreasing = TRUE)[1:N],
+      dplyr::mutate(to_label = ifelse(.data[["residual"]] %in% sort(.data[["residual"]], decreasing = TRUE)[1:N] | .data[["type"]] == "orig",
                                       TRUE, FALSE))
 
   } else if (label == "diverged") {
 
     target_conservation <- target_conservation %>%
-      dplyr::mutate(to_label = ifelse(.data[["residual"]] %in% sort(.data[["residual"]])[1:N],
+      dplyr::mutate(to_label = ifelse(.data[["residual"]] %in% sort(.data[["residual"]])[1:N] | .data[["type"]] == "orig",
                                       TRUE, FALSE))
 
   } else {
 
     target_conservation <- target_conservation %>%
       dplyr::mutate(to_label = ifelse(.data[["residual"]] %in% sort(.data[["residual"]])[1:N] |
-                                        .data[["residual"]] %in% sort(.data[["residual"]], decreasing = TRUE)[1:N],
+                                        .data[["residual"]] %in% sort(.data[["residual"]], decreasing = TRUE)[1:N] |
+                                        .data[["type"]] == "orig",
                                       TRUE, FALSE))
 
   }
@@ -150,7 +151,7 @@ plotConservedDivergedTargets <- function(target_conservation, N = 5, label = "au
       ggplot2::ylab("total tree length") +
       ggplot2::xlab("within-species diversity") +
       ggrepel::geom_label_repel(data = target_conservation %>%
-                                   dplyr::filter(.data[["to_label"]] | .data[["type"]] == "orig") %>%
+                                   dplyr::filter(.data[["to_label"]]) %>%
                                    dplyr::mutate(label = ifelse(.data[["type"]] == "orig", "original", paste0("w/o ", .data[["gene_removed"]]))),
                                  ggplot2::aes(label = .data[["label"]], color = .data[["residual"]]),
                                  fill = "white", size = 3, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20)
@@ -170,7 +171,7 @@ plotConservedDivergedTargets <- function(target_conservation, N = 5, label = "au
       ggplot2::xlab(paste0(focus, " diversity")) +
       ggplot2::ylab(paste0(focus, "-to-other branch length")) +
       ggrepel::geom_label_repel(data = target_conservation %>%
-                                  dplyr::filter(.data[["to_label"]] | .data[["type"]] == "orig") %>%
+                                  dplyr::filter(.data[["to_label"]]) %>%
                                   dplyr::mutate(label = ifelse(.data[["type"]] == "orig", "original", paste0("w/o ", .data[["gene_removed"]]))),
                                 ggplot2::aes(label = .data[["label"]], color = .data[["residual"]]),
                                 fill = "white", size = 3, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20)

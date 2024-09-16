@@ -31,9 +31,9 @@ plotNetworks(
 
 \item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and clones.}
 
-\item{network_list}{A list of \code{\link{igraph}} objects containing the networks per clone.}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones.}
 
-\item{clone2species}{A data frame that specifies which clone belongs to which species, required columns:
+\item{clone2species}{A data frame that specifies which species each clone belongs to, required columns:
 \describe{
 \item{clone}{Character, name of the clone.}
 \item{species}{Character, name of the species.}
@@ -56,7 +56,7 @@ plotNetworks(
 \item{ncol}{Integer, the number of columns the subplots should be organized into if several modules are input. If NULL (default), the dimensions of the grid will follow the default of \code{\link{wrap_plots}}.}
 }
 \value{
-A \code{\link{ggraph}} object in case the argument \code{module_names} is a single module name and a \code{\link{patchwork}} object in case the argument \code{module_names} is a vector of module names.
+A \code{\link{ggraph}} object in case \code{module_names} is a single module name and a \code{\link{patchwork}} object in case \code{module_names} is a vector of module names.
 }
 \description{
 In the CroCoNet approach, networks are reconstructed per clone and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.

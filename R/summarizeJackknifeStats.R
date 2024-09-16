@@ -39,6 +39,7 @@
 #' pres_stats <- summarizeJackknifeStats(pres_stats_jk)
 #' tree_stats <- summarizeJackknifeStats(tree_stats_jk,
 #'                                       c("total_tree_length", "within_species_diversity"))
+#' @aliases summariseJackknifeStats
 summarizeJackknifeStats <- function(stats_df, stats = setdiff(colnames(stats_df), c("regulator", "type", "id", "gene_removed", "module_size", "clone", "species", "clone1", "clone2", "species1", "species2")), summary_method = ifelse(endsWith(stats, "monophyl"), "mean", "median"), conf_level = 0.95) {
 
   if (!is.data.frame(stats_df))

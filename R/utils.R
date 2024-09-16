@@ -86,32 +86,13 @@ getTreeDf <- function(tree) {
 }
 
 
-#' Restore old seed
-#'
-#' Restores the original seed in the user's environment after exiting a function that sets a seed internally.
-#'
-#' @noRd
-restoreOldSeed <- function() {
-
-    genv <- globalenv()
-
-    old_seed <- genv$.Random.seed
-
-    on.exit(suspendInterrupts({
-      if (is.null(old_seed)) {
-        rm(".Random.seed", envir = genv, inherits = FALSE)
-      } else {
-        assign(".Random.seed", value = old_seed, envir = genv, inherits = FALSE)
-      }
-    }))
-
-}
-
-
 #' Check validity of colors
 #'
 #' Checks whether the elements of a character vector are valid colors.
 #'
+#' @param x A character vector.
+#'
+#' @return A logical value indicating whether the input \code{x} contains valid colors.
 #' @noRd
 areColors <- function(x) {
 
@@ -121,5 +102,22 @@ areColors <- function(x) {
              error = function(e) FALSE)
 
   }, TRUE)
+
+}
+
+
+#' Wraps a string into several lines at "_" characters
+#'
+#' @param names Character vector containing the strings to wrap.
+#'
+#' @return Character vector after wrapping.
+#' @noRd
+wrapLongNames <- function(names) {
+
+  sapply(names, function(name) {
+
+    gsub(" ", "", paste0(strwrap(gsub("_", "_ ", name), width = 20), collapse = "\n"))
+
+  })
 
 }

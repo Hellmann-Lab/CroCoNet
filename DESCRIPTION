@@ -7,7 +7,7 @@ Authors@R:
 Description: A tool to quantitatively compare gene regulatory networks across species and identify conserved and diverged modules.
 License: GPL (>= 3)
 Encoding: UTF-8
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Imports: 
     ape,
     BiocParallel,
@@ -24,7 +24,6 @@ Imports:
     tibble,
     tidyr,
     stats,
-    rlist,
     SummarizedExperiment,
     Matrix,
     tidytree,
@@ -33,7 +32,6 @@ Imports:
     colorspace,
     ggtree,
     patchwork,
-    tools,
     SingleCellExperiment,
     ggnewscale,
     farver,

@@ -30,7 +30,7 @@ plotTrees(
 \item{ncol}{Integer, the number of columns the subplots should be organized into if several modules are input. If NULL (default), the dimensions of the grid will follow the default of \code{\link{wrap_plots}}.}
 }
 \value{
-A \code{\link{ggtree}} object in case the argument \code{trees} is a single \code{\link{phylo}} object and a \code{\link{patchwork}} object in case the argument \code{trees} is a list of \code{\link{phylo}} objects.
+A \code{\link{ggtree}} object in case \code{trees} is a single \code{\link{phylo}} object and a \code{\link{patchwork}} object in case \code{trees} is a list of \code{\link{phylo}} objects.
 }
 \description{
 Plots the tree representations of one or more modules.
@@ -45,5 +45,5 @@ The module trees are plotted using \code{\link{ggtree}} as unrooted trees with '
 If the aim is to plot trees of several modules together, the input should be a named list of module trees. The \code{\link{ggtree}} plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the names of the input list. All subplots have the same scale so that the branch lengths are comparable across modules.
 }
 \examples{
-plotTrees(trees_jk[1:6])
+plotTrees(trees)
 }

@@ -18,10 +18,10 @@
 #' @param branch_width Numeric, the widths of the tree branches (default: 0.4).
 #' @param ncol Integer, the number of columns the subplots should be organized into if several modules are input. If NULL (default), the dimensions of the grid will follow the default of \code{\link{wrap_plots}}.
 #'
-#' @return A \code{\link{ggtree}} object in case the argument \code{trees} is a single \code{\link{phylo}} object and a \code{\link{patchwork}} object in case the argument \code{trees} is a list of \code{\link{phylo}} objects.
+#' @return A \code{\link{ggtree}} object in case \code{trees} is a single \code{\link{phylo}} object and a \code{\link{patchwork}} object in case \code{trees} is a list of \code{\link{phylo}} objects.
 #' @export
 #'
-#' @examples plotTrees(trees_jk[1:6])
+#' @examples plotTrees(trees)
 plotTrees <- function(trees, show_labels = TRUE, species_colors = NULL, font_size = 14, tip_size = 1, branch_width = 0.4, ncol = NULL) {
 
   if (inherits(trees, "list")) {
@@ -80,7 +80,7 @@ plotTrees <- function(trees, show_labels = TRUE, species_colors = NULL, font_siz
   if (!inherits(branch_width, "numeric") || length(branch_width) != 1 || branch_width <= 0)
     stop("The argument \"branch_width\" should be a positive numeric value.")
 
-  if (!is.null(ncol) && (length(ncol) != 1 || (!inherits(ncol, "integer") & !(inherits(ncol, "numeric") & ncol == round(ncol))) || ncol < 1))
+  if (!is.null(ncol) && (length(ncol) != 1 || (!inherits(ncol, "integer") && !(inherits(ncol, "numeric") && ncol == round(ncol))) || ncol < 1))
     stop("The argument \"ncol\" should be a positive integer.")
 
   if (inherits(trees, "phylo")) {
@@ -138,7 +138,7 @@ plotTree <- function(tree, tree_df, species_colors = NULL, show_labels = TRUE, t
 
   if (show_labels) {
 
-    light_species_colors <- colorspace::lighten(species_colors, 0.2)
+    light_species_colors <- colorspace::lighten(species_colors, 0.4)
     names(light_species_colors) <- names(species_colors)
 
     p <- suppressMessages(

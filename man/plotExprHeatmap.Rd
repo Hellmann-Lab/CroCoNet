@@ -17,19 +17,18 @@ plotExprHeatmap(
 \arguments{
 \item{genes}{Character vector, the names of the genes for which the expression profiles should be plotted.}
 
-\item{sce}{\code{\link{SingleCellExperiment-class}} object containing the expression data (raw counts, logcounts and metadata) for all network genes. Required metadata columns:
+\item{sce}{\code{\link{SingleCellExperiment}} object containing the expression data (logcounts and metadata) for all network genes. Required metadata column:
 \describe{
-\item{species}{Character, the name of the species.}
 \item{\{\{order_by\}\}}{Numeric or character, the column by which the cells should be ordered on the plot. Typically contains the inferred pseudotime, or the cell type labels.}
 }}
 
 \item{order_by}{Character specifying the column in the metadata of \code{sce} by which the cells should be ordered on the plot. This column typically contains the inferred pseudotime (default: "pseudotime"), or the cell type labels.}
 
-\item{heatmap_colors}{Character vector, the heatmap colors for the expression levels. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.}
+\item{heatmap_colors}{Character vector, the heatmap colors for the expression levels. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.}
 
-\item{annotation_colors}{Character vector, the colors for the variable specified by \code{order_by}. If the variable is discrete, the vector should contain as many colors as there are unique values of the variable, if the variable is continuous, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.}
+\item{annotation_colors}{Character vector, the colors for the variable specified by \code{order_by}. If the variable is discrete, the vector should contain as many colors as there are unique values of the variable, if the variable is continuous, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}}
 
-\item{clip}{Numeric specifying the degree of clipping. The expression levels of each gene that are more standard deviations away from the mean than \code{clip} are treated as NA. The Default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.}
+\item{clip}{Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. The default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.}
 
 \item{font_size}{Numeric, font size (default: 14).}
 }
@@ -40,13 +39,21 @@ A heatmap as a \code{\link{ggplot}} object showing the expression profiles of th
 Plots the expression profiles of one or more genes as a heatmap, with the cells ordered by pseudotime or cell type.
 }
 \details{
-The species, pseudotime and cell type information are taken from the metadata slot of the input \code{sce} object, and the expression data are taken from the logcounts assay of the input \code{sce} object. The function a heatmap, with columns corresponding to cells, rows corresponding to genes and colors corresponding to scaled and centered expression levels. The colors to represent the expression levels can be controlled by the argument \code{heatmap_colors}.
+The function creates a heatmap, with columns corresponding to cells, rows corresponding to genes and colors corresponding to scaled and centered expression levels.
 
-Expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene, this can be changed via the argument \code{clip}. Clipping aids visualization by preventing the outlier data points from squishing the rest of the data into a small color range.
+The expression data are taken from the logcounts assay of the input \code{sce} object. The colors to represent the expression levels can be controlled by the parameter \code{heatmap_colors}.
 
-The cells can be order by pseudotime, cell type or any other variable that makes sense in the given context, the name of the column containing the desired cell property can be specified by the argument \code{order_by} (default: "pseudotime"). The colors to represent this cell property can be controlled by the argument \code{annotation_colors}.
+The cells can be order by pseudotime, cell type or any other variable that makes sense in the given context. The name of metadata column in the input \code{sce} object containing the desired cell property can be specified by the parameter \code{order_by} (default: "pseudotime"). This cell property is visualized as a rug plot under the heatmap, the colors for the rug can be controlled by the parameter \code{annotation_colors}.
+
+Expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene, this can be changed via the parameter \code{clip}. Clipping aids visualization by preventing the outlier data points from squishing the rest of the data into a small color range. If clipping is not desired, please set \code{clip} to Inf.
 }
 \examples{
 plotExprHeatmap(c("POU5F1","DNMT3B","TERF1","TDGF1","L1TD1","VIM","MAP1B","MARCKS","PTN","CDH2"),
-                          sce)
+                sce)
 }
+\seealso{
+Other functions to plot gene expression profiles: 
+\code{\link{plotExprAlongPseudotime}()},
+\code{\link{plotExprPerCellType}()}
+}
+\concept{functions to plot gene expression profiles}

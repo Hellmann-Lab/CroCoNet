@@ -9,11 +9,215 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
+  eval = FALSE,
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  meassage = FALSE,
+  error = FALSE,
+  warning = FALSE
 )
 ```
 
-```{r setup}
+```{r setup, echo = FALSE, eval = TRUE, results = 'hide'}
 library(CroCoNet)
+library(kableExtra)
+library(tidyverse)
+library(igraph)
 ```
+
+<tt>CroCoNet</tt> (**Cro**ss-species **Co**mparison of **Net**works) is a computational pipeline and R package to quantitatively compare gene-regulatory networks across species. In this vignette, we present the workflow step by step, exemplified by an scRNA-seq dataset of early primate neural differentiation. The corresponding data files can be found at the following Zenodo repository:
+<br>
+# Input data
+
+## Experimental design
+
+<tt>CroCoNet</tt> can be applied to transcriptomic data with multiple species and multiple replicates (clones) per species.
+
+The example dataset contains 3 species: human, gorilla and cynomolgus macaque with 3 human clones from 3 individuals (H1c1, H2c1, and H3c1), 2 gorilla clones from 1 individual (G1c1, and G1c2) and 4 cynomolgus macaque clones from 2 individuals (C1c1, C1c2, C2c1 and C2c2). 
+
+At several steps in the pipeline, the clones need to be matched to species. To make this possible, a data frame has to be created that specifies which species each clone belongs to.
+
+```{r load_clone2species}
+clone2species <- readRDS("RDS/clone2species.rds")
+```
+
+```{r echo = FALSE, eval = TRUE}
+clone2species %>% 
+  kbl() %>% 
+  kable_styling()
+```
+
+To reliably infer networks, the dataset should have a large enough sample size (typically single-cell data) and sufficient expression variance across samples (several different conditions, time-series experiment over a dynamic process or a mixture of cell types). For a meaningful analysis, conditions, time points and the cell type composition should be as comparable across species as possible.
+
+In case of the example dataset, all iPS cell lines were differentiated into neural progenitor cells (NPCs) over the course of 9 days, and samples were taken at 6 different time points. The dataset contains ~3700 cells in total.
+
+## Initial processing
+
+The pipeline assumes that the user has already done the standard processing steps on the transcriptomic data, including mapping, QC and normalization. In addition, it is required to have a shared feature space across all species. The genes can be matched using orthology information or in case of closely related species by transferring the annotation of one species to the genomes of others using the tool *Liftoff*. In case of a scRNA-seq dataset, it is also recommended to perform cell type annotation and pseudotime inference. After these steps, a SingleCellExperiment (SCE) object should be created that contains the raw counts, normalized counts and metadata (including information on species, clone, and if applicable cell type assignment and inferred pseudotime). 
+
+In case of the primate single-cell dataset, we created a shared feature space by transferring the human genome annotation to the gorGor6 and macFas6 genomes via *Liftoff*. We performed the nornalization using <tt>scran</tt>, pseudotime inference using <tt>SCORPIUS</tt> and cell type annotation using <tt>singleR</tt> with the embryoid body dataset from Rhodes et al. 2019 as the reference. The resulting normalized counts and cell metadata are stored in an SCE object:
+
+```{r load_sce}
+sce <- readRDS("RDS/sce.rds")
+```
+
+At the beginning, colors for species and cell types can also be defined:
+
+```{r load_basic_objects}
+spec_colors <- setNames(c("#4DAF4A", "#377EB8", "#9a1ebd"), 
+                        c("human", "gorilla", "cynomolgus"))
+
+ct_colors <- setNames(c("#86C1E6", "#F4AB62", "#CA6102"), 
+                      c("Pluripotent_Cells", "Early_Ectoderm",  "Neurons"))
+```
+
+## Network inference
+
+Before applying the pipeline, the user also has to infer co-expression networks per clone using a method of choice, for example *GRNBoost2* (metric: decision tree-based importance scores) or *correlatePairs* (metric: Spearman's correlation). The networks should not be restricted to connections between transcriptional regulators and their target genes, because <tt>CroCoNet</tt> relies also on connections between the target genes themselves. 
+
+If the clones have very different cell type compositions, it is recommended to downsample them in a way that the proprtions of the cell types are always the same, in order to avoid mashing together species and cell type differences. It often makes sense to create several downsamplings of each clone and run the network inference on each of them, this way useful data is not discarded.
+
+If the network inference algorithm involving stochastic steps (this is the case e.g. for GRNBoost2), it can make the results more robust to run the algorithm several times on the same data with different random seeds.
+
+The network reconstructions should be available as TSV files where each row corresponds to an edge. There should be at least 3 columns containing 1) the 1st gene that forms the edge, 2) the 2nd gene that forms the edge, and 3) the edge weight. The TSV files should be named using the following convention: *nameOfClone.tsv* if there is only 1 network output per clone or *nameOfClone_index.tsv* if there are several network outputs per clone.
+
+In case of example dataset, we inferred networks using GRNBoost2 with all genes as potential regulators. We run the algorithm 10 times on the count matrix of each clones, which produced 9×10 TSV files in the end.
+<br>
+# Loading and processing the networks
+
+## Loading the networks as igraphs
+
+As the first step, the TSV files containing the network reconstructions are loaded and summarized as a list of <tt>igraph</tt> objects per clone.
+
+If there are several network reconstructions per clone due to different subsamplings/runs, the edge weights are averaged across these, and a single combined <tt>igraph</tt> object is returned. The number of subsamplings/runs has to be specified by the parameter <tt>rep</tt>. If the network inference method produces an output with directed edges, i.e. geneA-geneB and geneB-geneA can both be present, the edge weights inferred between the same gene pair but in opposite directions are also averaged. Whether the edges are directed or not, has to be specified by the parameter <tt>directed</tt>. If an edge is missing in one of the network versions/directions, it is regarded as 0 for the calculation of the mean.
+
+Rarely occurring edges can be removed altogether by specifying <tt>min_occurrence</tt>. This is not relevant if the network inference was done only once per clone (<tt>rep</tt> = 1), therefore in this case the value of <tt>min_occurrence</tt> is ignored. If the network inference was done several times for each clone (<tt>rep</tt> > 1), the highest possible number of occurrences for each edge is 2×<tt>rep</tt> in case of a directed network inference method and <tt>rep</tt> in case of an undirected network inference method. If an edge occurs less often than the specified value of <tt>min_occurrence</tt>, the edge is removed. This can be helpful to 1) denoise the networks and 2) decrease the computational power needed for the next steps.
+
+In case of the example dataset, the 9×10 TSV files located in the "GRNBoost2_output/" directory are loaded as a list of 9 <tt>igraph</tt> objects (1 network reconstruction for each of the 9 clones). The parameter <tt>rep</tt> is set to 10 as GRNBoost2 has been run 10 times on each clone, and the parameter <tt>directed</tt> is left at TRUE (the default), as GRNBoost2 produces a directed output. As a result, the edge weights are averaged across the 10 runs and 2 directions for each edge. Since the parameter <tt>min_occurrece</tt> is left at 2 (the default), edges that occur only once across all runs and directions are removed.
+
+```{r load_networks}
+network_list_raw <- loadNetworks("GRNBoost2_output/", 
+                                 clone_names = clone2species$clone,
+                                 rep = 10)
+```
+
+## Removing gene pairs with overlapping annotations
+
+```{r load_GTFs}
+gtf_list <- list(human = plyranges::read_gff("genome_annotations/hg38.gtf"),
+                 gorilla = plyranges::read_gff("genome_annotations/gorGor6_liftoff.gtf"),
+                 cynomolgus = plyranges::read_gff("genome_annotations/macFas6_liftoff.gtf"))
+```
+
+```{r remove_overlapping_gene_pairs}
+network_list_raw_filt <- removeOverlappingGenePairs(network_list_raw, 
+                                                    gtf_list = gtf_list, 
+                                                    clone2species = clone2species, 
+                                                    gene_col = "gene_name")
+```
+
+## Normalizing edge weights
+
+```{r normalize_edge_weights}
+network_list <- normalizeEdgeWeights(network_list_raw_filt)
+```
+
+```{r plot_edge_weights}
+lapply(network_list, as_data_frame) %>% 
+  bind_rows(.id = "clone") %>% 
+  ggplot(aes(x = clone, y = weight)) +
+  geom_violin(draw_quantiles = 0.5) +
+  theme_bw() +
+  ylab("normalized edge weight")
+```
+
+## Creating the consensus network
+
+```{r load_tree}
+tree <- readRDS("RDS/tree.rds")
+```
+
+```{r create_consensus} 
+consensus_network <- createConsensus(network_list, 
+                                     clone2species = clone2species, 
+                                     tree = tree)
+```
+<br>
+# Module assignment
+
+## Selecting key transcriptional regulators
+
+```{r get_regulators}
+regulators <- getRegulators(sce, 
+                            source = c("jaspar_core", "jaspar_unvalidated", "image"))
+```
+
+## Assigning initial modules
+
+```{r initial_modules}
+initial_modules <- assignInitialModules(consensus_network, 
+                                        regulators = regulators, 
+                                        N = 4000)
+```
+
+## Module pruning
+
+```{r pruned_modules}
+pruned_modules <- pruneModules(initial_modules, 
+                               method = "UIK_adj_kIM", 
+                               consensus_network = consensus_network)
+```
+
+```{r plot_modules}
+example_modules <- c("NANOG", "POU5F1", "JUN", "PAX6", "NR2F1", "NEUROG2")
+plotNetworks(example_modules, 
+             pruned_modules, 
+             consensus_network, 
+             network_list, 
+             clone2species)
+```
+
+## Creating random modules
+
+```{r random_modules}
+genes <- rownames(sce)
+random_modules <- createRandomModules(pruned_modules, 
+                                      network_genes = genes)
+```
+
+## Module size distribution
+
+```{r module_size_distr}
+plotModuleSizeDistribution(pruned_modules)
+```
+
+## Calculating module eigengenes
+
+```{r eigengenes}
+eigengenes <- calculateEigengenes(regulators,
+                                  pruned_modules, 
+                                  sce)
+```
+
+```{r plot_eigengenes}
+eigengenes_filt <- eigengenes %>%
+  dplyr::filter(module %in% paste0(example_modules, "(+)")) %>%
+  dplyr::mutate(module = factor(module, paste0(example_modules, "(+)")))
+plotEigengeneHeatmap(eigengenes_filt)
+```
+
+# Module preservation within and across species
+
+## Calculating module preservation statistics
+
+```{r pres_stats}
+pres_stats_jk <- calculatePresStats(pruned_modules, 
+                                    network_list,
+                                    "cor_kIM", 
+                                    clone2species)
+random_pres_stats_jk <- calculatePresStats(random_modules, 
+                                           network_list,
+                                           "cor_kIM", 
+                                           clone2species)
+```
+
