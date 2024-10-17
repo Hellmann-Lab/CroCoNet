@@ -35,7 +35,7 @@ As part of the CroCoNet approach, pairwise module preservation scores are calcul
 Various useful statistics can be defined based on these module trees:
 \itemize{
  \item{Total tree length: The total length of all branches in the tree; measures module variability both within and across species.}
- \item{Diversity of a species: The total length of the branches connecting the clones of the given species; measures module variability within this particular species.}
+ \item{Diversity of a species: The total length of the branches connecting the clones of the given species to each other; measures module variability within this particular species.}
  \item{Within-species diversity: The sum of the diversity values across all species; measures module variability within species in general.}
  \item{Monophyleticity of a species: Indicates whether the tree is monophyletic for the clones of the given species. Only if a module tree is monophyletic for a species of inteerst can the module be tested for divergence between this species and all others.}
  \item{Species-to-other branch length: The length of the internal branch that connects the subtree of the clones belonging to the given species and the subtree of all other clones; measures module variability between this species and all others. Undefined if the tree is not monophyletic for the species of interest.}

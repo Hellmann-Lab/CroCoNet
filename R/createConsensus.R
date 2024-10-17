@@ -57,7 +57,7 @@ createConsensus <- function(network_list, clone2species, tree = NULL) {
   }
 
   # avoid NSE notes in R CMD check
-  . = weight2 = factor = weight = clone = n_supporting_clones = supporting_clones = from = to = NULL
+  . = phylo_corr_weight = phylo_weight_corr_dir = factor = weight = direction = clone = n_supporting_clones = supporting_clones = from = to = NULL
 
   # convert igraphs to data tables
   dt_list <- convertToDT(network_list)
@@ -101,12 +101,33 @@ createConsensus <- function(network_list, clone2species, tree = NULL) {
 
   }
 
-  # calculate weighted mean per edge across all clones
-  consensus <- data.table::rbindlist(dt_list, idcol = "clone")[
-    factors, on = "clone"][
-      , weight2 := factor * weight][
-        , .(weight = sum(weight2), n_supporting_clones = .N, supporting_clones = paste(clone, collapse = ",")), by = .(from, to)][
-          order(from, to)]
+  # combine all clones and add the weights for the weighted mean
+  dt_combined <- data.table::rbindlist(dt_list, idcol = "clone")[factors, on = "clone"]
+
+  # calculate consensus edge weight and consensus direction (if the column is present) per edge across all clones
+  if ("direction" %in% colnames(dt_combined)) {
+
+    consensus <- dt_combined[
+        , `:=`(phylo_corr_weight = factor * weight,
+               phylo_weight_corr_dir = factor * weight * ifelse(direction == "+", 1, -1))][
+          , .(weight = sum(phylo_corr_weight),
+              direction = ifelse(sum(phylo_weight_corr_dir) > 0, "+", "-"),
+              n_supporting_clones = .N,
+              supporting_clones = paste(clone, collapse = ",")),
+          by = .(from, to)][
+            order(from, to)]
+
+  } else {
+
+    consensus <- dt_combined[
+        , phylo_corr_weight := factor * weight][
+          , .(weight = sum(phylo_corr_weight),
+              n_supporting_clones = .N,
+              supporting_clones = paste(clone, collapse = ",")),
+          by = .(from, to)][
+            order(from, to)]
+
+  }
 
   # convert data table to igraph
   igraph::graph_from_data_frame(consensus, directed = FALSE, vertices = data.frame(vertex = V(network_list[[1]])$name))

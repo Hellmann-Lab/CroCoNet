@@ -103,44 +103,35 @@ loadNetworks <- function(path, clone_names = NULL, rep = 1L, directed = TRUE, mi
 
     doParallel::registerDoParallel(n_cores)
 
-    dt_list_raw <- foreach::foreach(clone_name = clone_names) %:%
-      foreach::foreach(i = 1:rep) %dopar% {
+    dt_list <- foreach::foreach(clone_name = clone_names) %dopar% {
 
-        # load TSV files as data tables and rename columns
+      # load TSV files as data tables and rename columns
+      dt_all_reps <- lapply(1:rep, function(i) {
+
         if (file.exists(paste0(path, "/", clone_name, "_", i, ".tsv")))
           data.table::fread(paste0(path, "/", clone_name, "_", i, ".tsv")) %>%
           data.table::setnames(., 1:3, c("from", "to", "weight"))
 
-      }
-
-    doParallel::stopImplicitCluster()
-
-    names(dt_list_raw) <- clone_names
-
-    doParallel::registerDoParallel(n_cores)
-
-    dt_list <- foreach::foreach(clone_name = clone_names) %dopar% {
+      }) %>% data.table::rbindlist()
 
       # if the networks are directed, average across the runs and the 2 directions
       if (directed) {
 
-        data.table::rbindlist(dt_list_raw[[clone_name]])[
+        dt_all_reps[
           , c("from", "to") := .(pmin(from, to), pmax(from, to))][
-          , .(weight = sum(weight) / (2*rep), n_supporting_edges = .N), by = .(from, to)][
-            n_supporting_edges >= min_occurrence][
-              order(from, to)]
+            , .(weight = sum(weight) / (2*rep), n_supporting_edges = .N), by = .(from, to)][
+              n_supporting_edges >= min_occurrence][
+                order(from, to)]
 
-      # if the networks are undirected, average across the runs
+        # if the networks are undirected, average across the runs
       } else {
 
-        data.table::rbindlist(dt_list_raw[[clone_name]])[
+        dt_all_reps[
           , .(weight = sum(weight) / rep, n_supporting_edges = .N), by = .(from, to)][
             n_supporting_edges >= min_occurrence][
               order(from, to)]
 
       }
-
-
 
     }
 

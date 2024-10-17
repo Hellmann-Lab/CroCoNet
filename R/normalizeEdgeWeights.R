@@ -50,40 +50,44 @@ normalizeEdgeWeights <- function(network_list, signed = FALSE, min_weight = NULL
   # convert igraphs to data tables
   dt_list <- convertToDT(network_list)
 
-  # get all interaction scores from all networks
-  all_weights <- data.table::rbindlist(dt_list)$weight
+  # if the theoretical minimum and/or maximum is not provided, get all interaction scores from all networks for the calculation of the empirical minimum and/or maximum
+  if (!signed || is.null(min_weight) || is.na(max_weight)) {
 
-  # if both positive and negative edge weights are present, store the sign of the edges as the directionality
-  if (any(all_weights < 0)) {
-
-    dt_list <- lapply(dt_list, function(dt) {
-
-      dt[, direction := ifelse(sign(weight) == 1, "+", "-")]
-
-    })
+    all_weights <- data.table::rbindlist(dt_list)$weight
 
   }
 
   # if signed = TRUE, do min-max normalization
   if (signed) {
 
-    min_all_weights <- min(all_weights)
-    max_all_weights <- max(all_weights)
+    if (is.null(min_weight)) min_weight <- min(all_weights)
+    if (is.null(max_weight)) max_weight <- max(all_weights)
 
     dt_list_norm <- lapply(dt_list, function(dt) {
 
-      dt[, weight := (weight - min_all_weights) / (max_all_weights - min_all_weights)]
+      dt[, weight := (weight - min_weight) / (max_weight - min_weight)]
 
     })
 
   # if signed = FALSE, take absolute, then scale by the max
   } else {
 
-    max_abs_all_weights <- max(abs(all_weights))
+    # if both positive and negative edge weights are present, store the sign of the edges as the directionality
+    if (any(all_weights < 0)) {
+
+      dt_list <- lapply(dt_list, function(dt) {
+
+        dt[, direction := ifelse(sign(weight) == 1, "+", "-")]
+
+      })
+
+    }
+
+    if (is.null(max_weight)) max_abs_weight <- max(abs(all_weights)) else max_abs_weight <- max(c(max_weight, abs(min_weight)))
 
     dt_list_norm <- lapply(dt_list, function(dt) {
 
-      dt[, weight := abs(weight) / max_abs_all_weights]
+      dt[, weight := abs(weight) / max_abs_weight]
 
     })
 

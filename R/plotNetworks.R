@@ -8,7 +8,7 @@
 #'
 #' The edges that were kept are plotted using \code{\link{ggraph}} per module. The default layout is "gem", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "kk" and "drl" (see also \code{\link{ggraph}}, \code{\link{layout_tbl_graph_stress}} and \code{\link{layout_tbl_graph_igraph}}). The width of the edges represents the consensus edge weights, the range of widths can be set using \code{edge_width}.
 #'
-#' For each edge, an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA and the F-statistic (i.e. the variation between the species means / variation within the species) is regarded as the measure of edge divergence and used to color the edges on the plot.
+#' For each edge, an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA, and the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence and used to color the edges on the plot.
 #'
 #' If the aim is to plot the networks of several modules together, the input \code{module_names} should be a vector of module names. The \code{\link{ggraph}} plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the elements of \code{module_names}. All subplots have the same scale so that the edge weights and divergence scores are comparable across modules.
 #'

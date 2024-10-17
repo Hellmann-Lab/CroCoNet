@@ -1,0 +1,144 @@
+@ARTICLE{Moerman2019-xh,
+title = "{GRNBoost2 and Arboreto: efficient and scalable inference of gene regulatory networks}",
+author = "Moerman, Thomas and Santos, Sara Aibar and González-Blas, Carmen Bravo and Simm, Jaak and Moreau, Yves and Aerts, Jan and Aerts, Stein",
+journal = "Bioinformatics",
+publisher = "Oxford Academic",
+volume =  35,
+number =  12,
+pages = "2159--2161",
+abstract = "Inferring a Gene Regulatory Network (GRN) from gene expression data is a computationally expensive task, exacerbated by increasing data sizes due to advances in high-Throughput gene profiling technology, such as single-cell RNA-seq. To equip researchers with a toolset to infer GRNs from large expression datasets, we propose GRNBoost2 and the Arboreto framework. GRNBoost2 is an efficient algorithm for regulatory network inference using gradient boosting, based on the GENIE3 architecture. Arboreto is a computational framework that scales up GRN inference algorithms complying with this architecture. Arboreto includes both GRNBoost2 and an improved implementation of GENIE3, as a user-friendly open source Python package.",
+year =  2019,
+keywords = "Cross-species GRN/Network inference methods",
+doi = "10.1093/BIOINFORMATICS/BTY916"
+}
+
+@ARTICLE{Shumate2021-ne,
+title = "{Liftoff: accurate mapping of gene annotations}",
+author = "Shumate, Alaina and Salzberg, Steven L",
+journal = "Bioinformatics",
+volume =  37,
+number =  12,
+pages = "1639--1643",
+abstract = "MOTIVATION: Improvements in DNA sequencing technology and computational methods have led to a substantial increase in the creation of high-quality genome assemblies of many species. To understand the biology of these genomes, annotation of gene features and other functional elements is essential; however, for most species, only the reference genome is well-annotated. RESULTS: One strategy to annotate new or improved genome assemblies is to map or 'lift over' the genes from a previously annotated reference genome. Here, we describe Liftoff, a new genome annotation lift-over tool capable of mapping genes between two assemblies of the same or closely related species. Liftoff aligns genes from a reference genome to a target genome and finds the mapping that maximizes sequence identity while preserving the structure of each exon, transcript and gene. We show that Liftoff can accurately map 99.9\% of genes between two versions of the human reference genome with an average sequence identity >99.9\%. We also show that Liftoff can map genes across species by successfully lifting over 98.3\% of human protein-coding genes to a chimpanzee genome assembly with 98.2\% sequence identity. AVAILABILITY AND IMPLEMENTATION: Liftoff can be installed via bioconda and PyPI. In addition, the source code for Liftoff is available at https://github.com/agshumate/Liftoff. SUPPLEMENTARY INFORMATION: Supplementary data are available at Bioinformatics online.",
+month =  "19~" # jul,
+year =  2021,
+keywords = "Pleiotropy;jungleGrant;EB\_single\_cells",
+doi = "10.1093/bioinformatics/btaa1016",
+language = "en"
+}
+
+@ARTICLE{Lun2016-lx,
+title = "{A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor}",
+author = "Lun, Aaron T L and McCarthy, Davis J and Marioni, John C",
+journal = "F1000Res.",
+publisher = "F1000Res",
+volume =  5,
+pages =  2122,
+abstract = "Single-cell RNA sequencing (scRNA-seq) is widely used to profile the transcriptome of individual cells. This provides biological resolution that cannot be matched by bulk RNA sequencing, at the cost of increased technical noise and data complexity. The differences between scRNA-seq and bulk RNA-seq data mean that the analysis of the former cannot be performed by recycling bioinformatics pipelines for the latter. Rather, dedicated single-cell methods are required at various steps to exploit the cellular resolution while accounting for technical noise. This article describes a computational workflow for low-level analyses of scRNA-seq data, based primarily on software packages from the open-source Bioconductor project. It covers basic steps including quality control, data exploration and normalization, as well as more complex procedures such as cell cycle phase assignment, identification of highly variable and correlated genes, clustering into subpopulations and marker gene detection. Analyses were demonstrated on gene-level count data from several publicly available datasets involving haematopoietic stem cells, brain-derived cells, T-helper cells and mouse embryonic stem cells. This will provide a range of usage scenarios from which readers can construct their own analysis pipelines.",
+month =  "31~" # aug,
+year =  2016,
+keywords = "Bioconductor; RNA-seq; Single cell; bioinformatics; workflow",
+doi = "10.12688/f1000research.9501.2",
+language = "en"
+}
+
+@ARTICLE{Cannoodt2016-hn,
+title = "{SCORPIUS improves trajectory inference and identifies novel modules in dendritic cell development}",
+author = "Cannoodt, Robrecht and Saelens, Wouter and Sichien, Dorine and Tavernier, Simon and Janssens, Sophie and Guilliams, Martin and Lambrecht, Bart and Preter, Katleen De and Saeys, Yvan",
+journal = "bioRxiv",
+publisher = "Cold Spring Harbor Laboratory",
+pages =  079509,
+abstract = "Recent advances in RNA sequencing enable the generation of genome-wide expression data at the single-cell level, opening up new avenues for transcriptomics and systems biology. A new application of single-cell whole-transcriptomics is the unbiased ordering of cells according to their progression along a dynamic process of interest. We introduce SCORPIUS, a method which can effectively reconstruct an ordering of individual cells without any prior information about the dynamic process. Comprehensive evaluation using ten scRNA-seq datasets shows that SCORPIUS consistently outperforms state-of-the-art techniques. We used SCORPIUS to generate novel hypotheses regarding dendritic cell development, which were subsequently validated in vivo . This work enables data-driven investigation and characterization of dynamic processes and lays the foundation for objective benchmarking of future trajectory inference methods.",
+year =  2016,
+keywords = "Benchmarking,Bioinformatics,Biology,Dendritic cell,Inference,Systems biology,Trajectory,Transcriptome;Cross-species GRN/Methods",
+doi = "10.1101/079509"
+}
+
+@ARTICLE{Aran2019-jl,
+title = "{Reference-based analysis of lung single-cell sequencing reveals a transitional profibrotic macrophage}",
+author = "Aran, Dvir and Looney, Agnieszka P and Liu, Leqian and Wu, Esther and Fong, Valerie and Hsu, Austin and Chak, Suzanna and Naikawadi, Ram P and Wolters, Paul J and Abate, Adam R and Butte, Atul J and Bhattacharya, Mallar",
+journal = "Nat. Immunol.",
+volume =  20,
+number =  2,
+pages = "163--172",
+abstract = "Tissue fibrosis is a major cause of mortality that results from the deposition of matrix proteins by an activated mesenchyme. Macrophages accumulate in fibrosis, but the role of specific subgroups in supporting fibrogenesis has not been investigated in vivo. Here, we used single-cell RNA sequencing (scRNA-seq) to characterize the heterogeneity of macrophages in bleomycin-induced lung fibrosis in mice. A novel computational framework for the annotation of scRNA-seq by reference to bulk transcriptomes (SingleR) enabled the subclustering of macrophages and revealed a disease-associated subgroup with a transitional gene expression profile intermediate between monocyte-derived and alveolar macrophages. These CX3CR1+SiglecF+ transitional macrophages localized to the fibrotic niche and had a profibrotic effect in vivo. Human orthologs of genes expressed by the transitional macrophages were upregulated in samples from patients with idiopathic pulmonary fibrosis. Thus, we have identified a pathological subgroup of transitional macrophages that are required for the fibrotic response to injury.",
+month =  feb,
+year =  2019,
+keywords = "Perturb-seq/dCas9 cell lines;jungleGrant;EB\_single\_cells",
+doi = "10.1038/s41590-018-0276-y",
+language = "en"
+}
+
+@ARTICLE{Rhodes2022-os,
+title = "{Human embryoid bodies as a novel system for genomic studies of functionally diverse cell types}",
+author = "Rhodes, Katherine and Barr, Kenneth A and Popp, Joshua M and Strober, Benjamin J and Battle, Alexis and Gilad, Yoav",
+journal = "Elife",
+volume =  11,
+abstract = "Practically all studies of gene expression in humans to date have been performed in a relatively small number of adult tissues. Gene regulation is highly dynamic and context-dependent. In order to better understand the connection between gene regulation and complex phenotypes, including disease, we need to be able to study gene expression in more cell types, tissues, and states that are relevant to human phenotypes. In particular, we need to characterize gene expression in early development cell types, as mutations that affect developmental processes may be of particular relevance to complex traits. To address this challenge, we propose to use embryoid bodies (EBs), which are organoids that contain a multitude of cell types in dynamic states. EBs provide a system in which one can study dynamic regulatory processes at an unprecedentedly high resolution. To explore the utility of EBs, we systematically explored cellular and gene expression heterogeneity in EBs from multiple individuals. We characterized the various cell types that arise from EBs, the extent to which they recapitulate gene expression in vivo, and the relative contribution of technical and biological factors to variability in gene expression, cell composition, and differentiation efficiency. Our results highlight the utility of EBs as a new model system for mapping dynamic inter-individual regulatory differences in a large variety of cell types.",
+month =  "10~" # feb,
+year =  2022,
+keywords = "embryoid bodies; genetics; genomics; human; iPSC; scRNA-seq; single cell;EB\_single\_cells;Perturb-seq/dCas9 cell lines;EB\_single\_cells/Jessy\_phd",
+doi = "10.7554/eLife.71361",
+language = "en"
+}
+
+@Article{Csardi2006-sy,
+    title = {The igraph software package for complex network research},
+    author = {Gabor Csardi and Tamas Nepusz},
+    journal = {InterJournal},
+    volume = {Complex Systems},
+    pages = {1695},
+    year = {2006},
+    url = {https://igraph.org},
+  }
+
+
+@ARTICLE{Bininda-Emonds2007-of,
+title = "{The delayed rise of present-day mammals}",
+author = "Bininda-Emonds, Olaf R P and Cardillo, Marcel and Jones, Kate E and MacPhee, Ross D E and Beck, Robin M D and Grenyer, Richard and Price, Samantha A and Vos, Rutger A and Gittleman, John L and Purvis, Andy",
+journal = "Nature",
+publisher = "Nature Publishing Group",
+volume =  446,
+number =  7135,
+pages = "507--512",
+abstract = "Did the end-Cretaceous mass extinction event, by eliminating non-avian dinosaurs and most of the existing fauna, trigger the evolutionary radiation of present-day mammals? Here we construct, date and analyse a species-level phylogeny of nearly all extant Mammalia to bring a new perspective to this question. Our analyses of how extant lineages accumulated through time show that net per-lineage diversification rates barely changed across the Cretaceous/Tertiary boundary. Instead, these rates spiked significantly with the origins of the currently recognized placental superorders and orders approximately 93 million years ago, before falling and remaining low until accelerating again throughout the Eocene and Oligocene epochs. Our results show that the phylogenetic 'fuses' leading to the explosion of extant placental orders are not only very much longer than suspected previously, but also challenge the hypothesis that the end-Cretaceous mass extinction event had a major, direct influence on the diversification of today's mammals.",
+month =  "29~" # mar,
+year =  2007,
+keywords = "pleiotropy;Pleiotropy;Cross-species GRN/Discussion;EB\_single\_cells",
+doi = "10.1038/nature05634",
+language = "en"
+}
+
+
+@ARTICLE{Rauluseviciute2023-dz,
+title = "{JASPAR 2024: 20th anniversary of the open-access database of transcription factor binding profiles}",
+author = "Rauluseviciute, Ieva and Riudavets-Puig, Rafael and Blanc-Mathieu, Romain and Castro-Mondragon, Jaime A and Ferenc, Katalin and Kumar, Vipin and Lemma, Roza Berhanu and Lucas, Jérémy and Chèneby, Jeanne and Baranasic, Damir and Khan, Aziz and Fornes, Oriol and Gundersen, Sveinung and Johansen, Morten and Hovig, Eivind and Lenhard, Boris and Sandelin, Albin and Wasserman, Wyeth W and Parcy, François and Mathelier, Anthony",
+journal = "Nucleic Acids Res",
+publisher = "Oxford Academic",
+volume =  52,
+number = "D1",
+pages = "D174--D182",
+abstract = "Abstract. JASPAR (https://jaspar.elixir.no/) is a widely-used open-access database presenting manually curated high-quality and non-redundant DNA-binding p",
+month =  "14~" # nov,
+year =  2023,
+keywords = "dna; genome; plants; mice; transcription factor; elixir dosage form; metadata; binding sites; base pairing",
+doi = "10.1093/nar/gkad1059",
+language = "en"
+}
+
+
+@ARTICLE{Madsen2018-gq,
+title = "{Integrated analysis of motif activity and gene expression changes of transcription factors}",
+author = "Madsen, Jesper Grud Skat and Rauch, Alexander and Van Hauwaert, Elvira Laila and Schmidt, Søren Fisker and Winnefeld, Marc and Mandrup, Susanne",
+journal = "Genome Res.",
+volume =  28,
+number =  2,
+pages = "243--255",
+abstract = "The ability to predict transcription factors based on sequence information in regulatory elements is a key step in systems-level investigation of transcriptional regulation. Here, we have developed a novel tool, IMAGE, for precise prediction of causal transcription factors based on transcriptome profiling and genome-wide maps of enhancer activity. High precision is obtained by combining a near-complete database of position weight matrices (PWMs), generated by compiling public databases and systematic prediction of PWMs for uncharacterized transcription factors, with a state-of-the-art method for PWM scoring and a novel machine learning strategy, based on both enhancers and promoters, to predict the contribution of motifs to transcriptional activity. We applied IMAGE to published data obtained during 3T3-L1 adipocyte differentiation and showed that IMAGE predicts causal transcriptional regulators of this process with higher confidence than existing methods. Furthermore, we generated genome-wide maps of enhancer activity and transcripts during human mesenchymal stem cell commitment and adipocyte differentiation and used IMAGE to identify positive and negative transcriptional regulators of this process. Collectively, our results demonstrate that IMAGE is a powerful and precise method for prediction of regulators of gene expression.",
+month =  feb,
+year =  2018,
+keywords = "Cross-species GRN/Methods",
+doi = "10.1101/gr.227231.117",
+language = "en"
+}
+
