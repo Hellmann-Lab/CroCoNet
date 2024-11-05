@@ -114,7 +114,7 @@ plotPresStatDistributions <- function(pres_stats, random_pres_stats, stats, colo
     ggplot2::scale_fill_manual(values = colors, guide = "none") +
     ggplot2::theme_bw(base_size = font_size) +
     ggplot2::theme(axis.title.x = ggplot2::element_blank(),
-                   axis.text.x = ggplot2::element_text(size = font_size, color = "black"))
+                   axis.text.x = ggplot2::element_text(size = font_size - 2, color = "black"))
 
 }
 
@@ -162,7 +162,7 @@ plotPresStatDistributions <- function(pres_stats, random_pres_stats, stats, colo
 #'
 #' @examples plotPresStats(pres_stats, stats = "cor_kIM")
 #' @family functions to plot preservation statistics
-plotPresStats <- function(pres_stats, random_pres_stats = NULL, stats, colors = NULL, font_size = 14, point_size = 0.3, point_alpha = 0.7) {
+plotPresStats <- function(pres_stats, random_pres_stats = NULL, stats, colors = NULL, font_size = 14, point_size = 0.1, point_alpha = 0.7) {
 
   # check input data
   if (!is.data.frame(pres_stats))
@@ -249,8 +249,6 @@ plotPresStats <- function(pres_stats, random_pres_stats = NULL, stats, colors = 
   p <- ggplot2::ggplot(combined_pres_stats, ggplot2::aes(x = .data[["within_species"]], y = .data[["cross_species"]])) +
     ggplot2::xlim(min_score, max_score) +
     ggplot2::ylim(min_score, max_score) +
-    ggplot2::xlab(parse(text = paste0(stats, '["within-species"]'))) +
-    ggplot2::ylab(parse(text = paste0(stats, '["cross-species"]'))) +
     ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey30") +
     ggplot2::theme_bw(base_size = font_size)
 
@@ -291,19 +289,23 @@ plotPresStats <- function(pres_stats, random_pres_stats = NULL, stats, colors = 
 
   }
 
-  ## Faceting
+  ## Faceting & axis labels
 
-  # if only 1 statistic has to be plotted, facet by species pair only (x-axis)
+  # if only 1 statistic has to be plotted, facet by species pair only (x-axis) and use the name of the statistic as axis labels
   if (length(stats) == 1) {
 
    p <- p +
-     ggplot2::facet_wrap(~ .data[["species_compared"]])
+     ggplot2::facet_wrap(~ .data[["species_compared"]]) +
+     ggplot2::xlab(parse(text = paste0(stats, '["within-species"]'))) +
+     ggplot2::ylab(parse(text = paste0(stats, '["cross-species"]')))
 
-  # if several statistics have to be plotted, facet by species pair (x-axis) and statistic (y-axis)
+  # if several statistics have to be plotted, facet by species pair (x-axis) and statistic (y-axis) and use a generic axis label
   } else {
 
     p <-  p +
-      ggplot2::facet_grid(.data[["statistic"]] ~ .data[["species_compared"]])
+      ggplot2::facet_grid(.data[["statistic"]] ~ .data[["species_compared"]]) +
+      ggplot2::xlab("within-species preservation score") +
+      ggplot2::ylab("cross-species preservation score")
 
   }
 

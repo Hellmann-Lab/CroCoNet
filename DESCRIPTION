@@ -44,5 +44,6 @@ LazyDataCompression: xz
 Suggests: 
     knitr,
     rmarkdown,
-    kableExtra
+    kableExtra,
+    clusterProfiler
 VignetteBuilder: knitr

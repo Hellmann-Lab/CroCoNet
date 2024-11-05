@@ -103,7 +103,7 @@ plotTreeStatDistributions <- function(tree_stats, random_tree_stats, stats, colo
   p + ggplot2::geom_violin(draw_quantiles = 0.5) +
     ggplot2::scale_fill_manual(values = colors, guide = "none") +
     ggplot2::theme_bw(base_size = font_size) +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(size = font_size, color = "black"),
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size = font_size - 2, color = "black"),
                    axis.title.x = ggplot2::element_blank())
 
 }

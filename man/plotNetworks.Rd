@@ -8,9 +8,10 @@ plotNetworks(
   module_names,
   pruned_modules,
   consensus_network,
-  network_list,
-  clone2species,
-  N = 200L,
+  network_list = NULL,
+  clone2species = NULL,
+  N = 300L,
+  color_by = "edge_divergence",
   n_cores = 1L,
   layout = "kk",
   seed = 0,
@@ -31,15 +32,17 @@ plotNetworks(
 
 \item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and clones.}
 
-\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones.}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones (only needed if \code{color_by} is set to "edge_divergence").}
 
-\item{clone2species}{A data frame that specifies which species each clone belongs to, required columns:
+\item{clone2species}{A data frame that specifies which species each clone belongs to (only needed if \code{color_by} is set to "edge_divergence"), required columns:
 \describe{
 \item{clone}{Character, name of the clone.}
 \item{species}{Character, name of the species.}
 }}
 
-\item{N}{Integer, the number of edges to plot (default: 200).}
+\item{N}{Integer, the number of edges to plot (default: 300).}
+
+\item{color_by}{Character, one of "edge_divergence" and "direction", specifies whether the edges should be colored by the degree of edge divergence across species (default) or the direction of interaction between the 2 genes that form the edge, i.e. positively or negatively correlated.}
 
 \item{n_cores}{Integer, the number of cores (default: 1).}
 
@@ -47,7 +50,7 @@ plotNetworks(
 
 \item{seed}{Integer, the seed for setting up the graph layout (default: 0, only relevant for certain layouts such as "gem", "nicely", "dh", "graphopt", "fr" and "drl").}
 
-\item{colors}{Character vector, the colors to visualize the edge divergences. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.}
+\item{colors}{Character vector, the colors to visualize the edge directions or edge divergences. If \code{color_by} is set to "edge_divergence", the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}. If \code{color_by} is set to "direction", the vector should contain 2 colors for the positively and negatively correlated gene pairs.}
 
 \item{font_size}{Numeric, font size (default: 14).}
 
@@ -65,12 +68,14 @@ This function selects the intramodular edges of the input module(s) in the conse
 
 The edges that were kept are plotted using \code{\link{ggraph}} per module. The default layout is "gem", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "kk" and "drl" (see also \code{\link{ggraph}}, \code{\link{layout_tbl_graph_stress}} and \code{\link{layout_tbl_graph_igraph}}). The width of the edges represents the consensus edge weights, the range of widths can be set using \code{edge_width}.
 
-For each edge, an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA and the F-statistic (i.e. the variation between the species means / variation within the species) is regarded as the measure of edge divergence and used to color the edges on the plot.
+If \code{color_by} is set to "edge_divergence" (the default), for each edge an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA, and the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence and used to color the edges on the plot. To calculate this information, \code{network_list} and \code{clone2species} has to be provided.
 
-If the aim is to plot the networks of several modules together, the input \code{module_names} should be a vector of module names. The \code{\link{ggraph}} plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the elements of \code{module_names}. All subplots have the same scale so that the edge weights and divergence scores are comparable across modules.
+If \code{color_by} is set to "direction", the edges are colored based on the direction of interaction (positively correlated/coexpressed or negatively correlated/anti-coexpressed) between the 2 genes that from the edge. This information is taken from the \code{direction} edge attribute of \code{consensus_network}.
+
+If the aim is to plot the networks of several modules together, the input \code{module_names} should be a vector of module names. The \code{\link{ggraph}} plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the elements of \code{module_names}. All subplots have the same scale so that the edge weights and divergence scores (if \code{color_by} = "edge_divergence") are comparable across modules.
 }
 \details{
-Plots the top \code{N} strongest connections of the chosen module(s) based on the consensus network. The edge width indicates the consensus edge weights, while the edge color indicates the degree of edge divergence across species.
+Plots the top \code{N} strongest connections of the chosen module(s) based on the consensus network. The edge width indicates the consensus edge weights, while the edge color indicates either the degree of edge divergence across species or the direction of interaction between the 2 genes that form the edge (positively/negatively correlated).
 }
 \examples{
 plotNetworks("POU5F1", pruned_modules, consensus_network, network_list, clone2species)

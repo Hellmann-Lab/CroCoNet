@@ -93,17 +93,17 @@ calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj"
   # clone names
   clone_names <- names(network_list)
 
-  # if direction is present in the network objects, correlate direction*weight instead of weight
-  if ("direction" %in% names(igraph::edge_attr(network_list[[1]]))) {
-
-    network_list <- lapply(network_list, function(network) {
-
-      E(network)$weight = E(network)$weight * ifelse(E(network)$direction == "+", 1, -1)
-      network
-
-    })
-
-  }
+  # # if direction is present in the network objects, correlate direction*weight instead of weight
+  # if ("direction" %in% names(igraph::edge_attr(network_list[[1]]))) {
+  #
+  #   network_list <- lapply(network_list, function(network) {
+  #
+  #     E(network)$weight = E(network)$weight * ifelse(E(network)$direction == "+", 1, -1)
+  #     network
+  #
+  #   })
+  #
+  # }
 
   # convert igraphs to adjacency matrices
   adjMat_list <- lapply(network_list, function(network) {

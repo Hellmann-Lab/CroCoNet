@@ -10,7 +10,7 @@ plotPresStats(
   stats,
   colors = NULL,
   font_size = 14,
-  point_size = 0.3,
+  point_size = 0.1,
   point_alpha = 0.7
 )
 }

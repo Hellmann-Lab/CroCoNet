@@ -1,16 +1,16 @@
 setwd("data-raw/intermediate_files/")
 
-# # download JASPAR2024 vertebrate core
-# download.file("https://jaspar.elixir.no/download/data/2024/CORE/JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt", "JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt")
-#
-# # download JASPAR2024 vertebrate unvalidated
-# download.file("https://jaspar.elixir.no/download/data/2024/collections/JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt", "JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt")
-#
-# # download IMAGE motifs
-# download.file("http://bioinformatik.sdu.dk/solexa/webshare/IMAGE/IMAGE_v1.1.tar.gz", "IMAGE_v1.1.tar.gz")
-# system("tar -xf IMAGE_v1.1.tar.gz")
-# system("mv IMAGE/utils/Genename_Motif.txt IMAGE_motifs.txt")
-# system("rm -r IMAGE IMAGE_v1.1.tar.gz")
+# download JASPAR2024 vertebrate core
+download.file("https://jaspar.elixir.no/download/data/2024/CORE/JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt", "JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt")
+
+# download JASPAR2024 vertebrate unvalidated
+download.file("https://jaspar.elixir.no/download/data/2024/collections/JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt", "JASPAR2024_UNVALIDATED_non-redundant_pfms_jaspar.txt")
+
+# download IMAGE motifs
+download.file("http://bioinformatik.sdu.dk/solexa/webshare/IMAGE/IMAGE_v1.1.tar.gz", "IMAGE_v1.1.tar.gz")
+system("tar -xf IMAGE_v1.1.tar.gz")
+system("mv IMAGE/utils/Genename_Motif.txt IMAGE_motifs.txt")
+system("rm -r IMAGE IMAGE_v1.1.tar.gz")
 
 # list of TRs
 jaspar_core_TRs <- data.table::fread("grep '>' JASPAR2024_CORE_vertebrates_non-redundant_pfms_jaspar.txt",

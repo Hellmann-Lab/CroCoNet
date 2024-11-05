@@ -106,7 +106,7 @@ convertPresToDist <- function(pres_stats, stat, min_stat = -1, max_stat = 1, n_c
 #'
 #' This function first sorts the distance measures of each module/jackknifed module version into a distance matrix of all clones, then based on this distance matrix reconstructs a tree using the neighbor-joining algorithm.
 #'
-#' The procedure results in a single tree per module/jackknifed module version (depending on whether the preservation statistics were calculated with or without jackknifing, see see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). The tips of the trees represent the clones and the branch lengths represent the dissimilarity of module connectivity patterns between the networks of 2 clones. The trees are output as a list of \code{\link{phylo}} objects.
+#' The procedure results in a single tree per module/jackknifed module version (depending on whether the preservation statistics were calculated with or without jackknifing, see see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). The tips of the trees represent the clones and the branch lengths represent the dissimilarity of module topology between the networks of 2 clones. The trees are output as a list of \code{\link{phylo}} objects.
 #'
 #' In the next steps of the pipeline, statistics based on these trees can be used to identify conserved and diverged modules and pinpoint target genes within these modules that contribute the most to conservation/divergence (see \code{\link{calculateTreeStats}}, \code{\link{fitTreeStatsLm}}, \code{\link{findConservedDivergedModules}} and \code{\link{findConservedDivergedTargets}}).
 #'
