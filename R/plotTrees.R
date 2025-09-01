@@ -164,7 +164,7 @@ plotTree <- function(tree, tree_df, species_colors = NULL, show_labels = TRUE, t
         tree_df +
         ggtree::geom_tippoint(ggplot2::aes(fill = .data[["species"]]), shape = 21, size = tip_size*7, color = "transparent") +
         ggplot2::scale_fill_manual(values = species_colors, breaks = levels(tree_df$species)) +
-        ggplot2::guides(fill = ggplot2::guide_legend(override.aes = list(size = tip_size*3.5))) +
+        ggplot2::guides(fill = ggplot2::guide_legend(override.aes = list(size = tip_size*5))) +
         ggplot2::theme(text = ggplot2::element_text(size = font_size),
                        legend.text = ggplot2::element_text(size = ggplot2::rel(0.8)),
                        plot.title = ggplot2::element_text(size = ggplot2::rel(1.2)))

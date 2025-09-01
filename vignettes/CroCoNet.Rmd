@@ -55,7 +55,7 @@ library(igraph)
 library(clusterProfiler)
 ```
 
-**<tt>CroCoNet</tt>** (**Cro**ss-species **Co**mparison of **Net**works) is a computational pipeline and R package to quantitatively compare gene-regulatory networks across species. In this vignette, we present the workflow step by step, exemplified by an scRNA-seq dataset of early primate neural differentiation. The corresponding data files can be found at the following Zenodo repository:
+<tt>CroCoNet</tt> (**Cro**ss-species **Co**mparison of **Net**works) is a computational pipeline and R package to quantitatively compare gene-regulatory networks across species. In this vignette, we present the workflow step by step, exemplified by an scRNA-seq dataset of early primate neural differentiation. The corresponding data files can be found at the following Zenodo repository:
 <br>
 <br>
 
@@ -778,19 +778,19 @@ knitr::include_graphics("within_species_diversity_total_tree_length.png")
 
 As we have seen before, the within-species diversities and total tree lengths are in general higher for the random modules than for the actual modules - thus the random modules cluster separately on the plot at the "wobbly" end of the spectrum. However, there are still individual actual modules that have particularly high total tree lengths and within-species diversities, comparable with those of the random modules. Since these modules seem to behave like random sets of genes in terms of their tree properties, it is recommended to remove them for further analysis.
 
-The function <tt>filterModuleTrees</tt> calculates the probability that the statistic of an actual modules comes from the distribution of the statistics of all random modules (one-sample one-sided z-test with the mean and standard deviation of the random module statistics as the expected mean and standard deviation). If a module is **not** significantly different from the random modules in terms of both statistics, it is removed.
+The function <tt>filterModuleTrees</tt> calculates how probable it is that the statistic of an actual comes from the distribution of all actual modules compared ($p_{actual}$) and how probable it is that the statistic comes from the distribution of all random modules ($p_{random}$) using one-sample one-sided z-tests (expected mean and standard deviation: the mean and standard deviation of all actual/random module statistics after outlier removal using the interquartile range method).  If $$1 - p_{actual} > 10⋅p_{random}$$ is fulfilled for both tree statistics, the module is kept, otherwise it is removed.
 
 ```{r filter_module_trees}
 tree_stats_filt <- filterModuleTrees(tree_stats, random_tree_stats)
 ```
 
-In case of the example dataset, this filtering removes 11 modules (marked in red):
+In case of the example dataset, this filtering removes 4 modules (marked in red):
 
 ```{r plot_total_vs_within_filt}
 plotTreeStats(tree_stats, 
               random_tree_stats, 
               c("within_species_diversity", "total_tree_length")) +
-  geom_point(data = anti_join(tree_stats, tree_stats_filt), color = "red3", size = 1.2)
+  geom_point(data = dplyr::anti_join(tree_stats, tree_stats_filt), color = "red3", size = 1.2)
 ```
 
 ```{r total_vs_within_filt, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'The relationship of the total tree lengths and within-species diversities across all actual and random modules, with the removed actual modules marked.'}
@@ -828,7 +828,7 @@ readRDS("module_conservation_overall_sample.rds")[, 9:16] %>%
   column_spec(1:8, "2.3cm")
 ```
 
-Using this approach, we identified 20 conserved and 24 diverged modules:
+Using this approach, we identified 21 conserved and 23 diverged modules:
 
 ```{r echo = FALSE, eval = TRUE}
 module_conservation_overall <- readRDS("module_conservation_overall.rds")
@@ -838,46 +838,47 @@ module_conservation_overall <- readRDS("module_conservation_overall.rds")
 table(module_conservation_overall$conservation)
 ```
 
-The function <tt>plotConservedDivergedModules</tt> helps to visualize the regression line, its 95% prediction interval (grey area), and the conserved and diverged modules (colored green and red, respectively). It also labels the top N most conserved and most diverged modules based on either the residuals or the t-scores. In the plot below, the top 4 most conserved and most diverged modules based on residuals are highlighted:
+The function <tt>plotConservedDivergedModules</tt> helps to visualize the regression line, its 95% prediction interval (grey area), and the conserved and diverged modules (colored green and red, respectively). It also labels the top N most conserved and most diverged modules based on either the residuals or the t-scores. In the plot below, the top 5 most conserved and most diverged modules based on residuals are highlighted:
 
 ```{r plot_cons_div_mod}
 plotConservedDivergedModules(module_conservation_overall,
-                             N = 4,
+                             N = 5,
                              rank_by = "residual")
 ```
 
-```{r cons_div_mod, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'Weighted linear regression between the total tree length and within-species diversity, with the top 4 most conserved and most diverged modules marked.'}
+```{r cons_div_mod, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'Weighted linear regression between the total tree length and within-species diversity, with the top 5 most conserved and most diverged modules marked.'}
 knitr::include_graphics("module_conservation_overall.png")
 ```
 
 To illustrate what makes these modules conserved or diverged, their distance matrices and module trees can also be plotted:
 
 ```{r get_top4_cons_div}
-top4_cons_div_modules <- module_conservation_overall %>% 
-  dplyr::filter(conservation != "not_significant") %>% 
-  dplyr::arrange(residual) %>% 
-  dplyr::slice(1:4, (dplyr::n()-3):dplyr::n()) %>% 
-  dplyr::pull(regulator) %>% 
-  as.character()
+top5_cons_div_modules <- bind_rows(module_conservation_overall %>%
+                                    dplyr::filter(conservation == "conserved") %>%
+                                    dplyr::slice_min(order_by = residual, n = 5),
+                                   module_conservation_overall %>%
+                                    dplyr::filter(conservation == "diverged") %>%
+                                    dplyr::slice_max(order_by = residual, n = 5)) %>% 
+  dplyr::pull(regulator)
 ```
 
 ```{r plot_dist_mats_cons_div}
-dist <- dist_jk[paste0(top4_cons_div_modules, "_orig")]
-names(dist) <- top4_cons_div_modules
-plotDistMats(dist, ncol = 4)
+dist <- dist_jk[paste0(top5_cons_div_modules, "_orig")]
+names(dist) <- top5_cons_div_modules
+plotDistMats(dist, ncol = 5)
 ```
 
-```{r dist_mats_cons_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The distance matrices of the 4 most conserved (top row) and 4 most diverged (bottom row) modules.'}
+```{r dist_mats_cons_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The distance matrices of the 5 most conserved (top row) and 5 most diverged (bottom row) modules.'}
 knitr::include_graphics("dist_mat_cons_div.png")
 ```
 
 ```{r plot_trees_cons_div}
-trees <- trees_jk[paste0(top4_cons_div_modules, "_orig")]
-names(trees) <- top4_cons_div_modules
-plotTrees(trees, species_colors = spec_colors, ncol = 4)
+trees <- trees_jk[paste0(top5_cons_div_modules, "_orig")]
+names(trees) <- top5_cons_div_modules
+plotTrees(trees, species_colors = spec_colors, ncol = 5)
 ```
 
-```{r trees_cons_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The tree reconstructions of the 4 most conserved (top row) and 4 most diverged (bottom row) modules.'}
+```{r trees_cons_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The tree reconstructions of the 5 most conserved (top row) and 5 most diverged (bottom row) modules.'}
 knitr::include_graphics("trees_cons_div.png")
 ```
 
@@ -889,19 +890,19 @@ In contrast, diverged modules tend to have much higher distance measures across 
 
 A divergence score can be calculated not just for a module as a whole, but also for each edge within a module, which can pinpoint individual edges or regions of neighboring edges that are particularly conserved or diverged. This score is calculated based on the different edge weights of a given edge in the networks of the different clones. The edge weights are compared across species using an ANOVA, and the log~10~ of the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence. 
 
-These scores can be returned as a data frame using <tt>calculateEdgeDivergence</tt> or directly plotted using <tt>plotNetworks</tt> with <tt>color_by</tt> set to "edge_divergence". Below we plot the 300 strongest edges within each of the 4 most conserved and most diverged modules colored by edge divergence:
+These scores can be returned as a data frame using <tt>calculateEdgeDivergence</tt> or directly plotted using <tt>plotNetworks</tt> with <tt>color_by</tt> set to "edge_divergence". Below we plot the 300 strongest edges within each of the 5 most conserved and most diverged modules colored by edge divergence:
 
 ```{r}
-plotNetworks(top4_cons_div_modules, 
+plotNetworks(top5_cons_div_modules, 
              pruned_modules, 
              consensus_network, 
              network_list, 
              clone2species, 
              color_by = "edge_divergence",
-             ncol = 4)
+             ncol = 5)
 ```
 
-```{r networks_cons_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The 300 strongest connections of the 4 most conserved (top row) and 4 most diverged (bottom row) modules. The thickness of the edges represents the consensus edge weights and the color of the edges represents how different the mean edge weights are across the 3 species.'}
+```{r networks_cons_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The 300 strongest connections of the 5 most conserved (top row) and 5 most diverged (bottom row) modules. The thickness of the edges represents the consensus edge weights and the color of the edges represents how different the mean edge weights are across the 3 species.'}
 knitr::include_graphics("networks_cons_div.png")
 ```
 
@@ -963,7 +964,7 @@ plotExprAlongPseudotime(c("POU5F1", top5_diverged_POU5F1_targets),
 knitr::include_graphics("POU5F1_target_expression.png")
 ```
 
-Several target genes of POU5F1 that are diverged in terms of network topology (SCGB3A2, SPP1 and FTL) also show different expression patterns across species. Such differences cannot be observed for POU5F1, the regulator itself - a hint towards cis-regulatory changes. Indeed, after a more thorough investigation we found that both SCGB3A2 and SPP1 are known to be located close to LTR7 elements in the human genome [@Wang2014-ew; @Hsieh2022-yl], which an evolutionary young family of TEs that often acquire regulatory functions. The LTR7 elements near these 2 genes appeared along the ape lineage and are bound by POU5F1 @Ito2017-da, so they could have potentially contributed to the rewiring of the POU5F1 module.
+Several target genes of POU5F1 that are diverged in terms of network topology (SCGB3A2, SPP1 and FTL) also show different expression patterns across species. Such differences cannot be observed for POU5F1, the regulator itself - a hint towards cis-regulatory changes. Indeed, after a more thorough investigation we found that both SCGB3A2 and SPP1 are known to be located close to LTR7 elements in the human genome [@Wang2014-ew; @Hsieh2022-yl], an evolutionary young family of transposable elements that often acquire regulatory functions. The LTR7 elements near these 2 genes appeared along the ape lineage and are bound by POU5F1 @Ito2017-da, so they could have potentially contributed to the rewiring of the POU5F1 module.
 
 ## Lineage-specific divergence
 

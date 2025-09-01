@@ -6,7 +6,7 @@
 #'
 #' This function selects the intramodular edges of the input module(s) in the consensus network, orders them by the consensus edge weight and keeps the top \code{N} edges per module for plotting. This means that only those module member genes will appear on the plot that are involved in the top \code{N} connections, the regulator itself might also be omitted if it is not particularly well-connected.
 #'
-#' The edges that were kept are plotted using \code{\link{ggraph}} per module. The default layout is "gem", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "kk" and "drl" (see also \code{\link{ggraph}}, \code{\link{layout_tbl_graph_stress}} and \code{\link{layout_tbl_graph_igraph}}). The width of the edges represents the consensus edge weights, the range of widths can be set using \code{edge_width}.
+#' The edges that were kept are plotted using \code{\link{ggraph}} per module. The default layout is "kk", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "gem" and "drl" (see also \code{\link{ggraph}}, \code{\link{layout_tbl_graph_stress}} and \code{\link{layout_tbl_graph_igraph}}). The width of the edges represents the consensus edge weights, the range of widths can be set using \code{edge_width}.
 #'
 #' If \code{color_by} is set to "edge_divergence" (the default), for each edge an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA, and the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence and used to color the edges on the plot. To calculate this information, \code{network_list} and \code{clone2species} has to be provided.
 #'
@@ -158,8 +158,8 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
 #'                                                                  clone2species)
 calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_network, network_list, clone2species, N = Inf, n_cores = 1L) {
 
-  if (!inherits(module_names, "character"))
-    stop("The argument \"module_names\" should be a character vector.")
+  if (!inherits(module_names, "character") && !inherits(module_names, "factor"))
+    stop("The argument \"module_names\" should be a character vector or factor.")
 
   if (!is.data.frame(pruned_modules))
     stop("The argument \"pruned_modules\" should be a data frame.")
@@ -320,7 +320,7 @@ getEdgeDirection <- function(module_names, pruned_modules, consensus_network, N 
 
 #' Plot the network of a single module
 #'
-#' @param edges with 5 columns:
+#' @param edges Data frame with 5 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{to}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
@@ -328,7 +328,7 @@ getEdgeDirection <- function(module_names, pruned_modules, consensus_network, N 
 #' \item{f_statistic}{Numeric, measue of edge divergence. It is calculated as the F-statistic from the ANOVA of edge weights with species as groups (optional, if present the edges will be colored by edge divergence).}
 #' \item{dir}{Character, direction of the interaction between the 2 genes that form the edge ("+" or "-", optional, if present the edges will be colored by direction)}.
 #' }
-#' @param layout Character, graph layout (default: "gem", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "kk" and "drl"). See also \code{\link{ggraph}}, \code{\link{layout_tbl_graph_stress}} and \code{\link{layout_tbl_graph_igraph}}.
+#' @param layout Character, graph layout (default: "kk", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "gem" and "drl"). See also \code{\link{ggraph}}, \code{\link{layout_tbl_graph_stress}} and \code{\link{layout_tbl_graph_igraph}}.
 #' @param seed Integer, the seed for setting up the graph layout (default: 0, only relevant for certain layouts such as "gem", "nicely", "dh", "graphopt", "fr" and "drl").
 #' @param colors Character vector, the colors to visualize the edge directions or edge divergences. If the edges are colored by edge divergence, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}. If the edges are colored by direction, the vector should contain 2 colors for the positively and negatively correlated gene pairs.
 #' @param font_size Numeric, font size (default: 14).
@@ -415,7 +415,7 @@ plotNetwork <- function(edges, layout = "kk", seed = 0, colors, font_size = 14, 
     ggraph::scale_edge_width(range = edge_width, limits = lim_edge_weight, name = "consensus\nedge weight") +
     ggraph::geom_node_point(size = 6, shape = 21, fill = "transparent", color = "transparent") +
     ggraph::geom_node_label(data = . %>% dplyr::filter(!.data[["is_regulator"]]), ggplot2::aes(label = .data[["name"]]), label.padding = ggplot2::unit(0.08, "lines"), label.size = 0.001, size = font_size / 5, fill = "grey90") +
-    ggraph::geom_node_label(data = . %>% dplyr::filter(.data[["is_regulator"]]), ggplot2::aes(label = .data[["name"]]), label.padding = ggplot2::unit(0.11, "lines"), label.size = 0.005, size = font_size / 4, fill = "grey40", color = "white") +
+    ggraph::geom_node_label(data = . %>% dplyr::filter(.data[["is_regulator"]]), ggplot2::aes(label = .data[["name"]]), label.padding = ggplot2::unit(0.11, "lines"), label.size = 0.005, size = font_size / 4, fill = "grey60", color = "white", fontface = "bold") +
     ggplot2::theme_void(base_size = font_size) +
     ggplot2::theme(legend.ticks = ggplot2::element_blank()) +
     ggplot2::xlim(xmin_new, xmax_new) +

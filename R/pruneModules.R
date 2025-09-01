@@ -146,6 +146,11 @@ pruneModules_UIK_adj <- function(initial_modules, min_module_size = 20L, max_fra
 
   }
 
+  # print message if any modules were lost due to low module size
+  modules_lost <- setdiff(unique(initial_modules$regulator), unique(module_data[[1]]$regulator))
+  if (length(modules_lost) > 0)
+    message(paste0("The following modules were removed due to too low module size after pruning: ", paste(modules_lost, collapse = ", "), ". If you would like to keep them, consider lowering 'min_module_size'."))
+
   # take the last module data frame that still passed the size criterion
   module_data[[1]] %>%
     # sort targets
@@ -275,6 +280,11 @@ pruneModules_UIK_adj_kIM <- function(initial_modules, consensus_network, min_mod
     module_data <- c(list(intermediate_modules_filt), module_data)
 
   }
+
+  # print message if any modules were lost due to low module size
+  modules_lost <- setdiff(unique(initial_modules$regulator), unique(module_data[[1]]$regulator))
+  if (length(modules_lost) > 0)
+    message(paste0("The following modules were removed due to too low module size after pruning: ", paste(modules_lost, collapse = ", "), ". If you would like to keep them, consider lowering 'min_module_size'."))
 
   # take the last module data frame that still passed the size criterion
   module_data[[1]] %>%

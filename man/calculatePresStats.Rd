@@ -10,6 +10,7 @@ calculatePresStats(
   stats = c("cor_adj", "cor_adj_regulator", "cor_kIM"),
   clone2species = NULL,
   jackknife = TRUE,
+  signed = FALSE,
   n_cores = 1L,
   corr_method = "spearman"
 )
@@ -33,6 +34,8 @@ calculatePresStats(
 If NULL (default), the output will contain no species information.}
 
 \item{jackknife}{Logical specifying whether jackknifing should be performed or not (default: TRUE).}
+
+\item{signed}{Logical indicating whether the networks in \code{network_list} are signed (default: FALSE, see also \code{\link{normalizeEdgeWeights}}). If set to FALSE and \code{network_list} contains the edge attribute "direction", the edge weights in the network with direction "-" are negated for the calculation of "cor_adj" and "cor_adj_regulator".}
 
 \item{n_cores}{Integer, the number of cores (default: 1).}
 

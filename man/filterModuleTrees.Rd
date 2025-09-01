@@ -4,7 +4,7 @@
 \alias{filterModuleTrees}
 \title{Filter modules based on their tree representations}
 \usage{
-filterModuleTrees(tree_stats, random_tree_stats, p_adj_cutoff = 0.1)
+filterModuleTrees(tree_stats, random_tree_stats, p_cutoff = 0.95)
 }
 \arguments{
 \item{tree_stats}{Data frame of the tree-based statistics for the actual (pruned) modules. Required columns:
@@ -21,7 +21,7 @@ filterModuleTrees(tree_stats, random_tree_stats, p_adj_cutoff = 0.1)
 \item{within_species_diversity}{Numeric, within-species diveristy per module (typically the median across all jackknife versions of a module).}
 }}
 
-\item{p_adj_cutoff}{Numeric, adjusted p-value cutoff (default: 0.1).}
+\item{p_cutoff}{Numeric, the cutoff for the probability of a module's statistics being drawn from the distribution of the actual modules and not the distribution of random modules. Modules are retained only if this probability exceeds the cutoff.}
 }
 \value{
 Data frame of the tree-based statistics for the actual (pruned) modules after filtering.
@@ -32,5 +32,5 @@ Filters modules using two tree-based statistics (the total tree length and withi
 \details{
 The within-species diversity measures the variability of module connectivity patterns within species and the total tree length measures the variability of module connectivity patterns both within and across species. The within-species diversity is a subset of the total tree, hence we expect a linear relationship between the two statistics. This line explains the detection robustness: modules that have both low within-species diversity and low total tree length are well-preserved both within and across species, meaning that these modules could be robustly detected in all clones, whereas modules, for which both metrics are high, are poorly preserved not just across but also within species, indicating a high detection uncertainty ("wobbliness"). Random modules are expected to fall at the wobbly end of the spectrum, while actual modules are expected to fall at the robust end of the spectrum.
 
-The function removes the modules that are uncertain to detect, i.e. modules the are too similar to the random modules in terms of their total tree length and within-species diversity. This similarity is measured by the probability that the statistic of an actual modules comes from the distribution of the statistics of all random modules (one-sample one-sided z-test with the mean and standard deviation of the random module statistics as the expected mean and standard deviation). If the adjusted p-value of a module is below the specified \code{p_adj_cutoff} for either of the two statistics, i.e. the module is significantly different from the random modules, it is kept.
+The function removes the modules that are uncertain to detect, i.e. modules the are too similar to the random modules in terms of their total tree length and within-species diversity. It calculates how probable it is that the statistics of an actual module come from the distribution of all actual modules (\eqn{p_{actual}}) and how probable it is that they come from the distribution of all random modules (\eqn{p_{random}}) using the probability density functions of the two bivariate normal distributions. If \deqn{\frac{p_{actual}}{p_{actual} + p_{random}} > p_{cutoff}} is fulfilled, the module is kept, otherwise it is removed.
 }

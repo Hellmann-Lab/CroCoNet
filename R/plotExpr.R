@@ -18,7 +18,8 @@
 #' @param order_by Character specifying the column in the metadata of \code{sce} by which the cells should be ordered on the plot. This column typically contains the inferred pseudotime (default: "pseudotime"), or the cell type labels.
 #' @param heatmap_colors Character vector, the heatmap colors for the expression levels. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.
 #' @param annotation_colors Character vector, the colors for the variable specified by \code{order_by}. If the variable is discrete, the vector should contain as many colors as there are unique values of the variable, if the variable is continuous, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}
-#' @param clip Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. The default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.
+#' @param z_transform Logical specifying whether z-transformation should be performed per gene before plotting (default: TRUE).
+#' @param clip Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. If \code{z_transform} is set to TRUE, the default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene, otherwise the default is Inf.
 #' @param font_size Numeric, font size (default: 14).
 #'
 #' @return A heatmap as a \code{\link{ggplot}} object showing the expression profiles of the input genes across all cells.
@@ -28,7 +29,7 @@
 #' plotExprHeatmap(c("POU5F1","DNMT3B","TERF1","TDGF1","L1TD1","VIM","MAP1B","MARCKS","PTN","CDH2"),
 #'                 sce)
 #' @family functions to plot gene expression profiles
-plotExprHeatmap <- function(genes, sce, order_by = "pseudotime", heatmap_colors = NULL, annotation_colors = NULL, clip = 3, font_size = 14) {
+plotExprHeatmap <- function(genes, sce, order_by = "pseudotime", heatmap_colors = NULL, annotation_colors = NULL, z_transform = TRUE, clip = ifelse(z_transform, 3, Inf),  font_size = 14) {
 
   # check input data
   if (!inherits(genes, "character"))
@@ -80,7 +81,7 @@ plotExprHeatmap <- function(genes, sce, order_by = "pseudotime", heatmap_colors 
                              data.frame(cell = colnames(sce),
                                         order_by = sce[[order_by]],
                                         gene = gene_name,
-                                        expr = scale(SingleCellExperiment::logcounts(sce)[gene_name,]))
+                                        expr = scale(SingleCellExperiment::logcounts(sce)[gene_name,], center = z_transform, scale = z_transform))
 
                            } %>%
     dplyr::mutate(gene = factor(.data[["gene"]], levels = rev(genes)))
@@ -92,9 +93,21 @@ plotExprHeatmap <- function(genes, sce, order_by = "pseudotime", heatmap_colors 
   if (is.null(heatmap_colors))
     heatmap_colors <- eigengene_colors
 
+  # initialize plot
+  if (!is.numeric(expr$order_by)) {
+
+    p <- expr %>%
+      ggplot2::ggplot(ggplot2::aes(x = stats::reorder(.data[["cell"]], as.numeric(as.factor(.data[["order_by"]]))), y = .data[["gene"]], fill = .data[["expr"]])) # if the cells are supposed to be ordered by a categorical variable, make it numeric so that the cells can be rearranged accordingly
+
+  } else {
+
+    p <- expr %>%
+      ggplot2::ggplot(ggplot2::aes(x = stats::reorder(.data[["cell"]], .data[["order_by"]]), y = .data[["gene"]], fill = .data[["expr"]]))
+
+  }
+
   # heatmap
-  p <- expr %>%
-    ggplot2::ggplot(ggplot2::aes(x = stats::reorder(.data[["cell"]], as.numeric(.data[["order_by"]])), y = .data[["gene"]], fill = .data[["expr"]])) +
+  p <- p +
     ggplot2::geom_tile() +
     ggplot2::theme_bw(base_size = font_size) +
     ggplot2::scale_fill_gradientn(colors = heatmap_colors, limits = c(-max_abs_expr, max_abs_expr), guide = ggplot2::guide_colorbar(order = 1), name = "expression") +
@@ -117,7 +130,7 @@ plotExprHeatmap <- function(genes, sce, order_by = "pseudotime", heatmap_colors 
       p + ggplot2::scale_color_gradientn(colors = annotation_colors, name = order_by)
     )
 
-  # if the cells are ordered by cell type (or any other discrete variable), add discrete color scale
+    # if the cells are ordered by cell type (or any other discrete variable), add discrete color scale
   } else {
 
     # if no annotation colors are provided, take the default
@@ -160,17 +173,18 @@ plotExprHeatmap <- function(genes, sce, order_by = "pseudotime", heatmap_colors 
 #' @param order_by Character specifying which column of \code{eigengenes} by which the cells should be ordered on the plot. This column typically contains the inferred pseudotime (default: "pseudotime"), or the cell type labels.
 #' @param heatmap_colors Character vector, the heatmap colors for the variable specified by \code{expr_column}. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.
 #' @param annotation_colors Character vector, the colors for the variable specified by \code{order_by}. If the variable is discrete, the vector should contain as many colors as there are unique values of the variable, if the variable is continuous, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.
-#' @param clip Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. The default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.
+#' @param z_transform Logical specifying whether z-transformation should be performed per module before plotting (default: TRUE).
+#' @param clip Numeric specifying the degree of clipping. For each module, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. If \code{z_transform} is set to TRUE, the default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per module, otherwise the default is Inf.
 #' @param font_size Numeric, font size (default: 14).
 #'
-#' @return A heatmap as a \code{\link{ggplot}} object showing the summarized expression profiles of the modules across all cells.
+#' @return A heatmap as a \code{\link{ggplot}} object showing the expression profiles of the modules across all cells.
 #' @export
 #'
 #' @examples plotEigengeneHeatmap(eigengenes)
 #' @family functions to plot eigengene profiles
 #' @references
 #' Zhang, B., & Horvath, S. (2005). A general framework for weighted gene co-expression network analysis. Statistical Applications in Genetics and Molecular Biology, 4, 17-60. https://doi.org/10.2202/1544-6115.1128
-plotEigengeneHeatmap <- function(eigengenes, expr_column = "eigengene", order_by = "pseudotime", heatmap_colors = NULL, annotation_colors = NULL, clip = 3, font_size = 14) {
+plotEigengeneHeatmap <- function(eigengenes, expr_column = "eigengene", order_by = "pseudotime", heatmap_colors = NULL, annotation_colors = NULL, z_transform = TRUE, clip = ifelse(z_transform, 3, Inf), font_size = 14) {
 
   # check input data
   if (!is.data.frame(eigengenes))
@@ -204,10 +218,14 @@ plotEigengeneHeatmap <- function(eigengenes, expr_column = "eigengene", order_by
   n_modules <- length(unique(eigengenes$module))
 
   # scale
-  eigengenes <- eigengenes %>%
-    dplyr::group_by(.data[["module"]]) %>%
-    dplyr::mutate({{expr_column}} := scale(.data[[expr_column]])) %>%
-    dplyr::ungroup()
+  if (z_transform) {
+
+    eigengenes <- eigengenes %>%
+      dplyr::group_by(.data[["module"]]) %>%
+      dplyr::mutate({{expr_column}} := scale(.data[[expr_column]])) %>%
+      dplyr::ungroup()
+
+  }
 
   # clipping threshold
   max_abs_expr <- min(max(abs(eigengenes[[expr_column]])), clip)
@@ -216,9 +234,21 @@ plotEigengeneHeatmap <- function(eigengenes, expr_column = "eigengene", order_by
   if (is.null(heatmap_colors))
     heatmap_colors <- eigengene_colors
 
+  # initialize plot
+  if (!is.numeric(eigengenes[[order_by]])) {
+
+    p <- eigengenes %>%
+      ggplot2::ggplot(ggplot2::aes(x = stats::reorder(.data[["cell"]], as.numeric(as.factor(.data[[order_by]]))), y = .data[["module"]], fill = .data[[expr_column]])) # if the cells are supposed to be ordered by a categorical variable, make it numeric so that the cells can be rearranged accordingly
+
+  } else {
+
+    p <- eigengenes %>%
+      ggplot2::ggplot(ggplot2::aes(x = stats::reorder(.data[["cell"]], .data[[order_by]]), y = .data[["module"]], fill = .data[[expr_column]]))
+
+  }
+
   # heatmap
-  p <- eigengenes %>%
-    ggplot2::ggplot(ggplot2::aes(x = stats::reorder(.data[["cell"]], as.numeric(.data[[order_by]])), y = .data[["module"]], fill = .data[[expr_column]])) +
+  p <- p +
     ggplot2::geom_tile() +
     ggplot2::theme_bw(base_size = font_size) +
     ggplot2::scale_fill_gradientn(colors = heatmap_colors,  limits = c(-max_abs_expr, max_abs_expr), guide = ggplot2::guide_colorbar(order = 1)) +
@@ -241,7 +271,7 @@ plotEigengeneHeatmap <- function(eigengenes, expr_column = "eigengene", order_by
       p + ggplot2::scale_color_gradientn(colors = annotation_colors)
     )
 
-  # if the cells are ordered by cell type (or any other discrete variable), add discrete color scale
+    # if the cells are ordered by cell type (or any other discrete variable), add discrete color scale
   } else {
 
     # if no annotation colors are provided, take the default
@@ -365,9 +395,9 @@ plotExprAlongPseudotime <- function(genes, sce, pseudotime_column = "pseudotime"
   loess_fit <- foreach::foreach(gene_name = genes,
                                 .combine = dplyr::bind_rows,
                                 .multicombine = TRUE) %:%
-               foreach::foreach(species_name = species_names,
-                                .combine = dplyr::bind_rows,
-                                .multicombine = TRUE)  %do% {
+    foreach::foreach(species_name = species_names,
+                     .combine = dplyr::bind_rows,
+                     .multicombine = TRUE)  %do% {
 
                        expr_gene_spec <- expr %>%
                          dplyr::filter(.data[["gene"]] == gene_name & .data[["species"]] == species_name)
@@ -522,9 +552,9 @@ plotEigengenesAlongPseudotime <- function(eigengenes, expr_column = "eigengene",
   loess_fit <- foreach::foreach(module_name = module_names,
                                 .combine = dplyr::bind_rows,
                                 .multicombine = TRUE) %:%
-               foreach::foreach(species_name = species_names,
-                                .combine = dplyr::bind_rows,
-                                .multicombine = TRUE)  %do% {
+    foreach::foreach(species_name = species_names,
+                     .combine = dplyr::bind_rows,
+                     .multicombine = TRUE)  %do% {
 
                        eigengene_mod_spec <- eigengenes %>%
                          dplyr::filter(.data[["module"]] == module_name & .data[["species"]] == species_name)
@@ -584,9 +614,9 @@ plotEigengenesAlongPseudotime <- function(eigengenes, expr_column = "eigengene",
 }
 
 
-#' Plot expression levels per cell type
+#' Plot expression distributions per cell type and species
 #'
-#' Plots the expression levels of one or more genes per cell type and species, and thus allows the expression patterns to be visually compared across species.
+#' Plots the expression distributions of one or more genes per cell type and species, and thus allows the expression patterns to be visually compared across species.
 #'
 #' The function produces a violin plot of expression levels per cell type and species, faceted by gene. The colors for the species can be controlled by the parameter \code{species_colors}.
 #'
@@ -602,12 +632,13 @@ plotEigengenesAlongPseudotime <- function(eigengenes, expr_column = "eigengene",
 #' @param species_colors Character vector, colors per species.
 #' @param font_size Numeric, font size (default: 14).
 #'
-#' @return A violin plot as a \code{\link{ggplot}} object showing the expression levels of the genes per cell type and species.
+#' @return A violin plot as a \code{\link{ggplot}} object showing the expression distributions of the input genes per cell type and species.
 #' @export
 #'
-#' @examples plotExprPerCellType(regulators, sce)
+#' @examples plotExprViolin(c("POU5F1","DNMT3B","TERF1","TDGF1","L1TD1","VIM","MAP1B","MARCKS","PTN","CDH2"),
+#'                          sce)
 #' @family functions to plot gene expression profiles
-plotExprPerCellType <- function(genes, sce, cell_type_column = "cell_type", species_colors = NULL, font_size = 14) {
+plotExprViolin <- function(genes, sce, cell_type_column = "cell_type", species_colors = NULL, font_size = 14) {
 
   # check input data
   if (!inherits(genes, "character"))
@@ -665,7 +696,7 @@ plotExprPerCellType <- function(genes, sce, cell_type_column = "cell_type", spec
   # violin plot
   expr %>%
     ggplot2::ggplot(ggplot2::aes(x = .data[["cell_type"]], y = .data[["expr"]], fill = .data[["species"]])) +
-    ggplot2::geom_violin(draw_quantiles = 0.5) +
+    ggplot2::geom_violin(draw_quantiles = 0.5, linewidth = 0.2) +
     ggplot2::scale_fill_manual(values = species_colors) +
     ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(linewidth = 0.7))) +
     ggplot2::xlab(cell_type_column) +
@@ -677,9 +708,9 @@ plotExprPerCellType <- function(genes, sce, cell_type_column = "cell_type", spec
 }
 
 
-#' Plot eigengenes per cell type
+#' Plot eigengene distributions per cell type and species
 #'
-#' Plots the eigengenes (or other types of summarized module expression profiles) per cell type and species, and thus allows the expression patterns to be visually compared across species.
+#' Plots the distribution of eigengenes (or other types of summarized module expression profiles) per cell type and species, and thus allows the expression patterns to be visually compared across species.
 #'
 #' A concept adapted from WGCNA, the eigengene summarizes the expression profile of an entire module, and it is calculated as the first principal component of the module expression data (see also \code{\link{calculateEigengenes}}). Other possible ways of representing the expression profile of a module include the mean expression and the regulator expression.
 #'
@@ -700,14 +731,14 @@ plotExprPerCellType <- function(genes, sce, cell_type_column = "cell_type", spec
 #' @param species_colors Character vector, colors per species.
 #' @param font_size Numeric, font size (default: 14).
 #'
-#' @return A violin plot as a \code{\link{ggplot}} object showing the summarized expression levels of the modules per cell type and species.
+#' @return A violin plot as a \code{\link{ggplot}} object showing the expression distributions of the modules per cell type and species.
 #' @export
 #'
-#' @examples plotEigengenesPerCellType(eigengenes)
+#' @examples plotEigengenesViolin(eigengenes)
 #' @family functions to plot eigengene profiles
 #' @references
 #' Zhang, B., & Horvath, S. (2005). A general framework for weighted gene co-expression network analysis. Statistical Applications in Genetics and Molecular Biology, 4, 17-60. https://doi.org/10.2202/1544-6115.1128
-plotEigengenesPerCellType <- function(eigengenes, expr_column = "eigengene", cell_type_column = "cell_type", species_colors = NULL, font_size = 14) {
+plotEigengenesViolin <- function(eigengenes, expr_column = "eigengene", cell_type_column = "cell_type", species_colors = NULL, font_size = 14) {
 
   # check input data
   if (!is.data.frame(eigengenes))
@@ -738,7 +769,7 @@ plotEigengenesPerCellType <- function(eigengenes, expr_column = "eigengene", cel
   # violin plot
   eigengenes %>%
     ggplot2::ggplot(ggplot2::aes(x = .data[["cell_type"]], y = .data[[expr_column]], fill = .data[["species"]])) +
-    ggplot2::geom_violin(draw_quantiles = 0.5) +
+    ggplot2::geom_violin(draw_quantiles = 0.5, linewidth = 0.2) +
     ggplot2::scale_fill_manual(values = species_colors) +
     ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(linewidth = 0.7))) +
     ggplot2::xlab(cell_type_column) +
@@ -748,3 +779,647 @@ plotEigengenesPerCellType <- function(eigengenes, expr_column = "eigengene", cel
     ggplot2::scale_y_continuous(position = "right")
 
 }
+
+
+#' Plot summarized expression profiles as a heatmap
+#'
+#' Plots the summarized expression of one or more genes per cell type and species as a heatmap.
+#'
+#' The function creates a heatmap, with columns corresponding to cell types, rows corresponding to genes and species, and colors corresponding to either percent of cells expressing the given gene (if \code{summary_metric} = "pct", the default) or mean expression in logcounts (if \code{summary_metric} = "mean").
+#'
+#' The cell types and species are visualized as annotation graphics above the heatmap using \code{cell_type_colors} and on the right hand side of the heatmap using \code{species_colors}, respectively.
+#'
+#' Expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene, this can be changed via the parameter \code{clip}. Clipping aids visualization by preventing the outlier data points from squishing the rest of the data into a small color range. If clipping is not desired, please set \code{clip} to Inf.
+#'
+#' @param genes Character vector, the names of the genes for which the expression profiles should be plotted.
+#' @param sce \code{\link{SingleCellExperiment}} object containing the expression data (logcounts and metadata) for all network genes. Required metadata column:
+#'\describe{
+#' \item{species}{Character, the name of the species.}
+#' \item{\{\{cell_type_column\}\}}{Character, cell type annotation.}
+#' }
+#' @param summary_metric Character, the metric for summarizing the expression of a gene per cell type and species. One of "pct" (the percent of cells expressing the gene, the default) and "mean" (mean expression in logcounts).
+#' @param cell_type_column Character, the name of the cell type annotation column in the metadata of \code{sce} (default: "cell_type").
+#' @param heatmap_colors Character vector, the heatmap colors for the summarized expression levels. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.
+#' @param species_colors Character vector, colors per species.
+#' @param cell_type_colors Character vector, colors per cell type.
+#' @param clip Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. The default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.
+#' @param font_size Numeric, font size (default: 14).
+#' @param label_size Numeric, font size of the cell type labels (default: \code{font_size} / 5).
+#'
+#' @return A heatmap as a \code{\link{ggplot}} object showing the summarized expression levels of the input genes per cell type and species.
+#' @export
+#'
+#' @examples plotSumExprHeatmap(c("POU5F1","DNMT3B","TERF1","TDGF1","L1TD1","VIM","MAP1B","MARCKS","PTN","CDH2"),
+#'                              sce)
+#' @family functions to plot gene expression profiles
+plotSumExprHeatmap <- function(genes, sce, summary_metric = "pct", cell_type_column = "cell_type", heatmap_colors = NULL, species_colors = NULL, cell_type_colors = NULL, clip = 3, font_size = 14, label_size = font_size / 3) {
+
+  # check input data
+  if (!inherits(genes, "character"))
+    stop("The argument \"genes\" should be a character vector.")
+
+  if (!inherits(sce, "SingleCellExperiment"))
+    stop("The argument \"sce\" should be of class \"SingleCellExperiment\".")
+
+  if (!("logcounts" %in% names(SummarizedExperiment::assays(sce))))
+    stop("The argument \"sce\" should contain the assay \"logcounts\".")
+
+  if (is.null(summary_metric) || !summary_metric %in% c("pct", "mean"))
+    stop("The argument \"summary_metric\" should be one of \"pct\", \"mean\".")
+
+  if (!is.null(cell_type_column) && (!inherits(cell_type_column, "character") || length(cell_type_column) != 1 || is.null(sce[[cell_type_column]])))
+    stop("The argument \"cell_type_column\" should be a string specifying the metadata column of \"sce\" that contains the cell type labels.")
+
+  genes_not_found <- genes[!genes %in% rownames(sce)]
+
+  if (length(genes_not_found) > 0)
+    stop(paste0("The following input genes cannot be found in \"sce\": ", paste(genes_not_found, collapse = ", "), "."))
+
+  if (!is.null(heatmap_colors) && (!inherits(heatmap_colors, "character") || any(!areColors(heatmap_colors))))
+    stop("The argument \"heatmap_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(species_colors) && (!inherits(species_colors, "character") || any(!areColors(species_colors))))
+    stop("The argument \"species_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(cell_type_colors) && (!inherits(cell_type_colors, "character") || any(!areColors(cell_type_colors))))
+    stop("The argument \"cell_type_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(species_colors) && length(species_colors) != length(unique(sce$species)))
+    stop("The argument \"species_colors\" should contain as many colors as there are unique species in the \"species\" metadata column of \"sce\".")
+
+  if (!is.null(cell_type_colors) && length(cell_type_colors) != length(unique(sce[[cell_type_column]])))
+    stop("The argument \"cell_type_colors\" should contain as many colors as there are unique cell types in the metadata column of \"sce\" specified by \"cell_type_column\".")
+
+  if (!inherits(clip, "numeric") || length(clip) != 1 || clip <= 0)
+    stop("The argument \"clip\" should be a positive numeric value.")
+
+  if (!inherits(font_size, "numeric") || length(font_size) != 1 || font_size <= 0)
+    stop("The argument \"font_size\" should be a positive numeric value.")
+
+  if (!inherits(label_size, "numeric") || length(label_size) != 1 || label_size <= 0)
+    stop("The argument \"label_size\" should be a positive numeric value.")
+
+  # avoid NSE notes in R CMD check
+  gene_name = NULL
+
+  # extract metadata and logcounts of the genes of interest from the SCE object
+  expr <- foreach::foreach(gene_name = genes,
+                           .combine = dplyr::bind_rows,
+                           .multicombine = TRUE) %do% {
+
+                             expr_gene <- data.frame(species = sce$species,
+                                                     cell_type = sce[[cell_type_column]],
+                                                     gene = gene_name,
+                                                     expr = SingleCellExperiment::logcounts(sce)[gene_name,])
+
+                             # summarize expression per cell type and species
+                             if (summary_metric == "pct") {
+
+                               expr_gene <- expr_gene %>%
+                                 dplyr::group_by(.data[["species"]], .data[["cell_type"]], .data[["gene"]]) %>%
+                                 dplyr::summarise(expr = sum(.data[["expr"]] > 0) / length(.data[["expr"]])*100, .groups = "keep") %>%
+                                 dplyr::ungroup()
+
+                             } else {
+
+                               expr_gene <- expr_gene %>%
+                                 dplyr::group_by(.data[["species"]], .data[["cell_type"]], .data[["gene"]]) %>%
+                                 dplyr::summarise(expr = mean(.data[["expr"]]),  .groups = "keep") %>%
+                                 dplyr::ungroup()
+
+                             }
+
+                             expr_gene
+
+                           } %>%
+    dplyr::right_join(tidyr::expand_grid(gene = genes, species = unique(sce$species), cell_type = unique(sce[[cell_type_column]])), by = c("gene", "species", "cell_type")) %>%
+    dplyr::mutate(gene = factor(.data[["gene"]], levels = genes))
+
+  # clipping threshold
+  max_abs_expr <- min(max(expr$expr), mean(expr$expr) + clip*stats::sd(expr$expr))
+  min_abs_expr <- max(min(expr$expr), mean(expr$expr) - clip*stats::sd(expr$expr))
+
+  # if no heatmap colors are provided, take the default
+  if (is.null(heatmap_colors))
+    heatmap_colors <- eigengene_colors
+
+  # if no cell type colors are provided, take the default
+  if (is.null(cell_type_colors))
+    cell_type_colors <- cell_type_color_ramp(seq(0, 1, len = length(unique(sce[[cell_type_column]]))))
+
+  # if no species colors are provided, take the default
+  if (is.null(species_colors))
+    species_colors <- species_color_ramp(seq(0, 1, len = length(unique(sce$species))))
+
+  # heatmap
+  p3 <- expr %>%
+    ggplot2::ggplot(ggplot2::aes(y = .data[["species"]], x = .data[["cell_type"]], fill = .data[["expr"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::theme_bw(base_size = font_size) +
+    ggplot2::scale_fill_gradientn(colors = heatmap_colors, limits = c(min_abs_expr, max_abs_expr), guide = ggplot2::guide_colorbar(order = 1), name = ifelse(summary_metric == "pct", "% cells\nexpressed", "mean\nlogcounts")) +
+    ggplot2::theme(axis.ticks = ggplot2::element_blank(),
+                   axis.text = ggplot2::element_blank(),
+                   strip.background = ggplot2::element_blank(),
+                   strip.text.x = ggplot2::element_blank(),
+                   strip.text.y.left = ggplot2::element_text(angle = 0),
+                   plot.margin = ggplot2::margin(r = -5.5, t = -5.5),
+                   panel.spacing = ggplot2::unit(0.1, "lines")) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(0, 0)), limits = rev) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::facet_grid(.data[["gene"]]~.data[["cell_type"]], space = "free", scales = "free_x", switch = "y") +
+    ggplot2::xlab("cell type") +
+    ggplot2::ylab("gene & species")
+
+  # species
+  p2 <-  expr %>%
+    ggplot2::ggplot(ggplot2::aes(y = .data[["species"]], x = 1, fill = .data[["species"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::theme_bw(base_size = font_size) +
+    ggplot2::scale_fill_manual(values = species_colors) +
+    ggplot2::theme(axis.ticks = ggplot2::element_blank(),
+                   axis.text = ggplot2::element_blank(),
+                   axis.title = ggplot2::element_blank(),
+                   strip.background = ggplot2::element_blank(),
+                   strip.text = ggplot2::element_blank(),
+                   plot.margin = ggplot2::margin(l = -5.5),
+                   panel.spacing = ggplot2::unit(0.1, "lines")) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(0, 0)), limits = rev) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::facet_grid(.data[["gene"]]~.)
+
+  # cell types
+  p1 <-  expr %>%
+    ggplot2::ggplot(ggplot2::aes(y = 1, x = .data[["cell_type"]], fill = .data[["cell_type"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::geom_text(ggplot2::aes(label = .data[["cell_type"]]), size = label_size) +
+    ggplot2::theme_bw(base_size = font_size) +
+    ggplot2::scale_fill_manual(values = cell_type_colors, guide = "none") +
+    ggplot2::theme(axis.ticks = ggplot2::element_blank(),
+                   axis.text = ggplot2::element_blank(),
+                   axis.title = ggplot2::element_blank(),
+                   strip.background = ggplot2::element_blank(),
+                   strip.text = ggplot2::element_blank(),
+                   plot.margin = ggplot2::margin(b = -5.5),
+                   panel.spacing = ggplot2::unit(0.1, "lines")) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::facet_grid(.~.data[["cell_type"]], space = "free", scales = "free_x")
+
+  patchwork::wrap_plots(p1, patchwork::plot_spacer(), p3, p2, nrow = 2, heights = c(1, 20), widths = c(40, 1), guides = "collect")
+
+}
+
+
+#' Plot summarized eigengenes as a heatmap
+#'
+#' Plots the mean eigengene (or the mean of other types of summarized module expression profile) per cell type and species as a heatmap.
+#'
+#' A concept adapted from WGCNA, the eigengene summarizes the expression profile of an entire module, and it is calculated as the first principal component of the module expression data (see also \code{\link{calculateEigengenes}}). Other possible ways of representing the expression profile of a module include the mean expression and the regulator expression.
+#'
+#' The function takes a data frame containing any of these summarized module expression profiles as input (normally the output of \code{\link{calculateEigengenes}}) and plots it as a heatmap, with columns corresponding to cell types, rows corresponding to modules and species, and colors corresponding to the mean module expression across all cells of the given cell type and species.
+#'
+#' The column of the data frame containing the chosen type of summarized expression profile can be specified by the parameter \code{expr_column} (default: "eigengene"). The colors to represent the expression levels can be controlled by the parameter \code{heatmap_colors}.
+#'
+#' If the eigengene (or mean expression) has been calculated for positively and negatively regulated targets separately, then these will appear as separate rows of the heatmap.
+#'
+#' The cell types and species are visualized as annotation graphics above the heatmap using \code{cell_type_colors} and on the right hand side of the heatmap using \code{species_colors}, respectively.
+#'
+#' Expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per module, this can be changed via the parameter \code{clip}. Clipping aids visualization by preventing the outlier data points from squishing the rest of the data into a small color range. If clipping is not desired, please set \code{clip} to Inf.
+#'
+#' @param eigengenes Data frame of eigengenes, required columns:
+#'\describe{
+#' \item{cell}{Character, the cell barcode.}
+#' \item{species}{Character, the name of the species.}
+#' \item{\{\{cell_type_column\}\}}{Character, cell type annotation.}
+#' \item{module}{Character, transcriptional regulator and in case the eigengene was calculated for the positively or negatively regulated targets only, the direction of regulation (format: nameOfRegulator(+) or nameOfRegulator(-)).}
+#' \item{\{\{expr_column\}\}}{Numeric, summarized module expression profiles (typically the eigengene, the mean expression of the module, or the expression of the regulator).}
+#' }
+#' @param expr_column Character specifying the column of \code{eigengenes} by which the heatmap should be colored. This column is expected to contain summarized module expression profiles, typically the eigengene (default: "eigengene"), the mean expression of the module, or the expression of the regulator.
+#' @param cell_type_column Character, the name of the cell type annotation column in \code{eigengenes} (default: "cell_type").
+#' @param heatmap_colors Character vector, the heatmap colors for the summarized expression levels. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.
+#' @param species_colors Character vector, colors per species.
+#' @param cell_type_colors Character vector, colors per cell type.
+#' @param clip Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. The default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.
+#' @param font_size Numeric, font size (default: 14).
+#' @param label_size Numeric, font size of the cell type labels (default: \code{font_size} / 5).
+#'
+#' @return A heatmap as a \code{\link{ggplot}} object showing the summarized expression levels of the modules per cell type and species.
+#' @export
+#'
+#' @examples plotSumEigengeneHeatmap(eigengenes)
+#' @family functions to plot eigengene profiles
+#' @references
+#' Zhang, B., & Horvath, S. (2005). A general framework for weighted gene co-expression network analysis. Statistical Applications in Genetics and Molecular Biology, 4, 17-60. https://doi.org/10.2202/1544-6115.1128
+plotSumEigengeneHeatmap <- function(eigengenes, expr_column = "eigengene", cell_type_column = "cell_type", heatmap_colors = NULL, species_colors = NULL, cell_type_colors = NULL, clip = 3, font_size = 14, label_size = font_size / 3) {
+
+  # check input data
+  if (!is.data.frame(eigengenes))
+    stop("The argument \"eigengenes\" should be a data frame.")
+
+  if (any(!c("cell", "species", "module") %in% colnames(eigengenes)))
+    stop("The argument \"eigengenes\" should contain the columns \"cell\", \"species\" and \"module\".")
+
+  if (!inherits(expr_column, "character") || length(expr_column) != 1 || !expr_column %in% colnames(eigengenes))
+    stop("The argument \"expr_column\" should be a string specifying the column of \"eigengenes\" that contains the summarized module expression profiles to be plotted.")
+
+  if (!inherits(cell_type_column, "character") || length(cell_type_column) != 1 || !cell_type_column %in% colnames(eigengenes))
+    stop("The argument \"cell_type_column\" should be a string specifying the metadata column of \"eigengenes\" that contains the cell type labels.")
+
+  if (!is.null(heatmap_colors) && (!inherits(heatmap_colors, "character") || any(!areColors(heatmap_colors))))
+    stop("The argument \"heatmap_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(species_colors) && (!inherits(species_colors, "character") || any(!areColors(species_colors))))
+    stop("The argument \"species_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(cell_type_colors) && (!inherits(cell_type_colors, "character") || any(!areColors(cell_type_colors))))
+    stop("The argument \"cell_type_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(species_colors) && length(species_colors) != length(unique(eigengenes$species)))
+    stop("The argument \"species_colors\" should contain as many colors as there are unique species in the \"species\" column of \"eigengenes\".")
+
+  if (!is.null(cell_type_colors) && length(cell_type_colors) != length(unique(eigengenes[[cell_type_column]])))
+    stop("The argument \"cell_type_colors\" should contain as many colors as there are unique cell types in the column of \"eigengenes\" specified by \"cell_type_column\".")
+
+  if (!inherits(clip, "numeric") || length(clip) != 1 || clip <= 0)
+    stop("The argument \"clip\" should be a positive numeric value.")
+
+  if (!inherits(font_size, "numeric") || length(font_size) != 1 || font_size <= 0)
+    stop("The argument \"font_size\" should be a positive numeric value.")
+
+  if (!inherits(label_size, "numeric") || length(label_size) != 1 || label_size <= 0)
+    stop("The argument \"label_size\" should be a positive numeric value.")
+
+  # get all modules, species and cell types
+  eigengenes <- eigengenes %>%
+    dplyr::rename(expr = expr_column,
+                  cell_type = cell_type_column)
+  module_names <- unique(eigengenes$module)
+  species_names <- unique(eigengenes$species)
+  cell_types <- unique(eigengenes$cell_type)
+
+  # summarize expression per cell type and species
+  eigengenes_sum <- eigengenes %>%
+    dplyr::group_by(.data[["species"]], .data[["cell_type"]], .data[["module"]]) %>%
+    dplyr::summarise(expr = mean(.data[["expr"]]),  .groups = "keep") %>%
+    dplyr::ungroup() %>%
+    dplyr::right_join(tidyr::expand_grid(module = module_names, species = species_names, cell_type = cell_types), by = c("module", "species", "cell_type")) %>%
+    dplyr::mutate(module = factor(.data[["module"]], levels = module_names))
+
+  # clipping threshold
+  max_abs_expr <- min(max(eigengenes_sum$expr), mean(eigengenes_sum$expr) + clip*stats::sd(eigengenes_sum$expr))
+  min_abs_expr <- max(min(eigengenes_sum$expr), mean(eigengenes_sum$expr) - clip*stats::sd(eigengenes_sum$expr))
+
+  # if no heatmap colors are provided, take the default
+  if (is.null(heatmap_colors))
+    heatmap_colors <- eigengene_colors
+
+  # if no cell type colors are provided, take the default
+  if (is.null(cell_type_colors))
+    cell_type_colors <- cell_type_color_ramp(seq(0, 1, len = length(cell_types)))
+
+  # if no species colors are provided, take the default
+  if (is.null(species_colors))
+    species_colors <- species_color_ramp(seq(0, 1, len = length(species_names)))
+
+  # heatmap
+  p3 <- eigengenes_sum %>%
+    ggplot2::ggplot(ggplot2::aes(y = .data[["species"]], x = .data[["cell_type"]], fill = .data[["expr"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::theme_bw(base_size = font_size) +
+    ggplot2::scale_fill_gradientn(colors = heatmap_colors, limits = c(min_abs_expr, max_abs_expr), guide = ggplot2::guide_colorbar(order = 1), name = paste0(expr_column, "\nsummarized\nper cell type\nand species")) +
+    ggplot2::theme(axis.ticks = ggplot2::element_blank(),
+                   axis.text = ggplot2::element_blank(),
+                   strip.background = ggplot2::element_blank(),
+                   strip.text.x = ggplot2::element_blank(),
+                   strip.text.y.left = ggplot2::element_text(angle = 0),
+                   plot.margin = ggplot2::margin(r = -5.5, t = -5.5),
+                   panel.spacing = ggplot2::unit(0.1, "lines")) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(0, 0)), limits = rev) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::facet_grid(.data[["module"]]~.data[["cell_type"]], space = "free", scales = "free_x", switch = "y") +
+    ggplot2::xlab("cell type") +
+    ggplot2::ylab("module & species")
+
+  # species
+  p2 <- eigengenes_sum %>%
+    ggplot2::ggplot(ggplot2::aes(y = .data[["species"]], x = 1, fill = .data[["species"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::theme_bw(base_size = font_size) +
+    ggplot2::scale_fill_manual(values = species_colors) +
+    ggplot2::theme(axis.ticks = ggplot2::element_blank(),
+                   axis.text = ggplot2::element_blank(),
+                   axis.title = ggplot2::element_blank(),
+                   strip.background = ggplot2::element_blank(),
+                   strip.text = ggplot2::element_blank(),
+                   plot.margin = ggplot2::margin(l = -5.5),
+                   panel.spacing = ggplot2::unit(0.1, "lines")) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(0, 0)), limits = rev) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::facet_grid(.data[["module"]]~.)
+
+  # cell types
+  p1 <- eigengenes_sum %>%
+    ggplot2::ggplot(ggplot2::aes(y = 1, x = .data[["cell_type"]], fill = .data[["cell_type"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::geom_text(ggplot2::aes(label = .data[["cell_type"]]), size = label_size) +
+    ggplot2::theme_bw(base_size = font_size) +
+    ggplot2::scale_fill_manual(values = cell_type_colors, guide = "none") +
+    ggplot2::theme(axis.ticks = ggplot2::element_blank(),
+                   axis.text = ggplot2::element_blank(),
+                   axis.title = ggplot2::element_blank(),
+                   strip.background = ggplot2::element_blank(),
+                   strip.text = ggplot2::element_blank(),
+                   plot.margin = ggplot2::margin(b = -5.5),
+                   panel.spacing = ggplot2::unit(0.1, "lines")) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::facet_grid(.~.data[["cell_type"]], space = "free", scales = "free_x")
+
+  patchwork::wrap_plots(p1, patchwork::plot_spacer(), p3, p2, nrow = 2, heights = c(1, 20), widths = c(40, 1), guides = "collect")
+
+}
+
+
+#' Plot summarized expression profiles as a line plot
+#'
+#' Plots the summarized expression of one or more genes per cell type and species as a line plot, and thus allows the expression patterns to be visually compared across species.
+#'
+#' The expression of each input gene is summarized either as the percent of cells expressing the given gene (if \code{summary_metric} = "pct", the default) or the mean expression and its 95% confidence interval in logcounts (if \code{summary_metric} = "mean") per cell type and species.#' The species and cell type information are taken from the metadata slot of the input \code{sce} object, and the expression data are taken from the logcounts assay of the input \code{sce} object.
+#'
+#' The summarized expression levels are then visualized as a scatter plot across the cell types, colored by species and faceted by gene. To aid visual comparison across species, the data points of the same species are connected by lines across the cell types (this is not meant to represent continuity).
+#'
+#' The cell types are depicted below the plot using \code{cell_type_colors}.
+#'
+#' @param genes Character vector, the names of the genes for which the expression profiles should be plotted.
+#' @param sce \code{\link{SingleCellExperiment}} object containing the expression data (raw counts, logcounts and metadata) for all network genes. Required metadata columns:
+#'\describe{
+#' \item{species}{Character, the name of the species.}
+#' \item{\{\{cell_type_column\}\}}{Character, cell type annotation.}
+#' }
+#' @param summary_metric Character, the metric for summarizing the expression of a gene per cell type and species. One of "pct" (the percent of cells expressing the gene, the default) and "mean" (mean expression in logcounts).
+#' @param cell_type_column Character, the name of the cell type annotation column in the metadata of \code{sce}.
+#' @param species_colors Character vector, colors per species.
+#' @param cell_type_colors Character vector, colors per cell type.
+#' @param font_size Numeric, font size (default: 14).
+#'
+#' @return A line plot as a \code{\link{ggplot}} object showing the summarized expression levels of the genes per cell type and species.
+#' @export
+#'
+#' @examples plotSumExprLine(c("POU5F1","DNMT3B","TERF1","TDGF1","L1TD1","VIM","MAP1B","MARCKS","PTN","CDH2"),
+#'                           sce)
+#' @family functions to plot gene expression profiles
+plotSumExprLine <- function(genes, sce, summary_metric = "pct", cell_type_column = "cell_type", species_colors = NULL, cell_type_colors = NULL, font_size = 14) {
+
+  # check input data
+  if (!inherits(genes, "character"))
+    stop("The argument \"genes\" should be a character vector.")
+
+  if (!inherits(sce, "SingleCellExperiment"))
+    stop("The argument \"sce\" should be of class \"SingleCellExperiment\".")
+
+  if (!("logcounts" %in% names(SummarizedExperiment::assays(sce))))
+    stop("The argument \"sce\" should contain the assay \"logcounts\".")
+
+  if (is.null(summary_metric) || !summary_metric %in% c("pct", "mean"))
+    stop("The argument \"summary_metric\" should be one of \"pct\", \"mean\".")
+
+  if (is.null(sce$species))
+    stop("The argument \"sce\" should contain the metadata column \"species\".")
+
+  if (!inherits(cell_type_column, "character") || length(cell_type_column) != 1)
+    stop("The argument \"cell_type_column\" should be a string specifying the metadata column of \"sce\" that contains the cell type labels.")
+
+  if (is.null(sce[[cell_type_column]]))
+    stop("The argument \"sce\" should contain the metadata column specified by \"cell_type_column\".")
+
+  genes_not_found <- genes[!genes %in% rownames(sce)]
+
+  if (length(genes_not_found) > 0)
+    stop(paste0("The following input genes cannot be found in \"sce\": ", paste(genes_not_found, collapse = ", "), "."))
+
+  if (!is.null(species_colors) && (!inherits(species_colors, "character") || any(!areColors(species_colors))))
+    stop("The argument \"species_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(cell_type_colors) && (!inherits(cell_type_colors, "character") || any(!areColors(cell_type_colors))))
+    stop("The argument \"cell_type_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(species_colors) && length(species_colors) != length(unique(sce$species)))
+    stop("The argument \"species_colors\" should contain as many colors as there are unique species in the \"species\" metadata column of \"sce\".")
+
+  if (!is.null(cell_type_colors) && length(cell_type_colors) != length(unique(sce[[cell_type_column]])))
+    stop("The argument \"cell_type_colors\" should contain as many colors as there are unique cell types in the metadata column of \"sce\" specified by \"cell_type_column\".")
+
+  if (!inherits(font_size, "numeric") || length(font_size) != 1 || font_size <= 0)
+    stop("The argument \"font_size\" should be a positive numeric value.")
+
+  # avoid NSE notes in R CMD check
+  gene_name = NULL
+
+  # extract metadata and logcounts of the genes of interest from the SCE object
+  expr_sum <- foreach::foreach(gene_name = genes,
+                               .combine = dplyr::bind_rows,
+                               .multicombine = TRUE) %do% {
+
+                             expr_gene <- data.frame(species = sce$species,
+                                                     cell_type = sce[[cell_type_column]],
+                                                     gene = gene_name,
+                                                     expr = SingleCellExperiment::logcounts(sce)[gene_name,])
+
+                             # summarize expression per cell type and species
+                             if (summary_metric == "pct") {
+
+                               expr_gene <- expr_gene %>%
+                                 dplyr::group_by(.data[["species"]], .data[["cell_type"]], .data[["gene"]]) %>%
+                                 dplyr::summarise(expr = sum(.data[["expr"]] > 0) / length(.data[["expr"]])*100, .groups = "keep") %>%
+                                 dplyr::ungroup()
+
+                             } else {
+
+                               expr_gene <- expr_gene %>%
+                                 dplyr::group_by(.data[["species"]], .data[["cell_type"]], .data[["gene"]]) %>%
+                                 dplyr::summarise(summarizeStat(.data[["expr"]], "mean"), .groups = "keep") %>%
+                                 dplyr::ungroup() %>%
+                                 dplyr::rename(expr = .data[["estimate"]])
+
+                             }
+
+                             expr_gene
+
+                           } %>%
+    dplyr::mutate(gene = factor(.data[["gene"]], levels = genes))
+
+  # if no cell type colors are provided, take the default
+  if (is.null(cell_type_colors))
+    cell_type_colors <- cell_type_color_ramp(seq(0, 1, len = length(unique(sce[[cell_type_column]]))))
+
+  # if no species colors are provided, take the default
+  if (is.null(species_colors))
+    species_colors <- species_color_ramp(seq(0, 1, len = length(unique(sce$species))))
+
+  # line plot
+  p2 <- expr_sum %>%
+    ggplot2::ggplot(ggplot2::aes(x = .data[["cell_type"]], y = .data[["expr"]], color = .data[["species"]], group = .data[["species"]])) +
+    ggplot2::geom_line() +
+    ggplot2::scale_color_manual(values = species_colors) +
+    ggplot2::theme_bw(base_size = font_size) +
+    ggplot2::facet_wrap(~.data[["gene"]], scales = "free_y", ncol = 1, strip.position = "left") +
+    ggplot2::scale_y_continuous(position = "right") +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = 0.5)) +
+    ggplot2::theme(axis.ticks.x = ggplot2::element_blank(),
+                   axis.text.x = ggplot2::element_blank(),
+                   axis.title.x = ggplot2::element_blank(),
+                   plot.margin = ggplot2::margin(b = -5.5))
+
+  if (summary_metric == "pct") {
+
+    p2 <- p2 +
+      ggplot2::geom_point() +
+      ggplot2::ylab("% cells expressed")
+
+
+  } else {
+
+    p2 <- p2 +
+      ggplot2::geom_pointrange(ggplot2::aes(ymin = .data[["lwr"]], ymax = .data[["upr"]]), size = 0.2, linewidth = 0.2) +
+      ggplot2::ylab("mean expression (logcounts)")
+
+  }
+
+  # cell types
+  p1 <-  expr_sum %>%
+    ggplot2::ggplot(ggplot2::aes(y = 1, x = .data[["cell_type"]], fill = .data[["cell_type"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::theme_minimal(base_size = font_size) +
+    ggplot2::scale_fill_manual(values = cell_type_colors, guide = ggplot2::guide_legend(ncol = 1)) +
+    ggplot2::theme(axis.ticks = ggplot2::element_blank(),
+                   axis.text = ggplot2::element_blank(),
+                   axis.title.y = ggplot2::element_blank(),
+                   plot.margin = ggplot2::margin(t = -5.5)) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = 0.5)) +
+    ggplot2::xlab("cell type")
+
+  patchwork::wrap_plots(p2, p1, ncol = 1, heights = c(20, 1), guides = "collect")
+
+}
+
+
+#' Plot summarized eigengenes as a line plot
+#'
+#' Plots the mean eigengene (or the mean of other types of summarized module expression profile) per cell type and species as a line plot
+#'
+#' A concept adapted from WGCNA, the eigengene summarizes the expression profile of an entire module, and it is calculated as the first principal component of the module expression data (see also \code{\link{calculateEigengenes}}). Other possible ways of representing the expression profile of a module include the mean expression and the regulator expression.
+#'
+#' The function takes a data frame containing any of these summarized module expression profiles as input (normally the output of \code{\link{calculateEigengenes}}) and further summarizes them by taking the mean and its 95% confidence interval across all cells per cell type and species.
+#'
+#' The summarized module expression levels are then visualized as a scatter plot across the cell types, colored by species and faceted by module. To aid visual comparison across species, the data points of the same species are connected by lines across the cell types (this is not meant to represent continuity).
+#'
+#' The cell types are depicted below the plot using \code{cell_type_colors}.
+#'
+#' @param eigengenes Data frame of eigengenes, required columns:
+#'\describe{
+#' \item{cell}{Character, the cell barcode.}
+#' \item{species}{Character, the name of the species.}
+#' \item{\{\{cell_type_column\}\}}{Character, cell type annotation.}
+#' \item{module}{Character, transcriptional regulator and in case the eigengene was calculated for the positively or negatively regulated targets only, the direction of regulation (format: nameOfRegulator(+) or nameOfRegulator(-)).}
+#' \item{\{\{expr_column\}\}}{Numeric, summarized module expression profiles (typically the eigengene, the mean expression of the module, or the expression of the regulator).}
+#' }
+#' @param expr_column Character specifying the column of \code{eigengenes} by which the heatmap should be colored. This column is expected to contain summarized module expression profiles, typically the eigengene (default: "eigengene"), the mean expression of the module, or the expression of the regulator.
+#' @param cell_type_column Character, the name of the cell type annotation column in \code{eigengenes} (default: "cell_type").
+#' @param species_colors Character vector, colors per species.
+#' @param cell_type_colors Character vector, colors per cell type.
+#' @param font_size Numeric, font size (default: 14).
+#'
+#' @return A line plot as a \code{\link{ggplot}} object showing the summarized expression levels of the modules per cell type and species.
+#' @export
+#'
+#' @examples plotSumEigengenesLine(eigengenes)
+#' @family functions to plot eigengene profiles
+#' @references
+#' Zhang, B., & Horvath, S. (2005). A general framework for weighted gene co-expression network analysis. Statistical Applications in Genetics and Molecular Biology, 4, 17-60. https://doi.org/10.2202/1544-6115.1128
+plotSumEigengenesLine <- function(eigengenes, expr_column = "eigengene", cell_type_column = "cell_type", species_colors = NULL, cell_type_colors = NULL, font_size = 14) {
+
+  # check input data
+  if (!is.data.frame(eigengenes))
+    stop("The argument \"eigengenes\" should be a data frame.")
+
+  if (any(!c("cell", "species", "module") %in% colnames(eigengenes)))
+    stop("The argument \"eigengenes\" should contain the columns \"cell\", \"species\" and \"module\".")
+
+  if (!inherits(expr_column, "character") || length(expr_column) != 1 || !expr_column %in% colnames(eigengenes))
+    stop("The argument \"expr_column\" should be a string specifying the column of \"eigengenes\" that contains the summarized module expression profiles to be plotted.")
+
+  if (!inherits(cell_type_column, "character") || length(cell_type_column) != 1 || !cell_type_column %in% colnames(eigengenes))
+    stop("The argument \"cell_type_column\" should be a string specifying the metadata column of \"eigengenes\" that contains the cell type labels.")
+
+  if (!is.null(species_colors) && (!inherits(species_colors, "character") || any(!areColors(species_colors))))
+    stop("The argument \"species_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(cell_type_colors) && (!inherits(cell_type_colors, "character") || any(!areColors(cell_type_colors))))
+    stop("The argument \"cell_type_colors\" should be a character vector of valid color representations.")
+
+  if (!is.null(species_colors) && length(species_colors) != length(unique(eigengenes$species)))
+    stop("The argument \"species_colors\" should contain as many colors as there are unique species in the \"species\" column of \"eigengenes\".")
+
+  if (!is.null(cell_type_colors) && length(cell_type_colors) != length(unique(eigengenes[[cell_type_column]])))
+    stop("The argument \"cell_type_colors\" should contain as many colors as there are unique cell types in the column of \"eigengenes\" specified by \"cell_type_column\".")
+
+  if (!inherits(font_size, "numeric") || length(font_size) != 1 || font_size <= 0)
+    stop("The argument \"font_size\" should be a positive numeric value.")
+
+  # get all modules, species and cell types
+  eigengenes <- eigengenes %>%
+    dplyr::rename(expr = expr_column,
+                  cell_type = cell_type_column)
+  module_names <- unique(eigengenes$module)
+  species_names <- unique(eigengenes$species)
+  cell_types <- unique(eigengenes$cell_type)
+
+  # summarize expression per cell type and species
+  eigengenes_sum <- eigengenes %>%
+    dplyr::group_by(.data[["species"]], .data[["cell_type"]], .data[["module"]]) %>%
+    dplyr::summarize(summarizeStat(.data[["expr"]], "mean"), .groups = "keep") %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(module = factor(.data[["module"]], levels = module_names))
+
+  # if no species colors are provided, take the default
+  if (is.null(species_colors))
+    species_colors <- species_color_ramp(seq(0, 1, len = length(species_names)))
+
+  # if no cell type colors are provided, take the default
+  if (is.null(cell_type_colors))
+    cell_type_colors <- cell_type_color_ramp(seq(0, 1, len = length(cell_types)))
+
+  # line plot
+  p2 <- eigengenes_sum %>%
+    ggplot2::ggplot(ggplot2::aes(x = .data[["cell_type"]], y = .data[["estimate"]], color = .data[["species"]], group = .data[["species"]])) +
+    ggplot2::geom_line() +
+    ggplot2::geom_pointrange(ggplot2::aes(ymin = .data[["lwr"]], ymax = .data[["upr"]]), size = 0.2, linewidth = 0.2) +
+    ggplot2::scale_color_manual(values = species_colors) +
+    ggplot2::ylab(paste0(expr_column, " summarized per cell type and species")) +
+    ggplot2::theme_bw(base_size = font_size) +
+    ggplot2::facet_wrap(~.data[["module"]], scales = "free_y", ncol = 1, strip.position = "left") +
+    ggplot2::scale_y_continuous(position = "right") +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = 0.1)) +
+    ggplot2::theme(axis.ticks.x = ggplot2::element_blank(),
+                  axis.text.x = ggplot2::element_blank(),
+                  axis.title.x = ggplot2::element_blank(),
+                  plot.margin = ggplot2::margin(b = -5.5))
+
+  # cell types
+  p1 <-  eigengenes_sum %>%
+    ggplot2::ggplot(ggplot2::aes(y = 1, x = .data[["cell_type"]], fill = .data[["cell_type"]])) +
+    ggplot2::geom_tile() +
+    ggplot2::theme_minimal(base_size = font_size) +
+    ggplot2::scale_fill_manual(values = cell_type_colors) +
+    ggplot2::theme(axis.ticks = ggplot2::element_blank(),
+                  axis.text = ggplot2::element_blank(),
+                  axis.title.y = ggplot2::element_blank(),
+                  plot.margin = ggplot2::margin(t = -5.5)) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(add = c(0, 0))) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = 0.1)) +
+    ggplot2::xlab("cell type")
+
+  patchwork::wrap_plots(p2, p1, ncol = 1, heights = c(20, 1), guides = "collect")
+
+  }

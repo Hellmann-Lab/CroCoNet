@@ -58,6 +58,8 @@ plotExprAlongPseudotime(regulators, sce)
 \seealso{
 Other functions to plot gene expression profiles: 
 \code{\link{plotExprHeatmap}()},
-\code{\link{plotExprPerCellType}()}
+\code{\link{plotExprViolin}()},
+\code{\link{plotSumExprHeatmap}()},
+\code{\link{plotSumExprLine}()}
 }
 \concept{functions to plot gene expression profiles}

@@ -68,6 +68,8 @@ Zhang, B., & Horvath, S. (2005). A general framework for weighted gene co-expres
 \seealso{
 Other functions to plot eigengene profiles: 
 \code{\link{plotEigengeneHeatmap}()},
-\code{\link{plotEigengenesPerCellType}()}
+\code{\link{plotEigengenesViolin}()},
+\code{\link{plotSumEigengeneHeatmap}()},
+\code{\link{plotSumEigengenesLine}()}
 }
 \concept{functions to plot eigengene profiles}

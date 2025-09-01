@@ -12,7 +12,6 @@
 #'
 #' If the user plans to plot the eigengene along pseudotime and/or cell types, the corresponding columns of the \code{sce} object can be specified by the arguments of \code{pseudotime_column} and \code{cell_type_column}, and then the pseudotime and cell type information of each cell will be added to the output.
 #'
-#' @param module_names Character vector, the names of the modules for which the eigengenes should be calculated.
 #' @param pruned_modules  Data frame of the pruned modules, required columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
@@ -26,6 +25,7 @@
 #' \item{\{\{cell_type_column\}\}}{Character, cell type annotation (optional).}
 #' }
 #' @param direction_of_regulation Character specifying how positively and negatively regulated targets of the same transcriptional regulator should be treated, one of "+_only", "+-_separately", "all_together". If "+_only", the eigengene is calculated only for the positively regulated targets, the negatively regulated targets are removed. If "+-_separately", the eigengene is calculated separately for the positively and negatively regulated targets. If "all_together", the eigengene is calculated for all targets, irrespective of the direction of regulation.
+#' @param module_names Character vector, the names of the modules for which the eigengenes should be calculated (default: all unique names in the column \code{regulator} of \code{pruned_modules}).
 #' @param per_species Logical, if FALSE (default), the eigengenes are calculated across all cells, if TRUE, the eigengenes are calculated per species.
 #' @param pseudotime_column Character, the name of the pseudotime column in the metadata of \code{sce} (default: "pseudotime", if there is no pseudotime column, it should be set to NULL).
 #' @param cell_type_column Character, the name of the cell type annotation column in the metadata of \code{sce} (default: "cell_type", if there is no cell type column, it should be set to NULL).
@@ -45,13 +45,13 @@
 #' @export
 #'
 #' @examples
-#' eigengenes <- calculateEigengenes(regulators, pruned_modules, sce)
-#' eigengenes_per_dir <- calculateEigengenes(regulators, pruned_modules, sce, "+-_separately")
-#' eigengenes_per_species <- calculateEigengenes(regulators, pruned_modules, sce, per_species = TRUE)
+#' eigengenes <- calculateEigengenes(pruned_modules, sce)
+#' eigengenes_per_dir <- calculateEigengenes(pruned_modules, sce, "+-_separately")
+#' eigengenes_per_species <- calculateEigengenes(pruned_modules, sce, per_species = TRUE)
 #'
 #' @references
 #' Zhang, B., & Horvath, S. (2005). A general framework for weighted gene co-expression network analysis. Statistical Applications in Genetics and Molecular Biology, 4, 17-60. https://doi.org/10.2202/1544-6115.1128
-calculateEigengenes <- function(module_names, pruned_modules, sce, direction_of_regulation = "+_only", per_species = FALSE, pseudotime_column = "pseudotime", cell_type_column = "cell_type", n_cores = 1L) {
+calculateEigengenes <- function(pruned_modules, sce, direction_of_regulation = "+_only", module_names = as.character(unique(pruned_modules$regulator)), per_species = FALSE, pseudotime_column = "pseudotime", cell_type_column = "cell_type", n_cores = 1L) {
 
   # check input data
   if (!inherits(module_names, "character"))

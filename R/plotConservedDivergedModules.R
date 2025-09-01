@@ -48,12 +48,13 @@
 #' @param rank_by Character, one of "residual" and "t_score". The name of the variable to rank the by when selecting the top N conserved and diverged modules to label.
 #' @param colors (Named) character vector of length 2, the colors for the diverged and conserved modules.
 #' @param font_size Numeric, font size (default: 14).
+#' @param label_size Numeric, the size of the labels for the most conserved and diverged modules (default: 2.5).
 #'
 #' @return A \code{\link{ggplot}} object.
 #' @export
 #'
 #' @examples plotConservedDivergedModules(module_conservation_overall)
-plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = "residual", colors = NULL, font_size = 14) {
+plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = "residual", colors = NULL, font_size = 14, label_size = 2.5) {
 
   if (!is.data.frame(module_conservation))
     stop("The argument \"module_conservation\" should be a data frame.")
@@ -137,7 +138,7 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
                                                           dplyr::filter(.data[["conservation"]] == "conserved") %>%
                                                           dplyr::slice_min(order_by = .data[[rank_by]], n = N)),
                                 ggplot2::aes(label = .data[["regulator"]], color = .data[["conservation"]]),
-                                fill = "white", size = 2.5, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20, show.legend = FALSE)
+                                fill = "white", size = label_size, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20, show.legend = FALSE)
 
   } else {
 
@@ -166,7 +167,7 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
                                   dplyr::filter(.data[["conservation"]] == "diverged") %>%
                                   dplyr::slice_max(order_by = .data[[rank_by]], n = N),
                                 ggplot2::aes(label = .data[["regulator"]], color = .data[["conservation"]]),
-                                fill = "white", size = 2.5, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20, show.legend = FALSE)
+                                fill = "white", size = label_size, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05, force = 2, max.overlaps = 20, show.legend = FALSE)
 
   }
 

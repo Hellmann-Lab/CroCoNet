@@ -77,7 +77,11 @@ addDirectionality <- function(network, sce, assay = "logcounts", n_cores = 1L) {
 
   # add correlations to the network data table
   dt_withDir <- dt[corr, on = c(from = "gene1", to = "gene2")][
-    , `:=` (p.adj = data.table::fifelse(is.na(FDR), 0, FDR), direction = data.table::fifelse(rho > 0, "+", "-"), p.value = NULL, FDR = NULL)]
+    , `:=` (p.adj = data.table::fifelse(is.na(FDR), 0, FDR),
+            direction = data.table::fcase(rho > 0, "+",
+                                          rho < 0, "-",
+                                          default = NA_character_),
+            p.value = NULL, FDR = NULL)]
 
   # convert data table back to igraph
   igraph::graph_from_data_frame(dt_withDir, directed = FALSE, vertices = data.frame(vertex = V(network)$name))

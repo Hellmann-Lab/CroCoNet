@@ -106,7 +106,7 @@ areColors <- function(x) {
 }
 
 
-#' Wraps a string into several lines at "_" characters
+#' Wrap a string into several lines at "_" characters
 #'
 #' @param names Character vector containing the strings to wrap.
 #'
@@ -119,5 +119,22 @@ wrapLongNames <- function(names) {
     gsub(" ", "", paste0(strwrap(gsub("_", "_ ", name), width = 20), collapse = "\n"))
 
   })
+
+}
+
+#' Remove outliers using the IQR method
+#'
+#' @param names Numeric vector.
+#'
+#' @return Numeric vector after the removal of outliers.
+#' @noRd
+remove_outliers <- function(vec) {
+
+  Q1 <- stats::quantile(vec, 0.25, na.rm = TRUE)
+  Q3 <- stats::quantile(vec, 0.75, na.rm = TRUE)
+  IQR_value <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR_value
+  upper_bound <- Q3 + 1.5 * IQR_value
+  vec[vec >= lower_bound & vec <= upper_bound]
 
 }

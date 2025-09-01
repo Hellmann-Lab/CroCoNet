@@ -124,6 +124,7 @@ plotDistMat <- function(dist_df, colors, font_size = 14) {
     ggplot2::scale_fill_gradientn(colors = colors, na.value = "grey95", name = "distance") +
     ggplot2::theme_bw(base_size = font_size) +
     ggplot2::facet_grid(.data[["species2"]] ~ .data[["species1"]], scales = "free", space = "free", switch = "y") +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1),
+                   panel.spacing = ggplot2::unit(0.01, "npc"))
 
 }

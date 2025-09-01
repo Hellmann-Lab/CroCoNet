@@ -36,9 +36,10 @@ Imports:
     ggnewscale,
     farver,
     ggraph,
-    grDevices
+    grDevices,
+    mvtnorm
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
 LazyData: true
 LazyDataCompression: xz
 Suggests: 
@@ -47,5 +48,5 @@ Suggests:
     kableExtra,
     clusterProfiler
 VignetteBuilder: knitr
-URL: https://github.com/Hellmann-Lab/CroCoNet
+URL: https://hellmann-lab.github.io/CroCoNet
 BugReports: https://github.com/Hellmann-Lab/CroCoNet/issues

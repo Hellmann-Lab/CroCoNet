@@ -22,6 +22,7 @@
 #' }
 #' If NULL (default), the output will contain no species information.
 #' @param jackknife Logical specifying whether jackknifing should be performed or not (default: TRUE).
+#' @param signed Logical indicating whether the networks in \code{network_list} are signed (default: FALSE, see also \code{\link{normalizeEdgeWeights}}). If set to FALSE and \code{network_list} contains the edge attribute "direction", the edge weights in the network with direction "-" are negated for the calculation of "cor_adj" and "cor_adj_regulator".
 #' @param n_cores Integer, the number of cores (default: 1).
 #' @param corr_method Character, the method for the calculation of correlation, one of "spearman", "pearson", "kendall" (default: "spearman").
 #'
@@ -40,7 +41,7 @@
 #' @examples pres_stats_jk <- calculatePresStats(pruned_modules, network_list, "cor_kIM", clone2species)
 #' @references
 #' Langfelder, P., Luo, R., Oldham, M. C., & Horvath, S. (2011). Is my network module preserved and reproducible? PLoS Computational Biology, 7(1), 1001057.
-calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj", "cor_adj_regulator", "cor_kIM"), clone2species = NULL, jackknife = TRUE, n_cores = 1L, corr_method = "spearman") {
+calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj", "cor_adj_regulator", "cor_kIM"), clone2species = NULL, jackknife = TRUE, signed = FALSE, n_cores = 1L, corr_method = "spearman") {
 
   # check input data
   if (!is.data.frame(pruned_modules))
@@ -78,8 +79,11 @@ calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj"
 
   }
 
-  if (!inherits(jackknife, "logical"))
+  if (!inherits(jackknife, "logical") || length(jackknife) != 1)
     stop("The argument \"jackknife\" should be a logical value.")
+
+  if (!inherits(signed, "logical") || length(signed) != 1)
+    stop("The argument \"signed\" should be a logical value.")
 
   if (length(n_cores) != 1 || (!inherits(n_cores, "integer") && !(inherits(n_cores, "numeric") && n_cores == round(n_cores))) || n_cores < 1)
     stop("The argument \"n_cores\" should be a positive integer.")
@@ -93,17 +97,24 @@ calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj"
   # clone names
   clone_names <- names(network_list)
 
-  # # if direction is present in the network objects, correlate direction*weight instead of weight
-  # if ("direction" %in% names(igraph::edge_attr(network_list[[1]]))) {
-  #
-  #   network_list <- lapply(network_list, function(network) {
-  #
-  #     E(network)$weight = E(network)$weight * ifelse(E(network)$direction == "+", 1, -1)
-  #     network
-  #
-  #   })
-  #
-  # }
+  # if direction is present in the network objects, correlate direction*weight instead of weight
+  if ("direction" %in% names(igraph::edge_attr(network_list[[1]])) && !signed && any(c("cor_adj", "cor_adj_regulator") %in% stats)) {
+
+    message("Calculating cor_adj and cor_adj_regulator using weight*direction")
+
+    network_list <- lapply(network_list, function(network) {
+
+      directions <- igraph::E(network)$direction
+
+      if (any(!directions %in% c("+", "-") & !is.na(directions)))
+        stop("The column \"direction\" of the networks in \"network_list\" should contain only the following values: \"+\", \"-\", NA.")
+
+      igraph::E(network)$weight = igraph::E(network)$weight * ifelse(directions == "+" | is.na(directions), 1, -1)
+      network
+
+    })
+
+  }
 
   # convert igraphs to adjacency matrices
   adjMat_list <- lapply(network_list, function(network) {
@@ -215,7 +226,7 @@ calculatePresStats <- function(pruned_modules, network_list, stats = c("cor_adj"
       foreach::foreach(module = module_names,
                        .combine = c) %dopar% {
 
-                         adjMat <- adjMat_list[[clone]]
+                         adjMat <- abs(adjMat_list[[clone]])
                          genes <- module_gene_list[[module]]
                          kIM <- list(Matrix::rowSums(adjMat[genes, genes]))
                          names(kIM) <- module

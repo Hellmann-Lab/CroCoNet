@@ -8,6 +8,14 @@
 \description{
 A tool to quantitatively compare gene regulatory networks across species and identify conserved and diverged modules.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/Hellmann-Lab/CroCoNet}
+  \item Report bugs at \url{https://github.com/Hellmann-Lab/CroCoNet/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Anita Térmeg \email{anita.termeg@gmail.com} (\href{https://orcid.org/0009-0005-8872-9086}{ORCID})
 

@@ -10,7 +10,8 @@ plotExprHeatmap(
   order_by = "pseudotime",
   heatmap_colors = NULL,
   annotation_colors = NULL,
-  clip = 3,
+  z_transform = TRUE,
+  clip = ifelse(z_transform, 3, Inf),
   font_size = 14
 )
 }
@@ -28,7 +29,9 @@ plotExprHeatmap(
 
 \item{annotation_colors}{Character vector, the colors for the variable specified by \code{order_by}. If the variable is discrete, the vector should contain as many colors as there are unique values of the variable, if the variable is continuous, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}}
 
-\item{clip}{Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. The default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.}
+\item{z_transform}{Logical specifying whether z-transformation should be performed per gene before plotting (default: TRUE).}
+
+\item{clip}{Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. If \code{z_transform} is set to TRUE, the default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene, otherwise the default is Inf.}
 
 \item{font_size}{Numeric, font size (default: 14).}
 }
@@ -54,6 +57,8 @@ plotExprHeatmap(c("POU5F1","DNMT3B","TERF1","TDGF1","L1TD1","VIM","MAP1B","MARCK
 \seealso{
 Other functions to plot gene expression profiles: 
 \code{\link{plotExprAlongPseudotime}()},
-\code{\link{plotExprPerCellType}()}
+\code{\link{plotExprViolin}()},
+\code{\link{plotSumExprHeatmap}()},
+\code{\link{plotSumExprLine}()}
 }
 \concept{functions to plot gene expression profiles}

@@ -144,7 +144,12 @@ findConservedDivergedTargets <- function(module_name, tree_stats_jk, lm_tree_sta
                                    dplyr::select(fit = .data[["fit.fit"]],
                                                  lwr_fit = .data[["fit.lwr"]],
                                                  upr_fit = .data[["fit.upr"]])) %>%
-      dplyr::mutate(residual = .data[[y_var]] - .data[["fit"]])
+      dplyr::mutate(residual = .data[[y_var]] - .data[["fit"]],
+                    residual_orig = .data[["residual"]][.data[["type"]] == "orig"],
+                    contribution = ifelse(.data[["type"]] == "jk", (.data[["residual_orig"]] - .data[["residual"]]) / .data[["residual_orig"]], NA)) %>%
+                    # contribution = ifelse(.data[["type"]] == "jk", .data[["residual_orig"]] - .data[["residual"]], NA),
+                    # contribution = .data[["contribution"]] / abs(sum(-.data[["contribution"]], na.rm = TRUE))) %>%
+      dplyr::select(-.data[["residual_orig"]])
 
   } else {
 
@@ -162,7 +167,12 @@ findConservedDivergedTargets <- function(module_name, tree_stats_jk, lm_tree_sta
                                    dplyr::select(fit = .data[["fit.fit"]],
                                                  lwr_fit = .data[["fit.lwr"]],
                                                  upr_fit = .data[["fit.upr"]])) %>%
-      dplyr::mutate(residual = .data[[y_var]] - .data[["fit"]])
+      dplyr::mutate(residual = .data[[y_var]] - .data[["fit"]],
+                    residual_orig = .data[["residual"]][.data[["type"]] == "orig"],
+                    contribution = ifelse(.data[["type"]] == "jk", (.data[["residual_orig"]] - .data[["residual"]]) / .data[["residual_orig"]], NA)) %>%
+                    # contribution = ifelse(.data[["type"]] == "jk", .data[["residual_orig"]] - .data[["residual"]], NA),
+                    # contribution = .data[["contribution"]] / abs(sum(-.data[["contribution"]], na.rm = TRUE))) %>%
+      dplyr::select(-.data[["residual_orig"]])
 
   }
 

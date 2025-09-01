@@ -10,7 +10,8 @@ plotEigengeneHeatmap(
   order_by = "pseudotime",
   heatmap_colors = NULL,
   annotation_colors = NULL,
-  clip = 3,
+  z_transform = TRUE,
+  clip = ifelse(z_transform, 3, Inf),
   font_size = 14
 )
 }
@@ -31,12 +32,14 @@ plotEigengeneHeatmap(
 
 \item{annotation_colors}{Character vector, the colors for the variable specified by \code{order_by}. If the variable is discrete, the vector should contain as many colors as there are unique values of the variable, if the variable is continuous, the vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{\link{scale_color_gradientn}}.}
 
-\item{clip}{Numeric specifying the degree of clipping. For each gene, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. The default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per gene.}
+\item{z_transform}{Logical specifying whether z-transformation should be performed per module before plotting (default: TRUE).}
+
+\item{clip}{Numeric specifying the degree of clipping. For each module, the expression level values that are more standard deviations away from the mean than \code{clip} are treated as NA. If \code{z_transform} is set to TRUE, the default is 3 meaning that expression levels are clipped to the range of mean \eqn{\pm} 3\eqn{\sigma} per module, otherwise the default is Inf.}
 
 \item{font_size}{Numeric, font size (default: 14).}
 }
 \value{
-A heatmap as a \code{\link{ggplot}} object showing the summarized expression profiles of the modules across all cells.
+A heatmap as a \code{\link{ggplot}} object showing the expression profiles of the modules across all cells.
 }
 \description{
 Plots the eigengenes (or other types of summarized module expression profiles) as a heatmap, with the cells ordered by pseudotime or cell type.
@@ -63,6 +66,8 @@ Zhang, B., & Horvath, S. (2005). A general framework for weighted gene co-expres
 \seealso{
 Other functions to plot eigengene profiles: 
 \code{\link{plotEigengenesAlongPseudotime}()},
-\code{\link{plotEigengenesPerCellType}()}
+\code{\link{plotEigengenesViolin}()},
+\code{\link{plotSumEigengeneHeatmap}()},
+\code{\link{plotSumEigengenesLine}()}
 }
 \concept{functions to plot eigengene profiles}

@@ -41,6 +41,15 @@ normalizeEdgeWeights <- function(network_list, signed = FALSE, min_weight = NULL
   if (any(!sapply(network_list, function(net) {inherits(net, "igraph")})))
     stop("All elements of \"network_list\" should be of class \"igraph\".")
 
+  if (!inherits(signed, "logical") || length(signed) != 1)
+    stop("The argument \"signed\" should be a logical value.")
+
+  if (!is.null(min_weight) && (!inherits(min_weight, "numeric") || length(min_weight) != 1))
+    stop("The argument \"min_weight\" should be a numeric value.")
+
+  if (!is.null(max_weight) && (!inherits(max_weight, "numeric") || length(max_weight) != 1))
+    stop("The argument \"max_weight\" should be a numeric value.")
+
   if (length(n_cores) != 1 || (!inherits(n_cores, "integer") && !(inherits(n_cores, "numeric") && n_cores == round(n_cores))) || n_cores < 1)
     stop("The argument \"n_cores\" should be a positive integer.")
 
@@ -50,10 +59,17 @@ normalizeEdgeWeights <- function(network_list, signed = FALSE, min_weight = NULL
   # convert igraphs to data tables
   dt_list <- convertToDT(network_list)
 
-  # if the theoretical minimum and/or maximum is not provided, get all interaction scores from all networks for the calculation of the empirical minimum and/or maximum
-  if (!signed || is.null(min_weight) || is.na(max_weight)) {
+  # get all interaction scores from all networks for the calculation of the empirical minimum and/or maximum and for the assessment whether the direction needs to be stores
+  all_weights <- data.table::rbindlist(dt_list)$weight
 
-    all_weights <- data.table::rbindlist(dt_list)$weight
+  # if both positive and negative edge weights are present, store the sign of the edges as the directionality
+  if (any(all_weights < 0)) {
+
+    dt_list <- lapply(dt_list, function(dt) {
+
+      dt[, direction := ifelse(sign(weight) == 1, "+", "-")]
+
+    })
 
   }
 
@@ -71,17 +87,6 @@ normalizeEdgeWeights <- function(network_list, signed = FALSE, min_weight = NULL
 
   # if signed = FALSE, take absolute, then scale by the max
   } else {
-
-    # if both positive and negative edge weights are present, store the sign of the edges as the directionality
-    if (any(all_weights < 0)) {
-
-      dt_list <- lapply(dt_list, function(dt) {
-
-        dt[, direction := ifelse(sign(weight) == 1, "+", "-")]
-
-      })
-
-    }
 
     if (is.null(max_weight)) max_abs_weight <- max(abs(all_weights)) else max_abs_weight <- max(c(max_weight, abs(min_weight)))
 
