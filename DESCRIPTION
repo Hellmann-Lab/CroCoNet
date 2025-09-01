@@ -48,5 +48,5 @@ Suggests:
     kableExtra,
     clusterProfiler
 VignetteBuilder: knitr
-URL: https://hellmann-lab.github.io/CroCoNet
+URL: https://hellmann-lab.github.io/CroCoNet, https://hellmann-lab.github.io/CroCoNet/
 BugReports: https://github.com/Hellmann-Lab/CroCoNet/issues

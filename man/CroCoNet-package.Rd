@@ -11,7 +11,8 @@ A tool to quantitatively compare gene regulatory networks across species and ide
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/Hellmann-Lab/CroCoNet}
+  \item \url{https://hellmann-lab.github.io/CroCoNet}
+  \item \url{https://hellmann-lab.github.io/CroCoNet/}
   \item Report bugs at \url{https://github.com/Hellmann-Lab/CroCoNet/issues}
 }
 
