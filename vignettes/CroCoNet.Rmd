@@ -20,6 +20,7 @@ p.caption {
   width: 85%;
   margin: auto;
 }
+
 h1.title {
   font-size: 30px;
 }
@@ -33,6 +34,9 @@ body {
 text-align: justify
 }
 
+.template-article .contents h2 { font-size: 1.75rem; }  /* top-level section */
+.template-article .contents h3 { font-size: 1.35rem; }  /* subsections */
+
 </style>
 
 ```{r, include = FALSE}
@@ -40,7 +44,7 @@ knitr::opts_chunk$set(
   eval = FALSE,
   collapse = TRUE,
   comment = "#>",
-  meassage = FALSE,
+  message = FALSE,
   error = FALSE,
   warning = FALSE
 )

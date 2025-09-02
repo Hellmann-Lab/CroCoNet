@@ -1,12 +1,19 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# `CroCoNet` <img src="vignettes/CroCoNet_logo.png" align="right" width="200" /> <br/> Cro<span style="font-weight:normal">ss-species</span> <br/> Co<span style="font-weight:normal">mparison of</span> <br/> Net<span style="font-weight:normal">works</span>
+# `CroCoNet` <img src="man/figures/logo.png" align="right" width="200" /> <br/> Cro<span style="font-weight:normal">ss-species</span> <br/> Co<span style="font-weight:normal">mparison of</span> <br/> Net<span style="font-weight:normal">works</span>
 
 `CroCoNet` is a tool to quantitatively compare gene regulatory networks
 across species and identify conserved and diverged modules. It hinges on
 contrasting module variability within and across species in order to
-distinguish actual evolutionary divergence from detection uncertainty.
+distinguish between-species divergence from confounding factors such as
+diversity across individuals, environmental differences and technical
+noise.
+
+<p align="center">
+<img src="man/figures/pipeline.png" alt="Pipeline" width="100%" /> <br>
+<sup>The main steps of the CroCoNet workflow</sup>
+</p>
 
 ## :arrow_down: Installation
 
@@ -23,4 +30,24 @@ with:
 
 ``` r
 devtools::install_github("Hellmann-Lab/CroCoNet")
+```
+
+## :book: User Guide
+
+For a step-by-step guide and detailed explanations, please check out the
+vignette on the analysis of an example scRNA-seq dataset:
+
+``` r
+browseVignettes("CroCoNet")
+```
+
+You can access this vignette and the documentations of all functions
+also at the [CroCoNet website](hellmann-lab.github.io/CroCoNet/).
+
+## :scroll: Citation
+
+Please use the following entry to cite `CroCoNet`:
+
+``` r
+citation("CroCoNet")
 ```
