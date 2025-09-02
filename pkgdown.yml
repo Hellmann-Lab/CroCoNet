@@ -3,7 +3,7 @@ pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   CroCoNet: CroCoNet.html
-last_built: 2025-09-02T10:31Z
+last_built: 2025-09-02T11:14Z
 urls:
   reference: https://hellmann-lab.github.io/CroCoNet/reference
   article: https://hellmann-lab.github.io/CroCoNet/articles
