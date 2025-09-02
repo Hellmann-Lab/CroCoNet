@@ -9,7 +9,7 @@ This function selects the intramodular edges of the input module(s) in the conse
 The edges that were kept are plotted using ggraph per module. The default layout is "kk", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "gem" and "drl" (see also ggraph, layout_tbl_graph_stress and layout_tbl_graph_igraph). The width of the edges represents the consensus edge weights, the range of widths can be set using edge_width.
 If color_by is set to "edge_divergence" (the default), for each edge an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA, and the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence and used to color the edges on the plot. To calculate this information, network_list and clone2species has to be provided.
 If color_by is set to "direction", the edges are colored based on the direction of interaction (positively correlated/coexpressed or negatively correlated/anti-coexpressed) between the 2 genes that from the edge. This information is taken from the direction edge attribute of consensus_network.
-If the aim is to plot the networks of several modules together, the input module_names should be a vector of module names. The ggraph plots are in this case combined together into a single patchwork object with the titles of the subplots matching the elements of module_names. All subplots have the same scale so that the edge weights and divergence scores (if color_by = "edge_divergence") are comparable across modules.'></head><body>
+If the aim is to plot the networks of several modules together, the input module_names should be a vector of module names. The ggraph plots are in this case combined together into a single patchwork object with the titles of the subplots matching the elements of module_names. All subplots have the same scale so that the edge weights and divergence scores (if color_by = "edge_divergence") are comparable across modules.'><meta property="og:image" content="https://hellmann-lab.github.io/CroCoNet/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -37,8 +37,7 @@ If the aim is to plot the networks of several modules together, the input module
 </nav><div class="container template-reference-topic">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Plot the networks of modules</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Plot the networks of modules</h1>
       <small class="dont-index">Source: <a href="https://github.com/Hellmann-Lab/CroCoNet/blob/main/R/plotNetworks.R" class="external-link"><code>R/plotNetworks.R</code></a></small>
       <div class="d-none name"><code>plotNetworks.Rd</code></div>
     </div>
