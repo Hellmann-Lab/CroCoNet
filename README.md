@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# `CroCoNet` <img src="man/figures/logo.png" align="right" width="200" /> <br/> Cro<span style="font-weight:normal">ss-species</span> <br/> Co<span style="font-weight:normal">mparison of</span> <br/> Net<span style="font-weight:normal">works</span>
+# `CroCoNet` <img src="man/figures/logo.png" align="right" width="17.5%" /> <br/> Cro<span style="font-weight:normal">ss-species</span> <br/> Co<span style="font-weight:normal">mparison of</span> <br/> Net<span style="font-weight:normal">works</span>
 
 `CroCoNet` is a tool to quantitatively compare gene regulatory networks
 across species and identify conserved and diverged modules. It hinges on
