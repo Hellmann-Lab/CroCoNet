@@ -1,15 +1,15 @@
 #' Convert preservation statistics to distances across all modules
 #'
-#' Converts preservation statistics between clones to distance measures ranging from 0 to 1.
+#' Converts preservation statistics between replicates to distance measures ranging from 0 to 1.
 #'
-#' As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module topology is preserved between the networks of two clones.
+#' As part of the CroCoNet approach, pairwise module preservation scores are calculated between replicates, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module topology is preserved between the networks of two replicates.
 #'
 #' This function converts a chosen preservation statistic (\emph{p}) specified by the argument \code{stat} into a distance measure (\emph{d}) using the following formula: \deqn{d = \frac{max(p) - p}{max(p) - min(p)}}
 #' If the theoretical minimum and maximum of the preservation statistic are known, these can be provided using the parameters \code{min_stat} and \code{max_stat}. As the preservation statistics implemented by CroCoNet are correlation-based, they all range between -1 and 1, and thus  \code{min_stat} and \code{max_stat} should be set to -1 and 1, respectively (default). If a custom preservation statistic is used, \code{min_stat} and \code{max_stat} might have to be set to different values. If they are set to NULL or ±Inf, the minimum and maximum of the preservation statistic are calculated empirically using the data.
 #'
-#' The function also splits up the distance measures into modules/jackknife module versions (depending on whether the preservation statistics were calculated with or without jackknifing, see see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}) and outputs a list of data frames per module/jackknife module version. Modules/jackknifed module versions where the preservation statistic for any of the clone pairs is NA are removed.
+#' The function also splits up the distance measures into modules/jackknife module versions (depending on whether the preservation statistics were calculated with or without jackknifing, see see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}) and outputs a list of data frames per module/jackknife module version. Modules/jackknifed module versions where the preservation statistic for any of the replicate pairs is NA are removed.
 #'
-#' In the next step of the pipeline, these distance measures are used to reconstruct a neighbor-joining tree per module/jackknife module version that represent the dissimilarity of module topology across all clones (see \code{\link{reconstructTrees}}).
+#' In the next step of the pipeline, these distance measures are used to reconstruct a neighbor-joining tree per module/jackknife module version that represent the dissimilarity of module topology across all replicates (see \code{\link{reconstructTrees}}).
 #'
 #' @param pres_stats Data frame of the preservation statistics, required columns:
 #' \describe{
@@ -18,8 +18,8 @@
 #' \item{type}{Character, module type ("orig" = original or "jk" = jackknifed, only needed if the preservation statistics were calculated with jackknifing).}
 #' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type "jk" and nameOfRegulator_orig in case of module type "orig", only needed if the preservation statistics were calculated with jackknifing).}
 #' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type "orig", only needed if the preservation statistics were calculated with jackknifing).}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 #' \item{\{\{stat\}\}}{Numeric, the preservation statistic specified by the parameter \code{stat}.}
 #' }
 #' @param stat Character, the name of the column containing the preservation statistic that is to be converted into a distance measure.
@@ -30,7 +30,7 @@
 #' \describe{
 #' \item{dist}{Numeric, the distance measure ranging from 0 to 1 calculated based on \code{stat}.}
 #' }
-#' While \code{pres_stats} contains only non-redundant clone pairs, the data frames in the output contain all possible clone pairs (i.e. cloneA-cloneB and cloneB-cloneA are 2 separate entries with the same distance).
+#' While \code{pres_stats} contains only non-redundant replicate pairs, the data frames in the output contain all possible replicate pairs (i.e. replicateA-replicateB and replicateB-replicateA are 2 separate entries with the same distance).
 #' @export
 #'
 #' @examples dist_jk <- convertPresToDist(pres_stats_jk, "cor_kIM")
@@ -40,8 +40,8 @@ convertPresToDist <- function(pres_stats, stat, min_stat = -1, max_stat = 1, n_c
   if (!is.data.frame(pres_stats))
     stop("The argument \"pres_stats\" should be a data frame.")
 
-  if (any(!c("regulator", "module_size", "clone1", "clone2", "species1", "species2") %in% colnames(pres_stats)))
-    stop("The argument \"pres_stats\" should contain the columns \"regulator\", \"module_size\", \"clone1\", \"clone2\", \"species1\" and \"species2\".")
+  if (any(!c("regulator", "module_size", "replicate1", "replicate2", "species1", "species2") %in% colnames(pres_stats)))
+    stop("The argument \"pres_stats\" should contain the columns \"regulator\", \"module_size\", \"replicate1\", \"replicate2\", \"species1\" and \"species2\".")
 
   if (!inherits(stat, "character") || length(stat) != 1)
     stop("The argument \"stat\" should be a string specifying the statistic that is to be converted into a distance measure.")
@@ -54,18 +54,18 @@ convertPresToDist <- function(pres_stats, stat, min_stat = -1, max_stat = 1, n_c
 
   module_id = NULL
 
-  # number of clones
-  n_clones <- length(unique(c(pres_stats$clone1, pres_stats$clone2)))
+  # number of replicates
+  n_replicates <- length(unique(c(pres_stats$replicate1, pres_stats$replicate2)))
 
   # ID column: "regulator" if preservation stats were calculated without jackknifing, "id" if preservation stats were calculated with jackknifing
   id_column <- ifelse("id" %in% colnames(pres_stats), "id", "regulator")
 
-  # remove modules/jackknifed module versions where the preservation statistic for any of the clone pairs is NA
+  # remove modules/jackknifed module versions where the preservation statistic for any of the replicate pairs is NA
   pres_stats <- pres_stats %>%
     dplyr::rename(stat = paste(stat)) %>%
     tidyr::drop_na(.data[["stat"]]) %>%
     dplyr::group_by(.data[[id_column]]) %>%
-    dplyr::filter(length(.data[["stat"]]) == n_clones*(n_clones - 1)/2) %>%
+    dplyr::filter(length(.data[["stat"]]) == n_replicates*(n_replicates - 1)/2) %>%
     dplyr::ungroup()
 
   # define the minimum and maximum value of the preservation statistic that correspond to a distance of 1 and 0, respectively
@@ -100,13 +100,13 @@ convertPresToDist <- function(pres_stats, stat, min_stat = -1, max_stat = 1, n_c
 
 #' Reconstruct trees across all modules
 #'
-#' Reconstructs neighbor-joining trees based on pairwise distance measures between clones.
+#' Reconstructs neighbor-joining trees based on pairwise distance measures between replicates.
 #'
-#' As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species, to quantify how similar module connectivity patterns are between the networks of two clones (see \code{\link{calculatePresStats}}). These preservation scores are then converted into distance measures (see \code{\link{convertPresToDist}}).
+#' As part of the CroCoNet approach, pairwise module preservation scores are calculated between replicates, both within and across species, to quantify how similar module connectivity patterns are between the networks of two replicates (see \code{\link{calculatePresStats}}). These preservation scores are then converted into distance measures (see \code{\link{convertPresToDist}}).
 #'
-#' This function first sorts the distance measures of each module/jackknifed module version into a distance matrix of all clones, then based on this distance matrix reconstructs a tree using the neighbor-joining algorithm.
+#' This function first sorts the distance measures of each module/jackknifed module version into a distance matrix of all replicates, then based on this distance matrix reconstructs a tree using the neighbor-joining algorithm.
 #'
-#' The procedure results in a single tree per module/jackknifed module version (depending on whether the preservation statistics were calculated with or without jackknifing, see see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). The tips of the trees represent the clones and the branch lengths represent the dissimilarity of module topology between the networks of 2 clones. The trees are output as a list of \code{\link{phylo}} objects.
+#' The procedure results in a single tree per module/jackknifed module version (depending on whether the preservation statistics were calculated with or without jackknifing, see see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). The tips of the trees represent the replicates and the branch lengths represent the dissimilarity of module topology between the networks of 2 replicates. The trees are output as a list of \code{\link{phylo}} objects.
 #'
 #' In the next steps of the pipeline, statistics based on these trees can be used to identify conserved and diverged modules and pinpoint target genes within these modules that contribute the most to conservation/divergence (see \code{\link{calculateTreeStats}}, \code{\link{fitTreeStatsLm}}, \code{\link{findConservedDivergedModules}} and \code{\link{findConservedDivergedTargets}}).
 #'
@@ -117,8 +117,8 @@ convertPresToDist <- function(pres_stats, stat, min_stat = -1, max_stat = 1, n_c
 #' \item{type}{Character, module type ("orig" = original or "jk" = jackknifed, only needed if the distances were calculated with jackknifing).}
 #' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type "jk" and nameOfRegulator_orig in case of module type "orig", only needed if the distances were calculated with jackknifing).}
 #' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type "orig", only needed if the distances were calculated with jackknifing).}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 #' \item{dist}{Numeric, the distance measure to be used for the tree reconstruction.}
 #' }
 #' @param n_cores Number of cores.
@@ -140,10 +140,10 @@ reconstructTrees <- function(dist_list, n_cores = 1L) {
 
   if (!all(sapply(dist_list, function(df) {
 
-    all(c("regulator", "module_size", "clone1", "clone2", "species1", "species2", "dist") %in% colnames(df))
+    all(c("regulator", "module_size", "replicate1", "replicate2", "species1", "species2", "dist") %in% colnames(df))
 
   })))
-    stop("All data frames in \"dist_list\" are expected to contain the columns \"regulator\", \"module_size\", \"clone1\", \"clone2\", \"species1\", \"species2\" and \"dist\".")
+    stop("All data frames in \"dist_list\" are expected to contain the columns \"regulator\", \"module_size\", \"replicate1\", \"replicate2\", \"species1\", \"species2\" and \"dist\".")
 
   if (!all(sapply(dist_list, function(df) {
 
@@ -194,8 +194,8 @@ reconstructTrees <- function(dist_list, n_cores = 1L) {
 #' \item{type}{Character, module type (orig = original or jk = jackknifed, only needed if the preservation statistics were calculated with jackknifing).}
 #' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig', only needed if the preservation statistics were calculated with jackknifing).}
 #' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig', only needed if the preservation statistics were calculated with jackknifing).}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 #' \item{stat}{Numeric, the preservation statistic that is to be converted into a distance measure.}
 #' }
 #' @param min_stat Numeric, the minimum value of the preservation statistics that corresponds to a distance of 1.
@@ -212,22 +212,22 @@ getDist <- function(pres_stats, min_stat, max_stat) {
   dist <- pres_stats %>%
     dplyr::mutate(dist = (max_stat - .data[["stat"]]) / (max_stat - min_stat))
 
-  # expand the data frame so that it contains all clone pairs (i.e. cloneA-cloneB and cloneB-cloneA are 2 separate entries with the same distance)
+  # expand the data frame so that it contains all replicate pairs (i.e. replicateA-replicateB and replicateB-replicateA are 2 separate entries with the same distance)
   dist_full <- dplyr::bind_rows(dist,
                    dist %>%
-                     dplyr::rename(clone2_new = .data[["clone1"]], clone1_new = .data[["clone2"]], species2_new = .data[["species1"]], species1_new = .data[["species2"]]) %>%
-                     dplyr::rename(clone1 = .data[["clone1_new"]], clone2 = .data[["clone2_new"]], species1 = .data[["species1_new"]], species2 = .data[["species2_new"]])) %>%
-    dplyr::arrange(.data[["clone2"]]) %>%
-    dplyr::arrange(.data[["clone1"]])
+                     dplyr::rename(replicate2_new = .data[["replicate1"]], replicate1_new = .data[["replicate2"]], species2_new = .data[["species1"]], species1_new = .data[["species2"]]) %>%
+                     dplyr::rename(replicate1 = .data[["replicate1_new"]], replicate2 = .data[["replicate2_new"]], species1 = .data[["species1_new"]], species2 = .data[["species2_new"]])) %>%
+    dplyr::arrange(.data[["replicate2"]]) %>%
+    dplyr::arrange(.data[["replicate1"]])
 
-  dist_full[, colnames(dist_full) %in% c("regulator", "module_size", "type", "id", "gene_removed", "clone1", "clone2", "species1", "species2", "dist")]
+  dist_full[, colnames(dist_full) %in% c("regulator", "module_size", "type", "id", "gene_removed", "replicate1", "replicate2", "species1", "species2", "dist")]
 
 }
 
 
 #' Reconstruct trees
 #'
-#' @description Reconstructs a neighbor-joining tree based on pairwise distance measures between clones for a single module.
+#' @description Reconstructs a neighbor-joining tree based on pairwise distance measures between replicates for a single module.
 #' @param dist Data frame of the distance measures for a single module or jackknifed module version, required columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
@@ -235,8 +235,8 @@ getDist <- function(pres_stats, min_stat, max_stat) {
 #' \item{type}{Character, module type (orig = original or jk = jackknifed, only needed if the distances were calculated with jackknifing).}
 #' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig', only needed if the distances were calculated with jackknifing).}
 #' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig', only needed if the distances were calculated with jackknifing).}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 #' \item{dist}{Numeric, the distance measure to be used for the tree reconstruction.}
 #' }
 #'
@@ -246,11 +246,11 @@ getNjTree <- function(dist) {
 
   # convert the data frame of distance measures into a distance matrxi
   distMat <- dist %>%
-    dplyr::mutate(clone1 = paste0(.data[["clone1"]], "_", .data[["species1"]]),
-                  clone2 = paste0(.data[["clone2"]], "_", .data[["species2"]])) %>%
-    dplyr::select(.data[["clone1"]], .data[["clone2"]], .data[["dist"]]) %>%
-    tidyr::pivot_wider(names_from = .data[["clone2"]], values_from = .data[["dist"]], values_fill = 0) %>%
-    tibble::column_to_rownames("clone1") %>%
+    dplyr::mutate(replicate1 = paste0(.data[["replicate1"]], "_", .data[["species1"]]),
+                  replicate2 = paste0(.data[["replicate2"]], "_", .data[["species2"]])) %>%
+    dplyr::select(.data[["replicate1"]], .data[["replicate2"]], .data[["dist"]]) %>%
+    tidyr::pivot_wider(names_from = .data[["replicate2"]], values_from = .data[["dist"]], values_fill = 0) %>%
+    tibble::column_to_rownames("replicate1") %>%
     as.matrix()
   distMat <- distMat[, rownames(distMat)]
 

@@ -37,12 +37,12 @@ Columns required in case the focus of interest is species-specific divergence:
 \item{type}{Character, module type (orig = original, jk = jackknifed or summary = the summary across all jackknife module versions).}
 \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk', nameOfRegulator_orig in case of module type 'orig' and nameOfRegulator_summary in case of module type 'summary').}
 \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module types 'orig' and 'summary').}
-\item{\{\{species\}\}_to_other_branch_length}{Numeric, the branch length between the species of interest and all others per jackknife module version.}
+\item{\{\{species\}\}_subtree_length}{Numeric, the subtree length of a species per jackknife module version.}
 \item{\{\{species\}\}_diversity}{Numeric, diversity within the species of interest per jackknife module version.}
-\item{fit}{Numeric, the fitted species-to-other branch length at the diversity value of a jackknife module version.}
+\item{fit}{Numeric, the fitted subtree length of the species at the diversity value of a jackknife module version.}
 \item{lwr_fit}{Numeric, the lower bound of the prediction interval of the fit.}
 \item{upr_fit}{Numeric, the upper bound of the prediction interval of the fit.}
-\item{residual}{Numeric, the residual of the jackknife module version in the linear model. It is calculated as the difference between the observed and expected (fitted) species-to-other branch lengths.}
+\item{residual}{Numeric, the residual of the jackknife module version in the linear model. It is calculated as the difference between the observed and expected (fitted) subtree length of the species.}
 }}
 
 \item{N}{Integer, the number of top conserved/diverged target genes to label.}
@@ -60,9 +60,9 @@ A \code{\link{ggplot}} object.
 Plots the cross-species conservation of target genes within a conserved/diverged module and marks the targets that are particularly responsible for the conservation/divergence.
 }
 \details{
-To determine whether a module as whole is conserved, diverged overall or diverged on a specific lineage, the CroConet approach relies on module trees reconstrcuted from pairwise preservation scores between clones and statistics calculated based on these trees (total tree length, diversity, species-to-other branch length). To identify individual genes that contribute the most to conservation/divergence, the same statistics can be used in combination with jackknifing. For more details on the approach and the generation of the \code{target_conservation} object please see \code{\link{findConservedDivergedTargets}}.
+To determine whether a module as whole is conserved, diverged overall or diverged on a specific lineage, the CroConet approach relies on module trees reconstrcuted from pairwise preservation scores between replicates and statistics calculated based on these trees (total tree length, overall within-species diversity, subtree length and diversity of each species). To identify individual genes that contribute the most to conservation/divergence, the same statistics can be used in combination with jackknifing. For more details on the approach and the generation of the \code{target_conservation} object please see \code{\link{findConservedDivergedTargets}}.
 
-The function plots each jackknife version of a module along the regression line that captures the relationship between total tree length and within-species diversity (in case the focus of interest is conservation and overall divergence) or between the species-to-other branch length and diversity of a species (in case the focus of interest is species-specific divergence). The residuals compared to this regression line characterize the cross-species conservation of the different jackknife module versions and the corresponding absent target genes: the jackknife version that has the highest residual is the most diverged, therefore the corresponding target gene is the most conserved, while the jackknife version that has the lowest residual is the most conserved, therefore the corresponding target gene is the most diverged.
+The function plots each jackknife version of a module along the regression line that captures the relationship between total tree length and within-species diversity (in case the focus of interest is conservation and overall divergence) or between the subtree length and diversity of a species (in case the focus of interest is species-specific divergence). The residuals compared to this regression line characterize the cross-species conservation of the different jackknife module versions and the corresponding absent target genes: the jackknife version that has the highest residual is the most diverged, therefore the corresponding target gene is the most conserved, while the jackknife version that has the lowest residual is the most conserved, therefore the corresponding target gene is the most diverged.
 
 The regression line is drawn in dark grey, and the 95\% prediction interval of the line is shown as a light grey area. The jackknife module versions are colored by their residuals: the red to yellow part of the color spectrum denotes positive residuals, while the yellow to green part of the color spectrum denotes negative residuals (the entire spectrum always spans residuals from \code{-max(abs(residual))} to \code{max(abs(residual))} across all jackknife module versions of the module of interest).
 

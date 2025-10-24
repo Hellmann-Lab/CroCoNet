@@ -10,7 +10,7 @@ getRegulators(sce, source = "jaspar_core", ...)
 \item{sce}{\code{\link{SingleCellExperiment}} object containing the expression data (logcounts and metadata) for all network genes. Required metadata columns:
 \describe{
 \item{species}{Character, the name of the species.}
-\item{clone}{Character, the name of the clone/cell line.}
+\item{replicate}{Character, the name of the replicate/cell line.}
 }}
 
 \item{source}{Character or character vector specifying the source of known transcriptional regulators. It can be one or more of "jaspar_core" (JASPAR 2024 vertebrate core, the default), "jaspar_unvalidated" (JASPAR 2024 unvalidated), and "image" (IMAGE database from Madsen et al. 2018), or alternatively, it can be a  custom list of regulators provided by the user.}

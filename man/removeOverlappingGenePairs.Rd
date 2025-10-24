@@ -7,19 +7,19 @@
 removeOverlappingGenePairs(
   network_list,
   gtf_list,
-  clone2species,
+  replicate2species,
   gene_col = c("gene_name", "gene_id"),
   n_cores = 1L
 )
 }
 \arguments{
-\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones.}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all replicates.}
 
 \item{gtf_list}{A named list of GRanges objects containing the genome annotations of all species.}
 
-\item{clone2species}{A data frame specifying which species each clone belongs to, required columns:
+\item{replicate2species}{A data frame specifying which species each replicate belongs to, required columns:
 \describe{
-\item{clone}{Character, name of the clone.}
+\item{replicate}{Character, name of the replicate.}
 \item{species}{Character, name of the species.}
 }}
 
@@ -28,7 +28,7 @@ removeOverlappingGenePairs(
 \item{n_cores}{Integer, the number of cores (default: 1).}
 }
 \value{
-A named list of \code{\link{igraph}} objects containing the networks of all clones, after the removal of gene pairs with overlapping annotations. A new edge attribute is added to all \code{\link{igraph}} objects:
+A named list of \code{\link{igraph}} objects containing the networks of all replicates, after the removal of gene pairs with overlapping annotations. A new edge attribute is added to all \code{\link{igraph}} objects:
 \describe{
 \item{genomic_dist}{Numeric, the genomic distance of the 2 genes that form the edge (\code{Inf} if the 2 genes are annotated on different chromosomes/contigs).}
 }
@@ -46,6 +46,6 @@ For all remaining edges of the networks, the function adds the genomic distance 
 \examples{
 network_list_filt <- removeOverlappingGenePairs(network_list_raw,
                                                 gtf_list,
-                                                clone2species,
+                                                replicate2species,
                                                 "gene_name")
 }

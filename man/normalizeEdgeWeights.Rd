@@ -14,7 +14,7 @@ normalizeEdgeWeights(
 )
 }
 \arguments{
-\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones.}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all replicates.}
 
 \item{signed}{Logical indicating whether a signed network is desired (default: FALSE, see \code{Details}).}
 
@@ -23,7 +23,7 @@ normalizeEdgeWeights(
 \item{n_cores}{Integer, the number of cores (default: 1).}
 }
 \value{
-A named list of \code{\link{igraph}} objects containing the networks of all clones, with the edge weights normalized between 0 and 1. If originally there were both positive and negative edge weights present in the data, a new edge attribute is added to all \code{\link{igraph}} objects:
+A named list of \code{\link{igraph}} objects containing the networks of all replicates, with the edge weights normalized between 0 and 1. If originally there were both positive and negative edge weights present in the data, a new edge attribute is added to all \code{\link{igraph}} objects:
 \describe{
 \item{direction}{Character, the direction of the interaction between the 2 genes that form the edge ("+" or "-" depending on the sign of the edge weight before normalization).}
 }

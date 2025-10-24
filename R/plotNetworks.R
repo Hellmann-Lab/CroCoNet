@@ -2,13 +2,13 @@
 #'
 #' Plots the top \code{N} strongest connections of the chosen module(s) based on the consensus network. The edge width indicates the consensus edge weights, while the edge color indicates either the degree of edge divergence across species or the direction of interaction between the 2 genes that form the edge (positively/negatively correlated).
 #'
-#' @description In the CroCoNet approach, networks are reconstructed per clone and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.
+#' @description In the CroCoNet approach, networks are reconstructed per replicate and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.
 #'
 #' This function selects the intramodular edges of the input module(s) in the consensus network, orders them by the consensus edge weight and keeps the top \code{N} edges per module for plotting. This means that only those module member genes will appear on the plot that are involved in the top \code{N} connections, the regulator itself might also be omitted if it is not particularly well-connected.
 #'
 #' The edges that were kept are plotted using \code{\link{ggraph}} per module. The default layout is "kk", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "gem" and "drl" (see also \code{\link{ggraph}}, \code{\link{layout_tbl_graph_stress}} and \code{\link{layout_tbl_graph_igraph}}). The width of the edges represents the consensus edge weights, the range of widths can be set using \code{edge_width}.
 #'
-#' If \code{color_by} is set to "edge_divergence" (the default), for each edge an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA, and the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence and used to color the edges on the plot. To calculate this information, \code{network_list} and \code{clone2species} has to be provided.
+#' If \code{color_by} is set to "edge_divergence" (the default), for each edge an edge divergence score is calculated based on its edge weights in the networks of individual replicates. The edge weights are compared across species using an ANOVA, and the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence and used to color the edges on the plot. To calculate this information, \code{network_list} and \code{replicate2species} has to be provided.
 #'
 #' If \code{color_by} is set to "direction", the edges are colored based on the direction of interaction (positively correlated/coexpressed or negatively correlated/anti-coexpressed) between the 2 genes that from the edge. This information is taken from the \code{direction} edge attribute of \code{consensus_network}.
 #'
@@ -20,11 +20,11 @@
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
 #' }
-#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and clones.
-#' @param network_list A named list of \code{\link{igraph}} objects containing the networks of all clones (only needed if \code{color_by} is set to "edge_divergence").
-#' @param clone2species A data frame that specifies which species each clone belongs to (only needed if \code{color_by} is set to "edge_divergence"), required columns:
+#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and replicates.
+#' @param network_list A named list of \code{\link{igraph}} objects containing the networks of all replicates (only needed if \code{color_by} is set to "edge_divergence").
+#' @param replicate2species A data frame that specifies which species each replicate belongs to (only needed if \code{color_by} is set to "edge_divergence"), required columns:
 #' \describe{
-#' \item{clone}{Character, name of the clone.}
+#' \item{replicate}{Character, name of the replicate.}
 #' \item{species}{Character, name of the species.}
 #' }
 #' @param N Integer, the number of edges to plot (default: 300).
@@ -40,8 +40,8 @@
 #' @return A \code{\link{ggraph}} object in case \code{module_names} is a single module name and a \code{\link{patchwork}} object in case \code{module_names} is a vector of module names.
 #' @export
 #'
-#' @examples plotNetworks("POU5F1", pruned_modules, consensus_network, network_list, clone2species)
-plotNetworks <- function(module_names, pruned_modules, consensus_network, network_list = NULL, clone2species = NULL, N = 300L, color_by = "edge_divergence", n_cores = 1L, layout = "kk", seed = 0, colors = NULL, font_size = 14, edge_width = c(0.2, 1.2), ncol = NULL) {
+#' @examples plotNetworks("POU5F1", pruned_modules, consensus_network, network_list, replicate2species)
+plotNetworks <- function(module_names, pruned_modules, consensus_network, network_list = NULL, replicate2species = NULL, N = 300L, color_by = "edge_divergence", n_cores = 1L, layout = "kk", seed = 0, colors = NULL, font_size = 14, edge_width = c(0.2, 1.2), ncol = NULL) {
 
   if (is.null(color_by) || !color_by %in% c("edge_divergence", "direction"))
     stop("The argument \"color_by\" should be one of \"edge_divergence\", \"direction\".")
@@ -67,7 +67,7 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
   # get edges
   if (color_by == "edge_divergence") {
 
-    edges <- calculateEdgeDivergence(module_names, pruned_modules, consensus_network, network_list, clone2species, N)
+    edges <- calculateEdgeDivergence(module_names, pruned_modules, consensus_network, network_list, replicate2species, N)
 
     if (is.null(colors))
       colors <- edge_div_colors
@@ -119,11 +119,11 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
 #'
 #' Selects the top \code{N} strongest edges of the chosen module(s) based on the consensus network and calculates a divergence score for each edge.
 #'
-#' In the CroCoNet approach, networks are reconstructed per clone and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.
+#' In the CroCoNet approach, networks are reconstructed per replicate and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.
 #'
 #' This function selects the intramodular edges of the input module(s) in the consensus network. If \code{N} is set to \code{Inf}, all intramodular edges are considered for the divergence calculation, if \code{N} is smaller than the module size, the edges are ordered by their consensus edge weight and only the top \code{N} edges are kept per module.
 #'
-#' For each edge that was kept, an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA. and the F-statistic (i.e. the variation across the species means / variation within the species) and the p-value of this F-statistic are output as the measures of edge divergence.
+#' For each edge that was kept, an edge divergence score is calculated based on its edge weights in the networks of individual replicates. The edge weights are compared across species using an ANOVA. and the F-statistic (i.e. the variation across the species means / variation within the species) and the p-value of this F-statistic are output as the measures of edge divergence.
 #'
 #' @param module_names Character or character vector, the name(s) of the module(s) of interest.
 #' @param pruned_modules Data frame of the pruned modules, required columns:
@@ -131,11 +131,11 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
 #' }
-#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and clones.
-#' @param network_list A list of \code{\link{igraph}} objects containing the networks per clone.
-#' @param clone2species A data frame that specifies which species each clone belongs to, required columns:
+#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and replicates.
+#' @param network_list A list of \code{\link{igraph}} objects containing the networks per replicate.
+#' @param replicate2species A data frame that specifies which species each replicate belongs to, required columns:
 #' \describe{
-#' \item{clone}{Character, name of the clone.}
+#' \item{replicate}{Character, name of the replicate.}
 #' \item{species}{Character, name of the species.}
 #' }
 #' @param N Integer, the number of strongest edges to subset. If set to Inf (default), all edges in the module are considered.
@@ -145,7 +145,7 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{from, to}{Character, the 2 member genes of the regulator's module that form the edge.}
-#' \item{consensus_weight}{Numeric, consensus edge weight/adjacency (the weighted average of clonewise adjacencies).}
+#' \item{consensus_weight}{Numeric, consensus edge weight/adjacency (the weighted average of replicate-wise adjacencies).}
 #' \item{f_statistic}{Numeric, measue of edge divergence. It is calculated as the F-statistic from the ANOVA of edge weights with species as groups.}
 #' \item{p-value}{Numeric, the p-value of the F-statistic.}
 #' }
@@ -155,8 +155,8 @@ plotNetworks <- function(module_names, pruned_modules, consensus_network, networ
 #'                                                                  pruned_modules,
 #'                                                                  consensus_network,
 #'                                                                  network_list,
-#'                                                                  clone2species)
-calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_network, network_list, clone2species, N = Inf, n_cores = 1L) {
+#'                                                                  replicate2species)
+calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_network, network_list, replicate2species, N = Inf, n_cores = 1L) {
 
   if (!inherits(module_names, "character") && !inherits(module_names, "factor"))
     stop("The argument \"module_names\" should be a character vector or factor.")
@@ -179,11 +179,11 @@ calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_netw
   if (any(!sapply(network_list, function(net) {inherits(net, "igraph")})))
     stop("All elements of \"network_list\" should be of class \"igraph\".")
 
-  if (!is.data.frame(clone2species))
-    stop("The argument \"clone2species\" should be a data frame.")
+  if (!is.data.frame(replicate2species))
+    stop("The argument \"replicate2species\" should be a data frame.")
 
-  if (any(!(c("clone", "species") %in% colnames(clone2species))))
-    stop("The argument \"clone2species\" should contain the columns \"clone\" and \"species\".")
+  if (any(!(c("replicate", "species") %in% colnames(replicate2species))))
+    stop("The argument \"replicate2species\" should contain the columns \"replicate\" and \"species\".")
 
   if (length(N) != 1 || (!inherits(N, "integer") && !(inherits(N, "numeric") && N == round(N))) || N < 1)
     stop("The argument \"N\" should be a positive integer.")
@@ -191,11 +191,11 @@ calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_netw
   if (length(n_cores) != 1 || (!inherits(n_cores, "integer") && !(inherits(n_cores, "numeric") && n_cores == round(n_cores))) || n_cores < 1)
     stop("The argument \"n_cores\" should be a positive integer.")
 
-  module = . = clone = consensus_weight = from = module = p.value = species = statistic = to = weight = NULL
+  module = . = replicate = consensus_weight = from = module = p.value = species = statistic = to = weight = NULL
 
   consensus_edges <- data.table::as.data.table(igraph::as_data_frame(consensus_network))
-  clonewise_edges <- lapply(network_list, function(network) data.table::as.data.table(igraph::as_data_frame(network))) %>%
-    data.table::rbindlist( idcol = "clone")
+  replicatewise_edges <- lapply(network_list, function(network) data.table::as.data.table(igraph::as_data_frame(network))) %>%
+    data.table::rbindlist( idcol = "replicate")
 
   doParallel::registerDoParallel(n_cores)
 
@@ -219,13 +219,13 @@ calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_netw
                                           from %in% module_genes & to %in% module_genes
                                         ][order(-weight)][1:min(N, .N), .(from, to, consensus_weight = weight)]
 
-                                         consensus_module_edges <- data.table::as.data.table(clone2species)[
-                                           , (consensus_module_edges), by = .(clone, species)]
+                                         consensus_module_edges <- data.table::as.data.table(replicate2species)[
+                                           , (consensus_module_edges), by = .(replicate, species)]
 
-                                        # get the adjacencies for all interactions between these genes in each clone
-                                        clonewise_edges[
-                                          consensus_module_edges, on = .(clone, from, to)][
-                                            , .(species, clone, from, to, weight = data.table::fifelse(is.na(weight), 0, weight), consensus_weight)][
+                                        # get the adjacencies for all interactions between these genes in each replicate
+                                        replicatewise_edges[
+                                          consensus_module_edges, on = .(replicate, from, to)][
+                                            , .(species, replicate, from, to, weight = data.table::fifelse(is.na(weight), 0, weight), consensus_weight)][
                                               , stats::oneway.test(weight ~ species, var.equal = TRUE)[c("statistic", "p.value")] %>% as.list(),
                                               by = .(from, to, consensus_weight)][
                                                 order(from, to)][
@@ -244,7 +244,7 @@ calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_netw
 #'
 #' Extracts the top \code{N} strongest edges of the chosen module(s) from the consensus network along with their directionality (positively correlated/coexpressed or negatively correlated/anti-coexpressed).
 #'
-#' In the CroCoNet approach, networks are reconstructed per clone and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.
+#' In the CroCoNet approach, networks are reconstructed per replicate and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.
 #'
 #' This function selects the intramodular edges of the input module(s) in the consensus network. If \code{N} is set to \code{Inf}, all intramodular edges are considered for the divergence calculation, if \code{N} is smaller than the module size, the edges are ordered by their consensus edge weight and only the top \code{N} edges are kept per module.
 #'
@@ -255,14 +255,14 @@ calculateEdgeDivergence <- function(module_names, pruned_modules, consensus_netw
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
 #' }
-#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and clones. It should contain the dge attribute "direction".
+#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and replicates. It should contain the dge attribute "direction".
 #' @param N Integer, the number of strongest edges to subset. If set to Inf (default), all edges in the module are considered.
 #'
 #' @return A data frame of the selected edges with 4 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{from, to}{Character, the 2 member genes of the regulator's module that form the edge.}
-#' \item{consensus_weight}{Numeric, consensus edge weight/adjacency (the weighted average of clonewise adjacencies).}
+#' \item{consensus_weight}{Numeric, consensus edge weight/adjacency (the weighted average of replicate-wise adjacencies).}
 #' \item{dir}{Character, direction of the interaction between the 2 genes that form the edge ("+" or "-").}
 #' }
 #' @noRd
@@ -324,7 +324,7 @@ getEdgeDirection <- function(module_names, pruned_modules, consensus_network, N 
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{to}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-#' \item{consensus_weight}{Numeric, consensus edge weight/adjacency (the weighted average of clonewise adjacencies).}
+#' \item{consensus_weight}{Numeric, consensus edge weight/adjacency (the weighted average of replicate-wise adjacencies).}
 #' \item{f_statistic}{Numeric, measue of edge divergence. It is calculated as the F-statistic from the ANOVA of edge weights with species as groups (optional, if present the edges will be colored by edge divergence).}
 #' \item{dir}{Character, direction of the interaction between the 2 genes that form the edge ("+" or "-", optional, if present the edges will be colored by direction)}.
 #' }

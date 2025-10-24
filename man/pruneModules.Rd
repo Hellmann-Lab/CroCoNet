@@ -9,7 +9,7 @@ pruneModules(
   method = c("UIK_adj", "UIK_adj_kIM", "topN"),
   consensus_network = NULL,
   min_module_size = 20L,
-  max_frac_modules_lost = 0.02,
+  max_frac_modules_lost = 0,
   exponent = 1L,
   N = 50L
 )
@@ -19,16 +19,16 @@ pruneModules(
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{target}{Character, member gene of the regulator's initial module.}
-\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 }}
 
 \item{method}{Character, the pruning method, one of "UIK_adj", "UIK_adj_kIM", "topN".}
 
-\item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and clones.}
+\item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and replicates.}
 
 \item{min_module_size}{Integer, the lower threshold of module size in case of the methods "UIK_adj" and "UIK_adj_kIM" (default: 20).}
 
-\item{max_frac_modules_lost}{Numeric, the upper threshold of the fraction of removed modules in case of the methods "UIK_adj" and "UIK_adj_kIM" (default: 0.02).}
+\item{max_frac_modules_lost}{Numeric, the threshold for the fraction of removed modules in case of the methods "UIK_adj" and "UIK_adj_kIM" (default: 0).}
 
 \item{exponent}{Integer, the exponent the regulator-target adjacency and intramodular connectivity is raised to the power of during the cumulative sum curve calculation in case of the methods "UIK_adj" and "UIK_adj_kIM" (default: 1, i.e. the regulator-target adjacencies and intramodular connectivities stay unchanged).}
 
@@ -40,7 +40,7 @@ Data frame of the pruned modules with the following columns:
 \item{regulator}{Character, transcriptional regulator.}
 \item{module_size}{Integer, the numer of genes assigned to a regulator.}
 \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 }
 Additional columns present in \code{initial_modules} will also be preserved in \code{pruned_modules}.
 }

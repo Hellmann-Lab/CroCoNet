@@ -7,7 +7,7 @@
 getTreeDf(tree)
 }
 \arguments{
-\item{tree}{Object of class [phylo] with clones as tips. It is expected to have a component 'species' that specifies which species each tip belongs to.}
+\item{tree}{Object of class [phylo] with replicates as tips. It is expected to have a component 'species' that specifies which species each tip belongs to.}
 }
 \value{
 A data frame of tree branches.

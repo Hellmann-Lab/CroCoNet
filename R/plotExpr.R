@@ -1371,7 +1371,6 @@ plotSumEigengenesLine <- function(eigengenes, expr_column = "eigengene", cell_ty
   eigengenes <- eigengenes %>%
     dplyr::rename(expr = expr_column,
                   cell_type = cell_type_column)
-  module_names <- unique(eigengenes$module)
   species_names <- unique(eigengenes$species)
   cell_types <- unique(eigengenes$cell_type)
 
@@ -1379,8 +1378,7 @@ plotSumEigengenesLine <- function(eigengenes, expr_column = "eigengene", cell_ty
   eigengenes_sum <- eigengenes %>%
     dplyr::group_by(.data[["species"]], .data[["cell_type"]], .data[["module"]]) %>%
     dplyr::summarize(summarizeStat(.data[["expr"]], "mean"), .groups = "keep") %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(module = factor(.data[["module"]], levels = module_names))
+    dplyr::ungroup()
 
   # if no species colors are provided, take the default
   if (is.null(species_colors))

@@ -1,18 +1,18 @@
-#' Plot the distance matrices of clones based on module connectivity patterns
+#' Plot the distance matrices of replicates based on module connectivity patterns
 #'
-#' Plots the pairwise distances between clones based on module connectivity patterns for one or more modules.
+#' Plots the pairwise distances between replicates based on module connectivity patterns for one or more modules.
 #'
-#' As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module connectivity patterns are preserved between the networks of two clones. They can be converted into distance measures using the formula \code{dist = (1 - pres)/2} (see \code{\link{convertPresToDist}}).
+#' As part of the CroCoNet approach, pairwise module preservation scores are calculated between replicates, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module connectivity patterns are preserved between the networks of two replicates. They can be converted into distance measures using the formula \code{dist = (1 - pres)/2} (see \code{\link{convertPresToDist}}).
 #'
-#' This function plots the distance measures as a tile plot where each tile corresponds to a pair of clones and the color of the tile corresponds to the distance based on module connectivity patterns between this pair of clones. The distance of a clone with itself is always 0 and thus not meaningful, therefore these tiles are colored grey.
+#' This function plots the distance measures as a tile plot where each tile corresponds to a pair of replicates and the color of the tile corresponds to the distance based on module connectivity patterns between this pair of replicates. The distance of a replicate with itself is always 0 and thus not meaningful, therefore these tiles are colored grey.
 #'
 #' If the aim is to plot distance matrices for several modules together, the input should be a named list of data frames, each containing the distances for one of the modules. The tile plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the names of the input list. All subplots have the same scale so that the distances are comparable across modules.
 #'
-#' @param dist_dfs Data frame or a named list of data frames containing the distance measures per clone pair for one or more modules. Required columns for each data frame:
+#' @param dist_dfs Data frame or a named list of data frames containing the distance measures per replicate pair for one or more modules. Required columns for each data frame:
 #' \describe{
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
-#' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{clone1} and \code{clone2}.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
+#' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{replicate1} and \code{replicate2}.}
 #' }
 #' @param colors Character vector, the colors to visualize the distances. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.
 #' @param font_size Numeric, font size (default: 14).
@@ -34,15 +34,15 @@ plotDistMats <- function(dist_dfs, colors = NULL, font_size = 14, ncol = NULL) {
 
     if (!all(sapply(dist_dfs, function(df) {
 
-      all(c("clone1", "clone2", "species1", "species2", "dist") %in% colnames(df))
+      all(c("replicate1", "replicate2", "species1", "species2", "dist") %in% colnames(df))
 
     })))
-      stop("All data frames in \"dist_dfs\" are expected to contain the columns \"clone1\", \"clone2\", \"species1\", \"species2\" and \"dist\".")
+      stop("All data frames in \"dist_dfs\" are expected to contain the columns \"replicate1\", \"replicate2\", \"species1\", \"species2\" and \"dist\".")
 
   } else if (is.data.frame(dist_dfs)) {
 
-    if (any(!c("clone1", "clone2", "species1", "species2", "dist") %in% colnames(dist_dfs)))
-      stop("The argument \"dist_dfs\" should contain the columns \"clone1\", \"clone2\", \"species1\", \"species2\" and \"dist\".")
+    if (any(!c("replicate1", "replicate2", "species1", "species2", "dist") %in% colnames(dist_dfs)))
+      stop("The argument \"dist_dfs\" should contain the columns \"replicate1\", \"replicate2\", \"species1\", \"species2\" and \"dist\".")
 
   } else {
 
@@ -93,15 +93,15 @@ plotDistMats <- function(dist_dfs, colors = NULL, font_size = 14, ncol = NULL) {
 
 }
 
-#' Plot the distance matrix of clones based on the connectivity patterns of a single module
+#' Plot the distance matrix of replicates based on the connectivity patterns of a single module
 #'
-#' Plots the pairwise distances between clones based on module connectivity patterns as a tile plot.
+#' Plots the pairwise distances between replicates based on module connectivity patterns as a tile plot.
 #'
-#' @param dist_df Data frame containing the distance measures per clone pair, required columns:
+#' @param dist_df Data frame containing the distance measures per replicate pair, required columns:
 #' \describe{
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
-#' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{clone1} and \code{clone2}.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
+#' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{replicate1} and \code{replicate2}.}
 #' }.
 #' @param colors Character vector, the colors to visualize the distances. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.
 #' @param font_size Numeric, font size (default: 14).
@@ -112,12 +112,12 @@ plotDistMat <- function(dist_df, colors, font_size = 14) {
 
   dist_df <- dist_df %>%
     dplyr::bind_rows(cbind(dist_df %>%
-                             dplyr::distinct(.data[["clone1"]], .data[["species1"]]),
+                             dplyr::distinct(.data[["replicate1"]], .data[["species1"]]),
                            dist_df %>%
-                             dplyr::distinct(.data[["clone1"]], .data[["species1"]]) %>%
-                             dplyr::rename(clone2 = .data[["clone1"]], species2 = .data[["species1"]])))
+                             dplyr::distinct(.data[["replicate1"]], .data[["species1"]]) %>%
+                             dplyr::rename(replicate2 = .data[["replicate1"]], species2 = .data[["species1"]])))
 
-  ggplot2::ggplot(dist_df, ggplot2::aes(x = .data[["clone1"]], y = .data[["clone2"]], fill = .data[["dist"]])) +
+  ggplot2::ggplot(dist_df, ggplot2::aes(x = .data[["replicate1"]], y = .data[["replicate2"]], fill = .data[["dist"]])) +
     ggplot2::geom_tile(colour = "white", size = 0.5) +
     ggplot2::scale_y_discrete(expand = c(0,0), limits = rev, position = "right") +
     ggplot2::scale_x_discrete(expand = c(0,0)) +

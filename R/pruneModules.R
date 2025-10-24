@@ -13,13 +13,13 @@
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' @param method Character, the pruning method, one of "UIK_adj", "UIK_adj_kIM", "topN".
-#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and clones.
+#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and replicates.
 #' @param N An integer or a named integer vector specifying the desired pruned module size(s) in case of the method "topN" (default: 50).
 #' @param min_module_size Integer, the lower threshold of module size in case of the methods "UIK_adj" and "UIK_adj_kIM" (default: 20).
-#' @param max_frac_modules_lost Numeric, the upper threshold of the fraction of removed modules in case of the methods "UIK_adj" and "UIK_adj_kIM" (default: 0.02).
+#' @param max_frac_modules_lost Numeric, the threshold for the fraction of removed modules in case of the methods "UIK_adj" and "UIK_adj_kIM" (default: 0).
 #' @param exponent Integer, the exponent the regulator-target adjacency and intramodular connectivity is raised to the power of during the cumulative sum curve calculation in case of the methods "UIK_adj" and "UIK_adj_kIM" (default: 1, i.e. the regulator-target adjacencies and intramodular connectivities stay unchanged).
 #'
 #' @return Data frame of the pruned modules with the following columns:
@@ -27,7 +27,7 @@
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{module_size}{Integer, the numer of genes assigned to a regulator.}
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' Additional columns present in \code{initial_modules} will also be preserved in \code{pruned_modules}.
 #' @export
@@ -36,7 +36,7 @@
 #' pruned_modules <- pruneModules(initial_modules, "topN", N = 30)
 #' pruned_modules <- pruneModules(initial_modules, "UIK_adj")
 #' pruned_modules <- pruneModules(initial_modules, "UIK_adj_kIM", consensus_network)
-pruneModules <- function(initial_modules, method = c("UIK_adj", "UIK_adj_kIM", "topN"), consensus_network = NULL, min_module_size = 20L, max_frac_modules_lost = 0.02, exponent = 1L, N = 50L) {
+pruneModules <- function(initial_modules, method = c("UIK_adj", "UIK_adj_kIM", "topN"), consensus_network = NULL, min_module_size = 20L, max_frac_modules_lost = 0, exponent = 1L, N = 50L) {
 
   if (method == "UIK_adj") {
 
@@ -67,9 +67,7 @@ pruneModules <- function(initial_modules, method = c("UIK_adj", "UIK_adj_kIM", "
 #'
 #' For each module, the initial module members are filtered in successive steps based on their regulator-target edge weight/adjacency, which quantifies how strongly a target is connected to the regulator. In each step, the cumulative sum curve of the regulator-target adjacencies is calculated per module, the knee point of the curve is identified using the Unit Invariant Knee (UIK) method (see \code{\link{uik}}), then only the targets that rank higher than the knee point are kept.
 #'
-#' The modules containing less target genes than \code{min_module_size} are removed after each pruning step. The steps continue until the fraction of removed modules becomes higher than \code{max_frac_modules_lost}.
-#'
-#' It is recommended to set \code{min_module_size} to at least 20, because the correlation-based preservation statistics in the next steps might be coupled with high uncertainty for modules smaller than this (see \code{\link{calculatePresStats}}). If you would like to keep all modules for further analysis, please set \code{max_frac_modules_lost} to 0.
+#' The modules containing less target genes than \code{min_module_size} are removed after each pruning step. The steps continue until the fraction of removed modules becomes higher than \code{max_frac_modules_lost}. By default, this cutoff is set to zero, meaning that all modules need to stay above the specified \code{min_module_size}. It is recommended to set \code{min_module_size} to at least 20, because the correlation-based preservation statistics in the next steps might be coupled with high uncertainty for modules smaller than this (see \code{\link{calculatePresStats}}).
 #'
 #' If \code{exponent} is set higher than 1, the adjacencies are raised to the equivalent power when calculating the cumulative sum curves and their knee points.
 #'
@@ -81,10 +79,10 @@ pruneModules <- function(initial_modules, method = c("UIK_adj", "UIK_adj_kIM", "
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' @param min_module_size Integer, the lower threshold of module size. Modules with a smaller size than this threshold are removed after each pruning step (default: 20).
-#' @param max_frac_modules_lost Numeric, the upper threshold of the fraction of removed modules (default: 0.02).
+#' @param max_frac_modules_lost Numeric, the threshold for the fraction of removed modules (default: 0).
 #' @param exponent Integer, the exponent the regulator-target adjacency and intramodular connectivity is raised to the power of during the cumulative sum curve calculation (default: 1, i.e. the regulator-target adjacencies and intramodular connectivities stay unchanged).
 #'
 #' @return Data frame of the pruned modules with the following columns:
@@ -92,7 +90,7 @@ pruneModules <- function(initial_modules, method = c("UIK_adj", "UIK_adj_kIM", "
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{module_size}{Integer, the numer of genes assigned to a regulator.}
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' Additional columns present in \code{initial_modules} will also be preserved in \code{pruned_modules}.
 #' @export
@@ -101,7 +99,7 @@ pruneModules <- function(initial_modules, method = c("UIK_adj", "UIK_adj_kIM", "
 #' @family methods to prune modules
 #' @references
 #' Christopoulos, D. (2016). Introducing Unit Invariant Knee (UIK) As an Objective Choice for Elbow Point in Multivariate Data Analysis Techniques. SSRN Electronic Journal. https://doi.org/10.2139/SSRN.3043076
-pruneModules_UIK_adj <- function(initial_modules, min_module_size = 20L, max_frac_modules_lost = 0.02,  exponent = 1L) {
+pruneModules_UIK_adj <- function(initial_modules, min_module_size = 20L, max_frac_modules_lost = 0,  exponent = 1L) {
 
   # check input data
   if (!is.data.frame(initial_modules))
@@ -167,9 +165,7 @@ pruneModules_UIK_adj <- function(initial_modules, min_module_size = 20L, max_fra
 #'
 #' For each module, the initial module members are filtered in successive steps based on 2 metrics alternately: 1) the regulator-target edge weight/adjacency, which quantifies how strongly a target is connected to the regulator, and 2) the intramodular connectivity, which quantifies how strongly a target is connected to all other genes in the module. In each step, the cumulative sum curve based on one of these two characteristics is calculated per module, the knee point of the curve is identified using the Unit Invariant Knee (UIK) method (see \code{\link{uik}}), then only the targets that rank higher than the knee point are kept. The first step is based on the regulator-target adjacencies, the second step is based on the intramodular connectivities, the third step is again based on the regulator-target adjacencies and so on. The intramodular connectivity is recalculated in each relevant filtering step based on the then-current module assignment.
 #'
-#' The modules containing less target genes than \code{min_module_size} are removed after each pruning step. The steps continue until the fraction of removed modules becomes higher than \code{max_frac_modules_lost}.
-#'
-#' It is recommended to set \code{min_module_size} to at least 20, because the correlation-based preservation statistics in the next steps might be coupled with high uncertainty for modules smaller than this (see \code{\link{calculatePresStats}}). If you would like to keep all modules for further analysis, please set \code{max_frac_modules_lost} to 0.
+#' The modules containing less target genes than \code{min_module_size} are removed after each pruning step. The steps continue until the fraction of removed modules becomes higher than \code{max_frac_modules_lost}. By default, this cutoff is set to zero, meaning that all modules need to stay above the specified \code{min_module_size}. It is recommended to set \code{min_module_size} to at least 20, because the correlation-based preservation statistics in the next steps might be coupled with high uncertainty for modules smaller than this (see \code{\link{calculatePresStats}}).
 #'
 #' If \code{exponent} is set higher than 1, the regulator-target adjacencies and intramodular connectivities are raised to the equivalent power when calculating the cumulative sum curves and their knee points.
 #'
@@ -183,11 +179,11 @@ pruneModules_UIK_adj <- function(initial_modules, min_module_size = 20L, max_fra
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
-#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and clones.
+#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and replicates.
 #' @param min_module_size Integer, the lower treshold of module size. Modules with a smaller size than this threshold are removed after each pruning step (default: 20).
-#' @param max_frac_modules_lost Numeric, the upper threshold of the fraction of removed modules (default: 0.02).
+#' @param max_frac_modules_lost Numeric, the threshold for the fraction of removed modules (default: 0).
 #' @param exponent Integer, the exponent the regulator-target adjacency and intramodular connectivity is raised to the power of during the cumulative sum curve calculation (default: 1, i.e. the regulator-target adjacencies and intramodular connectivities stay unchanged).
 #'
 #' @return Data frame of the pruned modules with the following columns:
@@ -195,7 +191,7 @@ pruneModules_UIK_adj <- function(initial_modules, min_module_size = 20L, max_fra
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{module_size}{Integer, the numer of genes assigned to a regulator.}
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' Additional columns present in \code{initial_modules} will also be preserved in \code{pruned_modules}.
 #' @export
@@ -204,7 +200,7 @@ pruneModules_UIK_adj <- function(initial_modules, min_module_size = 20L, max_fra
 #' @family methods to prune modules
 #' @references
 #' Christopoulos, D. (2016). Introducing Unit Invariant Knee (UIK) As an Objective Choice for Elbow Point in Multivariate Data Analysis Techniques. SSRN Electronic Journal. https://doi.org/10.2139/SSRN.3043076
-pruneModules_UIK_adj_kIM <- function(initial_modules, consensus_network, min_module_size = 20L, max_frac_modules_lost = 0.02, exponent = 1L) {
+pruneModules_UIK_adj_kIM <- function(initial_modules, consensus_network, min_module_size = 20L, max_frac_modules_lost = 0, exponent = 1L) {
 
   # check input data
   if (!is.data.frame(initial_modules))
@@ -288,8 +284,10 @@ pruneModules_UIK_adj_kIM <- function(initial_modules, consensus_network, min_mod
 
   # take the last module data frame that still passed the size criterion
   module_data[[1]] %>%
-    # sort targets
     dplyr::group_by(.data[["regulator"]]) %>%
+    # calculate final kIM
+    dplyr::mutate(kIM = Matrix::rowSums(adj_mat[.data[["target"]], c(.data[["target"]], unique(as.character(.data[["regulator"]])))]), .after = "weight") %>%
+    # sort targets
     dplyr::arrange(.data[["target"]], .by_group = TRUE) %>%
     dplyr::ungroup()
 
@@ -310,7 +308,7 @@ pruneModules_UIK_adj_kIM <- function(initial_modules, consensus_network, min_mod
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' @param N Either an integer specifying a single desired pruned module size for all modules or a named integer vector specifying the desired pruned module size for each regulator (default: 50).
 #'
@@ -319,7 +317,7 @@ pruneModules_UIK_adj_kIM <- function(initial_modules, consensus_network, min_mod
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{module_size}{Integer, the numer of genes assigned to a regulator.}
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' Additional columns present in \code{initial_modules} will also be preserved in \code{pruned_modules}.
 #' @export
@@ -381,7 +379,7 @@ pruneModules_topN <- function(initial_modules, N = 50L) {
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial/intermediate module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' @param exponent Integer, the exponent the regulator-target adjacency is raised to the power of during the cumulative sum curve calculation.
 #'
@@ -413,7 +411,7 @@ filterBasedOnAdj <- function(modules, exponent = 1L) {
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial/intermediate module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' @param adj_mat Adjacency matrix of the consensus network in a sparse or dense matrix format.
 #' @param exponent Integer, the exponent the regulator-target adjacency is raised to the power of during the cumulative sum curve calculation.
@@ -448,7 +446,7 @@ filterBasedOnkIM <- function(modules, adj_mat, exponent = 1L) {
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial/intermediate/pruned module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #'
 #' @return Numeric, the median size of the modules.
@@ -472,7 +470,7 @@ getMedianModuleSize <- function(modules) {
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial/intermediate/pruned module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #' @param min_module_size Integer, the size (number of genes) a module needs to reach to be kept.
 #'
@@ -495,7 +493,7 @@ removeSmallModules <- function(modules, min_module_size) {
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial/intermediate/pruned module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 #' }
 #'
 #' @return Integer, the number of modules.

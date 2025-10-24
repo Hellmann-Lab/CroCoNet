@@ -12,8 +12,8 @@ A named list with 232 elements containing the distance measures per (original or
 \item{type}{Character, module type (orig = original or jk = jackknifed).}
 \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig').}
 \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig').}
-\item{clone1, clone2}{Character the names of the clones compared.}
-\item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+\item{replicate1, replicate2}{Character the names of the replicates compared.}
+\item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the correlation of intramodular connectivities.}
 }
 }
@@ -21,9 +21,9 @@ A named list with 232 elements containing the distance measures per (original or
 random_dist_jk
 }
 \description{
-Distance measures per clone pair for the original and all jackknifed versions of the random modules.
+Distance measures per replicate pair for the original and all jackknifed versions of the random modules.
 }
 \details{
-The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \deqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknife module version and contains the distance measures between all possible pairs of clones for this module version.
+The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \deqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknife module version and contains the distance measures between all possible pairs of replicates for this module version.
 }
 \keyword{datasets}

@@ -17,7 +17,7 @@ plotTrees(
 \arguments{
 \item{trees}{\code{\link{phylo}} object or a named list of \code{\link{phylo}} objects, the tree representations(s) of one or more modules.}
 
-\item{show_labels}{Logical, if TRUE (default), the each tip will be labelled as the corresponding clone, if FALSE, tips are not labelled.}
+\item{show_labels}{Logical, if TRUE (default), the each tip will be labelled as the corresponding replicate, if FALSE, tips are not labelled.}
 
 \item{species_colors}{Character vector, tip colors per species.}
 
@@ -36,11 +36,11 @@ A \code{\link{ggtree}} object in case \code{trees} is a single \code{\link{phylo
 Plots the tree representations of one or more modules.
 }
 \details{
-The module trees are reconstructed based on pairwise preservation scores between clones, both within and across species (see \code{\link{reconstructTrees}}). The tips of the resulting tree represent the clones and the branch lengths represent the dissimilarity of module connectivity patterns between the networks of 2 clones. Therefore, if 2 tips fall close to each other within a module tree, it means that the module topology is similar between the corresponding clones.
+The module trees are reconstructed based on pairwise preservation scores between replicates, both within and across species (see \code{\link{reconstructTrees}}). The tips of the resulting tree represent the replicates and the branch lengths represent the dissimilarity of module connectivity patterns between the networks of 2 replicates. Therefore, if 2 tips fall close to each other within a module tree, it means that the module topology is similar between the corresponding replicates.
 
 These trees carry information about the cross-species conservation of a module. If a module is diverged between 2 species (i.e. it is poorly preserved between the species but well-preserved within each species), we expect the tips of the tree to separate according to species and the 2 species to be connected by a long branch. In contrast, if a module is conserved between 2 species (i.e. it is similarly preserved both within and across species), we expect the tips of the different species to be well-mixed within the tree with no systematic separation.
 
-The module trees are plotted using \code{\link{ggtree}} as unrooted trees with 'daylight' layout and the tips are colored based on their species identity. If \code{show_labels} is set to TRUE, the tips will be in addition labelled as the corresponding clone.
+The module trees are plotted using \code{\link{ggtree}} as unrooted trees with 'daylight' layout and the tips are colored based on their species identity. If \code{show_labels} is set to TRUE, the tips will be in addition labelled as the corresponding replicate.
 
 If the aim is to plot trees of several modules together, the input should be a named list of module trees. The \code{\link{ggtree}} plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the names of the input list. All subplots have the same scale so that the branch lengths are comparable across modules.
 }

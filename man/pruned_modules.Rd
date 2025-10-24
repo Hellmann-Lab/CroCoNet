@@ -9,9 +9,7 @@ A data frame with 225 rows and 9 columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise adjacencies.}
-\item{n_supporting_clones}{The number of clones where the edge was detected.}
-\item{supporting_clones}{The list of clones where the edge was detected.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of replicate-wise adjacencies.}
 \item{rho}{Approximate Spearman's correlation coefficient of the 2 genes' expression profiles that form the edge.}
 \item{p.adj}{BH-corrected approximate p-value of rho.}
 \item{direction}{Character specifying the direction of regulation between the regulator and the target, either "+" or "-".}

@@ -14,7 +14,6 @@ Node attributes:
 Edge attributes:
 \describe{
 \item{weight}{Edge weight, the importance score calculate by GRNBoost2 rescaled between 0 and 1.}
-\item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
 \item{genomic_dist}{Numeric, the genomic distance of the 2 genes that form the edge (Inf if the 2 genes are annotated on different chromosomes/contigs).}
 }
 }
@@ -22,6 +21,6 @@ Edge attributes:
 network_list
 }
 \description{
-List of networks per clone with edge weights re-scaled between 0 and 1, and gene pairs (edges) with overlapping annotations removed. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all clones. Gene pairs that have overlapping annotations in any of the species' genomes were removed from all networks.
+List of networks per replicate with edge weights re-scaled between 0 and 1, and gene pairs (edges) with overlapping annotations removed. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all replicates. Gene pairs that have overlapping annotations in any of the species' genomes were removed from all networks.
 }
 \keyword{datasets}

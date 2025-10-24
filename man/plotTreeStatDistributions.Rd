@@ -16,13 +16,13 @@ plotTreeStatDistributions(
 \item{tree_stats}{Data frame of the tree statistics for the actual (pruned) modules. Required columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
-\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the tree statistic of interest per module and clone pair.}
+\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the tree statistic of interest per module and replicate pair.}
 }}
 
 \item{random_tree_stats}{Data frame of the tree statistics for the random modules. Required columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
-\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the tree statistics of interest per module and clone pair.}
+\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the tree statistics of interest per module and replicate pair.}
 }}
 
 \item{stats}{Character or character vector, the name(s) of the column(s) containing the statistics of interest.}
@@ -38,9 +38,9 @@ A violin plot as a \code{\link{ggplot}} object showing the distributions of the 
 Plots the distribution(s) of the chosen tree-based statistic(s) for the actual and random modules. If the module trees represent well the differences of module topology within and across species, most tree-based statistics are expected to be lower for the actual modules than for the random modules.
 }
 \details{
-As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) and neighbor-joining trees are reconstructed based on these preservation scores per module (see \code{\link{convertPresToDist}} and \code{\link{reconstructTrees}}). The tips of the resulting tree represent the clones and the branch lengths represent the dissimilarity of module topology between the networks of 2 clones. Various statistics can be defined based on these trees such as total tree length, total within-species diversity, diversity of a species and species-to-other branch length (see \code{\link{calculateTreeStats}}. These tree-based statistics can then be used to identify conserved/diverged modules (see \code{\link{findConservedDivergedModules}}) and pinpoint individual target genes within these modules that contribute the most to conservation/divergence (see \code{\link{findConservedDivergedTargets}}).
+As part of the CroCoNet approach, pairwise module preservation scores are calculated between replicates, both within and across species (see \code{\link{calculatePresStats}}) and neighbor-joining trees are reconstructed based on these preservation scores per module (see \code{\link{convertPresToDist}} and \code{\link{reconstructTrees}}). The tips of the resulting tree represent the replicates and the branch lengths represent the dissimilarity of module topology between the networks of 2 replicates. Various statistics can be defined based on these trees such as total tree length, overall within-species diversity, and the subtree length and diversity of each species (see \code{\link{calculateTreeStats}}. These tree-based statistics can then be used to identify conserved/diverged modules (see \code{\link{findConservedDivergedModules}}) and pinpoint individual target genes within these modules that contribute the most to conservation/divergence (see \code{\link{findConservedDivergedTargets}}).
 
-Compared to the random modules, the actual modules are expected to be better preserved between clones and thus the branch lengths of their module trees are also expected to be shorter (especially between clones of the same species). As a result, most tree-based statistics (especially the ones measuring diversity) are expected to be lower for the actual modules than for the random modules. The function plots the distributions of the chosen tree-based statistics both for the actual and for the random modules and thus allows these expectations to be visually checked. If several different statistics are input, these will be shown as the rows of the faceted plot.
+Compared to the random modules, the actual modules are expected to be better preserved between replicates and thus the branch lengths of their module trees are also expected to be shorter (especially between replicates of the same species). As a result, most tree-based statistics (especially the ones measuring diversity) are expected to be lower for the actual modules than for the random modules. The function plots the distributions of the chosen tree-based statistics both for the actual and for the random modules and thus allows these expectations to be visually checked. If several different statistics are input, these will be shown as the rows of the faceted plot.
 }
 \examples{
 plotTreeStatDistributions(tree_stats,

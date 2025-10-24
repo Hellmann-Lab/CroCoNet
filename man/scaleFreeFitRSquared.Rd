@@ -2,7 +2,7 @@
 % Please edit documentation in R/scale_free_transformation.R
 \name{scaleFreeFitRSquared}
 \alias{scaleFreeFitRSquared}
-\title{Calculate \eqn{R^2} value of the scale-free model fit for the provided connectivities}
+\title{Calculate R2 value of the scale-free model fit for the provided connectivities}
 \usage{
 scaleFreeFitRSquared(k)
 }
@@ -13,5 +13,5 @@ scaleFreeFitRSquared(k)
 Numeric, the \eqn{R^2} value of the scale-free model fit.
 }
 \description{
-Calculate \eqn{R^2} value of the scale-free model fit for the provided connectivities
+Calculate R2 value of the scale-free model fit for the provided connectivities
 }

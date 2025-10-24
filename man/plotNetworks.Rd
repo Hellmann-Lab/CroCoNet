@@ -9,7 +9,7 @@ plotNetworks(
   pruned_modules,
   consensus_network,
   network_list = NULL,
-  clone2species = NULL,
+  replicate2species = NULL,
   N = 300L,
   color_by = "edge_divergence",
   n_cores = 1L,
@@ -30,13 +30,13 @@ plotNetworks(
 \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
 }}
 
-\item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and clones.}
+\item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and replicates.}
 
-\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones (only needed if \code{color_by} is set to "edge_divergence").}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all replicates (only needed if \code{color_by} is set to "edge_divergence").}
 
-\item{clone2species}{A data frame that specifies which species each clone belongs to (only needed if \code{color_by} is set to "edge_divergence"), required columns:
+\item{replicate2species}{A data frame that specifies which species each replicate belongs to (only needed if \code{color_by} is set to "edge_divergence"), required columns:
 \describe{
-\item{clone}{Character, name of the clone.}
+\item{replicate}{Character, name of the replicate.}
 \item{species}{Character, name of the species.}
 }}
 
@@ -62,13 +62,13 @@ plotNetworks(
 A \code{\link{ggraph}} object in case \code{module_names} is a single module name and a \code{\link{patchwork}} object in case \code{module_names} is a vector of module names.
 }
 \description{
-In the CroCoNet approach, networks are reconstructed per clone and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.
+In the CroCoNet approach, networks are reconstructed per replicate and combined into a single phylogeny-aware consensus network which is the basis of the module assignment.
 
 This function selects the intramodular edges of the input module(s) in the consensus network, orders them by the consensus edge weight and keeps the top \code{N} edges per module for plotting. This means that only those module member genes will appear on the plot that are involved in the top \code{N} connections, the regulator itself might also be omitted if it is not particularly well-connected.
 
 The edges that were kept are plotted using \code{\link{ggraph}} per module. The default layout is "kk", other reasonable options include "stress", "circle", "nicely", "dh", "graphopt", "mds", "fr", "gem" and "drl" (see also \code{\link{ggraph}}, \code{\link{layout_tbl_graph_stress}} and \code{\link{layout_tbl_graph_igraph}}). The width of the edges represents the consensus edge weights, the range of widths can be set using \code{edge_width}.
 
-If \code{color_by} is set to "edge_divergence" (the default), for each edge an edge divergence score is calculated based on its edge weights in the networks of individual clones. The edge weights are compared across species using an ANOVA, and the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence and used to color the edges on the plot. To calculate this information, \code{network_list} and \code{clone2species} has to be provided.
+If \code{color_by} is set to "edge_divergence" (the default), for each edge an edge divergence score is calculated based on its edge weights in the networks of individual replicates. The edge weights are compared across species using an ANOVA, and the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence and used to color the edges on the plot. To calculate this information, \code{network_list} and \code{replicate2species} has to be provided.
 
 If \code{color_by} is set to "direction", the edges are colored based on the direction of interaction (positively correlated/coexpressed or negatively correlated/anti-coexpressed) between the 2 genes that from the edge. This information is taken from the \code{direction} edge attribute of \code{consensus_network}.
 
@@ -78,5 +78,5 @@ If the aim is to plot the networks of several modules together, the input \code{
 Plots the top \code{N} strongest connections of the chosen module(s) based on the consensus network. The edge width indicates the consensus edge weights, while the edge color indicates either the degree of edge divergence across species or the direction of interaction between the 2 genes that form the edge (positively/negatively correlated).
 }
 \examples{
-plotNetworks("POU5F1", pruned_modules, consensus_network, network_list, clone2species)
+plotNetworks("POU5F1", pruned_modules, consensus_network, network_list, replicate2species)
 }

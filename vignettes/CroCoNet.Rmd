@@ -85,7 +85,24 @@ library(igraph)
 library(clusterProfiler)
 ```
 
-<tt>CroCoNet</tt> (**Cro**ss-species **Co**mparison of **Net**works) is a computational pipeline and R package to quantitatively compare gene-regulatory networks across species. In this vignette, we present the workflow step by step, exemplified by an scRNA-seq dataset of early primate neural differentiation. The corresponding data files can be found at the following Zenodo repository:
+<br>
+<tt>CroCoNet</tt> (**Cro**ss-species **Co**mparison of **Net**works) is a computational pipeline and R package to quantitatively compare gene-regulatory networks across species. The approach hinges on contrasting network variability within and across species in order to distinguish divergence from detection uncertainty. By enabling robust network analyses, CroCoNet contributes towards finding meaningful cross-species differences in gene regulation.
+
+In this vignette, we demonstrate the complete CroCoNet workflow using a single-cell RNA-seq dataset of early primate neural differentiation as an example. The corresponding input data are available in the associated Zenodo repository, under the compressed archive “neural_differentiation_dataset.zip”. All file paths used in the examples below are relative to this master folder.
+
+Through this tutorial, users will learn how to:
+
+- Prepare and format input data for CroCoNet (including preprocessing and network inference)
+
+- Process networks and build the consensus network
+
+- Assign and characterize modules
+
+- Calculate module preservation scores within and across species
+
+- Quantify module conservation across all species and along specific lineages
+
+- Visualize modules using network- and tree-based representations
 <br>
 <br>
 
@@ -93,105 +110,95 @@ library(clusterProfiler)
 
 ## Experimental design
 
-<tt>CroCoNet</tt> was designed to be used on scRNA-seq data with multiple species and multiple replicates (clones) per species. To reliably infer networks, the dataset should have sufficient expression variance across cells (several different conditions, time-series experiment over a dynamic process or a mixture of cell types). For a meaningful analysis, the conditions, pseudotemporal trajectory and cell type composition should be as comparable across species as possible.
+<tt>CroCoNet</tt> was designed to analyze scRNA-seq data from multiple species, with multiple replicates per species. For a meaningful analysis, the conditions, pseudotemporal trajectory and cell type composition should be as comparable across species as possible. To reliably infer networks, the dataset should in addition have sufficient expression variance across cells (several different conditions, time-series experiment over a dynamic process or a mixture of cell types).
 
-The example dataset contains 3 species: human, gorilla and cynomolgus macaque with 3 human clones from 3 individuals (H1c1, H2c1, and H3c1), 2 gorilla clones from 1 individual (G1c1, and G1c2) and 4 cynomolgus macaque clones from 2 individuals (C1c1, C1c2, C2c1 and C2c2). 
+To generate the example data, three iPS cell lines from three humans, two iPS cell lines from one gorilla and four iPS cell lines from two cynomolgus macaques were differentiated into neural progenitor cells (NPCs) over the course of nine days. Samples from six different time points were sequenced using scRNA-seq. The protocol and timeline were the same for all species to make the results comparable.
 
-At several steps in the pipeline, the clones need to be matched to species. To make this possible, a data frame <tt>clone2species</tt> has to be created that specifies which species each clone belongs to. How this looks like for the example data is shown below:
+At several steps of the CroCoNet workflow, the replicates need to be matched to species. To make this possible, a data frame <tt>replicate2species</tt> has to be created that specifies which species each replicate belongs to. How this looks like for the example data is shown below:
 
-```{r load_clone2species}
-clone2species <- readRDS("RDS/clone2species.rds")
+```{r load_replicate2species}
+replicate2species <- readRDS("processed_data/replicate2species.rds")
 ```
 
 ```{r echo = FALSE, eval = TRUE}
-clone2species %>% 
+replicate2species %>% 
   kbl(row.names = FALSE) %>% 
   kable_styling(font_size = 13)
 ```
 
-To generate the example data, all of these 9 iPS cell lines were differentiated into neural progenitor cells (NPCs) over the course of 9 days, and samples from 6 different time points were sequenced using scRNA-seq. The protocol and the timeline were the same for all species to make the results comparable.
-
 ## Initial processing
 
-The pipeline assumes that the user has already done the standard processing steps on the transcriptomic data, including mapping, QC and normalization. In addition, it is required to have a shared feature space across all species. The genes can be matched using orthology information or in case of closely related species by transferring the annotation of one species to the genomes of others using the tool *Liftoff* @Shumate2021-ne. It is also recommended to perform cell type annotation and pseudotime inference if applicable. After these steps, a SingleCellExperiment (SCE) object should be created that contains the raw counts, normalized counts and metadata (including information on species, clone, cell type assignment and inferred pseudotime). 
+The pipeline assumes that the user has already done the standard processing steps on the transcriptomic data, including mapping, QC and normalization. In addition, it is required to have a shared feature space across all species. In case of closely related species, genes can be matched by transferring the annotation of one species to the genomes of others using the tool *Liftoff* @Shumate2021-ne. It is of course also possible to use orthology information or even protein language model-based macrogenes @Rosen2024-li.
 
-In case of the primate single-cell dataset, we created a shared feature space by transferring the human genome annotation to the gorGor6 and macFas6 genomes via *Liftoff*. We performed the nornalization using <tt>scran</tt> @Lun2016-lx, pseudotime inference using <tt>SCORPIUS</tt> @Cannoodt2016-hn and cell type annotation using <tt>singleR</tt> @Aran2019-jl with the embryoid body dataset from Rhodes et al. @Rhodes2022-os as the reference. We found that the pseudotime trajectories are reasonably well-aligned across the 3 species, confirming comparability.
+It is also recommended to perform cell type annotation and pseudotime inference if applicable. After these steps, a SingleCellExperiment (SCE) object should be created that contains the raw counts, normalized counts and metadata (including information on species, replicate, cell type assignment and inferred pseudotime). 
+
+In case of the primate differentiation dataset, we created a shared feature space by transferring the human genome annotation to the gorGor6 and macFas6 genomes via *Liftoff*. We performed the nornalization using <tt>scran</tt> @Lun2016-lx, pseudotime inference using <tt>SCORPIUS</tt> @Cannoodt2016-hn and cell type annotation using <tt>singleR</tt> @Aran2019-jl with the embryoid body dataset from Rhodes et al. @Rhodes2022-os as the reference. We found that the pseudotime trajectories are reasonably well-aligned across the 3 species, confirming comparability.
 
 ```{r trajectory_plots, eval = TRUE, include = TRUE, echo = FALSE, out.width = "90%", fig.align = 'center', fig.cap = 'Pseudotime trajectory of the early primate neural differentiation dataset coloured by sampling day, pseudotime, species and cell type.'}
 knitr::include_graphics("trajectory.png")
 ```
 
-<!-- At the beginning, colors for species and cell types can also be defined: -->
-
-<!-- ```{r load_basic_objects} -->
-<!-- spec_colors <- setNames(c("#4DAF4A", "#377EB8", "#9a1ebd"),  -->
-<!--                         c("human", "gorilla", "cynomolgus")) -->
-
-<!-- ct_colors <- setNames(c("#86C1E6", "#F4AB62", "#CA6102"),  -->
-<!--                       c("Pluripotent_Cells", "Early_Ectoderm",  "Neurons")) -->
-<!-- ``` -->
-
 ## Network inference
 
-Before applying the pipeline, the user also has to infer co-expression networks per clone using a method of choice, for example *GRNBoost2* @Moerman2019-xh (metric: decision tree-based importance scores) or *correlatePairs* @Lun2016-lx (metric: Spearman's correlation). The networks should not be restricted to connections between transcriptional regulators and their target genes, because <tt>CroCoNet</tt> relies also on connections between the target genes themselves. 
+Before applying the pipeline, the user must first infer co-expression networks per replicate using a method of their choice, for example *GRNBoost2* @Moerman2019-xh (metric: gradient boosting-based importance scores) or *correlatePairs* @Lun2016-lx (metric: Spearman’s correlation). The networks should not be restricted to connections between transcriptional regulators and their target genes, because <tt>CroCoNet</tt> relies also on connections between the target genes themselves. 
 
-If the clones have very different cell type compositions, it is recommended to downsample them in a way that the proprtions of the cell types are always the same, in order to disentangle the species and cell type differences. It can make sense to create several downsamplings of each clone and run the network inference on each of them, this way valuable data is not discarded.
+If the replicates differ substantially in cell type composition, it is recommended to downsample them so that the proportions of cell types are consistent across replicates. This helps disentangle species-specific effects from cell type differences. It can be beneficial to create multiple downsampled versions of each replicate and run network inference on each, ensuring that valuable data are not discarded.
 
-If the network inference algorithm involving stochastic steps (this is the case e.g. for GRNBoost2), it can make the results more robust to run the algorithm several times on the same data with different random seeds.
+If the chosen network inference algorithm involves stochastic steps (as is the case for *GRNBoost2*), the results can be made more robust by running the algorithm multiple times on the same data with different random seeds.
 
-The network reconstructions should be available as TSV files where each row corresponds to an edge. There should be at least 3 columns containing 1) the 1st gene that forms the edge, 2) the 2nd gene that forms the edge, and 3) the edge weight. The TSV files should be named using the following convention: *nameOfClone.tsv* if there is only 1 network output per clone or *nameOfClone_index.tsv* if there are several network outputs per clone.
+The network reconstructions should be stored as TSV files where each row corresponds to an edge. There should be at least 3 columns containing 1) the 1st gene that forms the edge, 2) the 2nd gene that forms the edge, and 3) the edge weight. The TSV files should follow the naming convention *nameOfReplicate.tsv* (if there is a single network per replicate) or *nameOfReplicate_index.tsv* (if multiple network outputs are generated per replicate).
 
-In case of example dataset, we inferred networks using GRNBoost2 with all genes as potential regulators. We run the algorithm 10 times on the count matrix of each clones, which produced 9×10 TSV files stored in the directory <tt>GRNBoost2_output/</tt>.
+In case of example dataset, we inferred networks using GRNBoost2 with all genes as potential regulators. We run the algorithm 10 times on the count matrix of each replicate, producing a total of 9×10 TSV files stored in the directory <tt>network_inference/output/</tt>.
 <br>
 <br>
 
 # Loading and processing the networks
 
-In the first part of the workflow, the output files of the network inference are loaded as <tt>igraph</tt> objects, the edges are filtered and the edge weights are normalized (if desired), and finally, a phylogeny-aware consensus network is calculated across all clones and species. If the network inference algorithm does not distinguish correlated and anti-correlated gene pairs, this piece of information can also be added by calculating a Spearman's correlation for each gene pair.
+In the first part of the workflow, the output files of the network inference are loaded as <tt>igraph</tt> objects, the edges are filtered and the edge weights are normalized (if desired), and finally, a phylogeny-aware consensus network is calculated across all replicates and species. If the network inference algorithm does not distinguish positively and negatively correlated gene pairs, this information can also be added at this stage.
 
 ## Loading the networks as igraphs
 
-As the first step, the TSV files containing the network reconstructions are loaded and summarized as a list of <tt>igraph</tt> @Csardi2006-sy objects per clone with the help of the <tt>loadNetworks</tt> function.
+As the first step, the TSV files containing the network reconstructions are loaded and summarized as a list of <tt>igraph</tt> @Csardi2006-sy objects per replicate with the help of the <tt>loadNetworks</tt> function.
 
-If there are several versions of network reconstruction per clone due to different subsamplings/runs (needs to be specified in parameter <tt>rep</tt>), the edge weights are averaged across these, and a single combined <tt>igraph</tt> object is returned for each clone. If the network inference method produces an output with directed edges, i.e. geneA-geneB and geneB-geneA can both be present (needs to be specified in parameter <tt>directed</tt>), the edge weights inferred between the same gene pair but in opposite directions are also averaged. If an edge is missing in one of the network versions/directions, it is regarded as 0 for the calculation of the mean. The number of times an edge occurs across the different versions and directions can also be used as a filter and rare edges can be removed altogether (needs to be specified in parameter <tt>min_occurrence</tt>). This can be helpful to 1) denoise the networks and 2) decrease the computational power needed for the next steps.
+If there are several versions of network reconstruction per replicate due to different subsamplings or repeated runs (specified via the parameter <tt>rep</tt>), the edge weights are averaged across these versions, and a single combined <tt>igraph</tt> object is returned for each replicate. If the network inference method produces an output with directed edges, i.e. geneA-geneB and geneB-geneA can both be present (specified via the parameter <tt>directed</tt>), the edge weights inferred between the same gene pair but in opposite directions are also averaged. Edges that fall below the detection threshold in a network version/direction are assigned an edge weight of 0 for the calculation of the mean. If an edge meets the detection criteria in too few versions/directions (specified via the parameter <tt>min_occurrence</tt>), it is assigned a final weight of 0 in the corresponding replicate, regardless of its mean weight. This filtering approach helps to 1) denoise the networks and 2) decrease the computational power needed for the next steps. The steps relying on a detection threshold are not applicable to correlation-based networks.
 
-In case of the example dataset, the 9×10 TSV files located in the "GRNBoost2_output/" directory are loaded as a list of 9 <tt>igraph</tt> objects (1 network reconstruction for each of the 9 clones). The parameter <tt>rep</tt> is set to 10 as GRNBoost2 has been run 10 times on each clone, and the parameter <tt>directed</tt> is left at TRUE (the default), as GRNBoost2 produces a directed output. As a result, the edge weights are averaged across the 10 runs and 2 directions for each edge. Since the parameter <tt>min_occurrece</tt> is left at 2 (the default), edges that occur only once across all runs and directions are removed.
+In case of the example dataset, the 9×10 TSV files located in the <tt>network_inference/output/</tt> directory were loaded as a list of 9 <tt>igraph</tt> objects (one network reconstruction for each of the 9 replicates). The parameter <tt>rep</tt> was set to 10 as GRNBoost2 had been run 10 times on each replicate, and the parameter <tt>directed</tt> was left at the default value of TRUE, as GRNBoost2 produces a directed output. As a result, the edge weights were averaged across the 10 runs and 2 directions for each edge and replicate. Since the parameter <tt>min_occurrece</tt> was left at its default value of 2, edges that occurred zero or one times across all runs and directions were assigned a weight of 0.
 
 ```{r load_networks}
-network_list_raw <- loadNetworks("GRNBoost2_output/", 
-                                 clone_names = clone2species$clone,
+network_list_raw <- loadNetworks("network_inference/output/", 
+                                 replicate_names = replicate2species$replicate,
                                  rep = 10,
                                  directed = TRUE,
                                  min_occurrence = 2)
 ```
 
-The resulting igraph objects store the edge weight and number of occurrences for each edge:
+The resulting igraph objects store the weights for each edge:
 
 ```{r glimpse_at_networks, eval = TRUE, echo = FALSE}
 readRDS("network_list_raw_sample.rds") %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>A few example edges from the raw network of the clone C2c2</span>", align=rep('c', 4)) %>% 
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>A few example edges from the raw network of the replicate C2c2</span>", align=rep('c', 4)) %>% 
   kable_styling(font_size = 13)
 ```
 
 
 ## Removing gene pairs with overlapping annotations
 
-Mapping and counting is problematic for overlapping genomic features: parts of the reads from one gene can be assigned to the other gene, leading to correlated expression profiles simply due to genomic position. This has only a marginal effect on the results of a DE analysis, but can cause false positive edges with very high edge weights in case of a network analysis. Such potential artefacts can be circumvented by removing all edges between genes that have overlapping annotations in the genome(s) of at least 1 species.
+Mapping and counting is problematic for overlapping genomic features: parts of the reads from one gene can be assigned to the other gene, leading to correlated expression profiles simply due to genomic position. This has only a marginal effect on the results of a differential expression analysis, but can cause false positive edges with very high edge weights in case of a network analysis. Such potential artefacts can be circumvented by removing all edges between genes that have overlapping annotations in the genome(s) of at least one species.
 
 To do this, the genome annotations are needed in a list format:
 
 ```{r load_GTFs}
-gtf_list <- list(human = plyranges::read_gff("genome_annotations/hg38.gtf"),
-                 gorilla = plyranges::read_gff("genome_annotations/gorGor6_liftoff.gtf"),
-                 cynomolgus = plyranges::read_gff("genome_annotations/macFas6_liftoff.gtf"))
+gtf_list <- list(human = plyranges::read_gff("genomes/hg38.gtf"),
+                 gorilla = plyranges::read_gff("genomes/gorGor6.gtf"),
+                 cynomolgus = plyranges::read_gff("genomes/macFas6.gtf"))
 ```
 
-Then the function <tt>removeOverlappingGenePairs</tt> determines the genomic positions of the network genes based on the GTFs, identifies gene pairs with overlapping annotations in each genome and removed these gene pairs from all networks:
+Then the function <tt>removeOverlappingGenePairs</tt> determines the genomic positions of the network genes based on the GTFs, identifies gene pairs with overlapping annotations in each genome and removes these gene pairs from all networks:
 
 ```{r remove_overlapping_gene_pairs}
 network_list_raw_filt <- removeOverlappingGenePairs(network_list_raw, 
                                                     gtf_list = gtf_list, 
-                                                    clone2species = clone2species, 
+                                                    replicate2species = replicate2species, 
                                                     gene_col = "gene_name")
 ```
 
@@ -199,7 +206,7 @@ During this step, the genomic distance is also added for each gene pair of the n
 
 ```{r glimpse_at_networks2, eval = TRUE, echo = FALSE}
 readRDS("network_list_raw_filt_sample.rds") %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>A few example edges from the network of the clone C2c2 after removing gene pairs with overlapping annotation and adding genomic distances</span>", align=rep('c', 5)) %>% 
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>A few example edges from the network of the replicate C2c2 after removing gene pairs with overlapping annotation and adding genomic distances</span>", align=rep('c', 5)) %>% 
   kable_styling(font_size = 13)
 ```
 
@@ -227,7 +234,7 @@ network_list <- normalizeEdgeWeights(network_list_raw_filt,
 
 ```{r glimpse_at_networks3, eval = TRUE, echo = FALSE}
 readRDS("network_list_sample.rds") %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>A few example edges from the network of the clone C2c2 after normalizing edge weights</span>", align=rep('c', 5)) %>% 
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>A few example edges from the network of the replicate C2c2 after normalizing edge weights</span>", align=rep('c', 5)) %>% 
   kable_styling(font_size = 13)
 ```
 
@@ -236,31 +243,34 @@ Using the resulting adjacencies, we also calculated the connectivity ($k_i$) of 
 $$k_i = \sum_{j \neq i} a_{ij}$$
 Both the adjacencies and connectivites have a highly left-skewed distribution (the adjacencies range between 0 and 1, with a median of 0.000213, while the connectivities range between 0 and ~17, with a median of 0.256). This is expected since connectivities in many biological networks, including gene regulatory networks, have been reported to follow scale-free distribution [@Agrawal2002-tb; @Bergmann2003-sp; @Barabasi2004-gi] (although the extent of this varies across systems and metrics @Broido2019-tf).
 
-```{r adj_con_distr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "80%", fig.align = 'center', fig.cap = 'The distribution od adjacencies and connectivities for the networks of the 9 clones.'}
+```{r adj_con_distr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "80%", fig.align = 'center', fig.cap = 'The distribution od adjacencies and connectivities for the networks of the 9 replicates.'}
 knitr::include_graphics("edge_weight_con_distr.png")
 ```
 
 ## Creating the consensus network
 
-As the next step of the workflow, the networks across different clones and different species are integrated into a single consensus network in a phylogeny-aware manner.
+As the next step of the workflow, the networks across different replicates and different species are integrated into a single consensus network in a phylogeny-aware manner.
 
-This consensus network contains all edges that were detected in at least 1 of the clones. For each edge, the consensus adjacency is calculated as the weighted mean of clonewise adjacencies. The weighted mean corrects for 1) the phylogenetic distances between species, and 2) the different numbers of clones per species. As a result, the approach downweighs the edge weights of the clones that 1) belong to closely related species, or 2) belong to species with many clones, so that an imbalanced sampling across the phylogenetic tree does not bias the consensus network. If an edge is not present in one of the clones, the edge weight in that clone is regarded as 0 for the calculation of the weighted mean.
+For each edge, the consensus adjacency is calculated as the weighted mean of replicate-wise adjacencies. The weighted mean corrects for 1) the phylogenetic distances between species, and 2) the different numbers of replicates per species. As a result, the approach downweighs the edge weights of the replicates that 1) belong to closely related species, or 2) belong to species with many replicates, so that an imbalanced sampling across the phylogenetic tree does not bias the consensus network. 
 
 If a phylogeny-aware consensus is desired, the phylogenetic tree has to be provided. In case of the example dataset, this is the mammalian tree from Bininda-Emonds et al. @Bininda-Emonds2007-of subsetted for Homo sapiens (human), Gorilla gorilla (gorilla) and Macaca Fascicularis (cynomolgus):
 
 ```{r load_tree}
-tree <- readRDS("RDS/tree.rds")
+download.file("https://static-content.springer.com/esm/art%3A10.1038%2Fnature05634/MediaObjects/41586_2007_BFnature05634_MOESM362_ESM.txt", here(wd, "mammalian_tree.txt"))
+tree <- read.tree(here(wd, "mammalian_tree.txt"))[["treemammalST_bestDates="]] %>%
+  keep.tip(c("Homo_sapiens","Gorilla_gorilla", "Macaca_fascicularis"))
+tree$tip.label <- c("cynomolgus", "gorilla", "human")
 ```
 
 ```{r phylogeny, eval = TRUE, include = TRUE, echo = FALSE, out.width = "28%", fig.align = 'center', fig.cap = 'Phylogenetic tree of the species.'}
 knitr::include_graphics("tree.png")
 ```
 
-Using the tree and the information which species each clone belongs to, the consensus network can be calculated with the help of the function <tt>createConsensus</tt>:
+Based on the phylogenetic tree and the species assignment of each replicate, the consensus network is computed using the function <tt>createConsensus</tt>:
 
 ```{r create_consensus} 
 consensus_network <- createConsensus(network_list, 
-                                     clone2species = clone2species, 
+                                     replicate2species = replicate2species, 
                                      tree = tree)
 ```
 
@@ -272,17 +282,17 @@ readRDS("consensus_network_sample.rds") %>%
 
 ## Adding the direction of correlation
 
-In case the networks were inferred using a method that does not distinguish positively and negatively correlated gene pairs, it is useful to add this information for lines of analysis where it makes sense to separate the two (e.g. it makes biological sense to calculate the eigengenes for the activated and repressed target genes of a transcriptional regulator separately). If the network inference method output edges with both positive and negative edge weights in the first place (e.g. correlation-based methods), this information is already added during the step "Normalizing edge weights" and does not have to be calculated again.
+If the networks were inferred using a method that does not distinguish between positively and negatively correlated gene pairs, this information can be added for analyses where it is meaningful to separate the two (e.g. when calculating eigengenes for activated VS repressed targets of a transcriptional regulator). If the inference method already outputs both positive and negative edge weights (e.g. correlation-based methods), this information is already added during the step "Normalizing edge weights" and does not have to be calculated again.
 
-If the step does need to be performed, the directionality is determined for each edge by calculating a modified Spearman's correlation between the expression profiles of the 2 genes that form the edge and taking the sign of the modified Spearman's rho as the direction. The calculation relies on the approximate version of the Spearman's rho, significance testing and blocking implemented by <tt>correlatePairs</tt> @Lun2016-lx.
+If this step is required, the directionality of each edge is determined by calculating a modified Spearman’s correlation between the expression profiles of the two genes forming the edge and assigning the sign of the modified Spearman’s rho as the direction. The calculation uses the approximate Spearman’s rho, significance testing, and blocking implemented in <tt>correlatePairs</tt> @Lun2016-lx.
 
-In case of the example dataset, the networks were inferred using GRNBoost2 which does not provide information about the direction of regulation, therefore it is necessary to do this step. To get the expression profiles of the network genes, the SCE object needs to be loaded:
+In case of the example dataset, the networks were inferred using GRNBoost2 which does not provide information about the direction of regulation, therefore it is necessary to perform this step. To get the expression profiles of the network genes, the SCE object needs to be loaded:
 
 ```{r load_sce}
-sce <- readRDS("RDS/sce.rds")
+sce <- readRDS("processed_data/sce.rds")
 ```
 
-The calculation of directionality is done by the function <tt>addDirectionality</tt>:
+Next, edge directionality is calculated with the function <tt>addDirectionality</tt>:
 
 ```{r add_direction_of_regulation}
 consensus_network <- addDirectionality(consensus_network, sce)
@@ -299,11 +309,11 @@ readRDS("consensus_network_withDir_sample.rds") %>%
 
 # Module assignment
 
-Once the consensus network is calculated, it can be used to assign co-expression modules jointly for all species. The resulting modules combine co-expression information from all species but the bias due to an uneven sampling across the phylogenetic tree is minimized. The center of each module is a transcriptional regulator and the modules are assigned in 2 main steps: 1) large initial modules are created by selecting a fixed number of target genes per regulator, and 2) the initial modules are pruned to keep only the best targets of each regulator. 
+Once the consensus network is calculated, it can be used to assign co-expression modules jointly for all species. The center of each module is a transcriptional regulator and the modules are assigned in 2 main steps: 1) large initial modules are created by selecting a fixed number of target genes per regulator, and 2) the initial modules are pruned using a dynamic filtering approach to keep only the best targets of each regulator. 
 
 ## Selecting key transcriptional regulators
 
-First, the transcriptional regulators that form the cores of the co-expression modules have to be selected. To identify regulators that are relevant for the biological process at hand, it is a useful approach to combine prior biological knowledge with information from the dataset (this is implemented by the function <tt>getRegulators</tt>).
+First, the transcriptional regulators that form the cores of the co-expression modules have to be selected. To identify regulators that are relevant for the biological process under study, it is a useful approach to combine prior biological knowledge with information derived from the dataset. This step is implemented by the function <tt>getRegulators</tt>.
 
 As for the prior biological knowledge, we recommend to select only transcriptional regulators with known binding motifs based on motif databases. To get this information, the user can choose the following databases: JASPAR 2024 vertebrate core @Rauluseviciute2023-dz, JASPAR 2024 unvalidated @Rauluseviciute2023-dz, the IMAGE database @Madsen2018-gq, or any combination of the above. Alternatively, the user can provide a custom list of regulators selected by their preferred method.
 
@@ -412,7 +422,7 @@ pruned_modules <- pruneModules(initial_modules,
 
 The following figure shows the steps of the pruning process for the POU5F1 module:
 
-```{r POU5F1_mod_pruning, eval = TRUE, include = TRUE, echo = FALSE, out.width = "50%", fig.align = 'center', fig.cap = 'Stepwise dynamic pruning approach exemplified by the POU5F1 module. In each step, we calculated the cumulative sum curve of the regulator-target adjacency or intramodular connectivitiy of the target genes alternately, then kept the targets that fell below the knee point of the curve. We continued this process for 3 iterations - until the module sizes became as small as possible without falling below 20 genes.'}
+```{r POU5F1_mod_pruning, eval = TRUE, include = TRUE, echo = FALSE, out.width = "55%", fig.align = 'center', fig.cap = 'Stepwise dynamic pruning approach exemplified by the POU5F1 module. In each step, we calculated the cumulative sum curve of the regulator-target adjacency or intramodular connectivitiy of the target genes alternately, then kept the targets that fell below the knee point of the curve. We continued this process for 3 iterations - until the module sizes became as small as possible without falling below 20 genes.'}
 knitr::include_graphics("POU5F1_detailed_UIK_adj_kIM.png")
 ```
 
@@ -486,7 +496,7 @@ eigengenes <- calculateEigengenes(regulators,
 ```{r glimpse_at_eigengenes, eval = TRUE, echo = FALSE}
 readRDS("eigengenes_sample.rds") %>% 
   kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Eigengene profile of the activated POU5F1 module across a couple of example cells</span>", digits = 3) %>% 
-  kable_styling(font_size = 13)
+  kable_styling(font_size = 12.9)
 ```
 
 The eigengene profiles can then be plotted as a heatmap using <tt>plotEigengeneHeatmap</tt>. Here we focus on the 6 example modules again, that contain 3 pluripotency regulators (NANOG, POU5F1 and CREBL3) and 3 neural regulators (PAX6, NEUROD4 and FEZF2):
@@ -546,48 +556,44 @@ Encouragingly, the modules of the pluripotency regulators show enrichment for se
 
 # Module preservation within and across species
 
-In the next part of the CroCoNet workflow, we quantify how well-preseved the topologies of the modules are between different pairs of clones, both within and across species, and summarize these preservation scores as neighbour-joining trees per module.
+In the next part of the CroCoNet workflow, we quantify how well-preseved the topologies of the modules are between different pairs of replicates, both within and across species, and summarize these preservation scores as neighbour-joining trees per module.
 
 ## Calculating module preservation statistics
 
-For the calculation of preservation statistics, we use the joint module assignment derived from the consensus network but compare topological properties directly between the clonewise networks. This way, a module is always defined as the same set of genes, but the adjacencies and connectivities of these genes can differ from clone to clone; poorly preserved modules are expected to have many, while well-preserved modules are expected to have few such topological differences. 
+For the calculation of preservation statistics, we use the joint module assignment derived from the consensus network but compare topological properties directly between the replicate-wise networks. This way, a module is always defined as the same set of genes, but the adjacencies and connectivities of these genes can differ from replicate to replicate; poorly preserved modules are expected to have many, while well-preserved modules are expected to have few such topological differences. 
 
 Compared to the standard approach of cross-species module comparison (defining modules for each species separately and then cross-tabulating the module member genes across species), topology-based metrics can detect way more subtle differences. In addition, the results of cross-tabulation are strongly affected by statistical power: if we find a low overlap across species, it is difficult to disentangle to what extent this is due to real biological differences and to what extent this is just due to having a low power for module detection in the first place. In contrast, a comparison of network topology for a joint module assignment is much less dependent on the power.
 
-As part of the function <tt>calculatePresStats</tt>, 3 preservation statistics (adapted from WGCNA @Langfelder2011-wm) are implemented to quantify different aspects of this topological comparison:
+As part of the function <tt>calculatePresStats</tt>, two preservation statistics (adapted from WGCNA @Langfelder2011-wm) are implemented to quantify different aspects of this topological comparison:
 
-* **Correlation of adjacencies** (cor_adj): the correlation of all edge weights within the module in the network of clone1 VS in the network of clone2
+* **Correlation of adjacencies** (cor_adj): the correlation of all edge weights within the module in the network of replicate1 VS in the network of replicate2
 $$cor.adj^{(q)} = \mathrm{cor}(a^{[net1](q)}, a^{[net2](q)})$$
 where $a^{[net](q)}$ is the vector of intramodular adjacencies in module $q$ and network $net$.
 
-* **Correlation of regulator-target adjacencies** (cor_adj_regulator): the correlation of all edge weights between the transcriptional regulator and its module members in the network of clone1 VS in the network of clone2
-$$cor.adj^{    (q)}_{\mathrm{regulator}} = \mathrm{cor}(a^{     [net1](q)}_{\mathrm{regulator}}, a^{     [net2](q)}_{\mathrm{regulator}})$$
-where $a^{     [net](q)}_{\mathrm{regulator}}$ is the vector of adjacencies between the regulator of module $q$ and all its target genes in network $net$.
-
-* **Correlation of intramodular connectivities** (cor_kIM): the correlation of the intramodular connectivities per module member gene in the network of clone1 VS in the network of clone2
+* **Correlation of intramodular connectivities** (cor_kIM): the correlation of the intramodular connectivities per module member gene in the network of replicate1 VS in the network of replicate2
 $$cor.kIM^{(q)} = \mathrm{cor}(kIM^{[net1](q)}, kIM^{[net2](q)})$$
 where $kIM^{[net](q)}$ is the vector of intramodular connetivities per gene in module $q$ and network $net$.
 
-All of these statistics can be calculated with module jackknifing (by setting <tt>jackknife</tt> to TRUE). This means that the function creates all possible jackknifed versions of each input module by removing each target gene assigned to that module (the regulator itself is never excluded), then it calculates the preservation statistics for all of these jackknifed module versions in addition to the original module. The advantage of using jackknfing is that a confidence interval can be calculated for each module and statistic instead of just getting a single value. Later on in the pipeline, jackknifing can also provide information about which target genes within a conserved/diverged module are particularly responsible for the conservation/divergence. If jackknifing is not desired, the user can just set <tt>jackknife</tt> to FALSE which will also substantially reduce running times.
+Both of these statistics can be calculated with module jackknifing (by setting <tt>jackknife</tt> to TRUE). This means that the function creates all possible jackknifed versions of each input module by removing each target gene assigned to that module (the regulator itself is never excluded), then it calculates the preservation statistics for all of these jackknifed module versions in addition to the original module. The advantage of using jackknfing is that a confidence interval can be calculated for each module and statistic instead of just getting a single value. Later on in the pipeline, jackknifing can also provide information about which target genes within a conserved/diverged module are particularly responsible for the conservation/divergence. If jackknifing is not desired, the user can just set <tt>jackknife</tt> to FALSE which will also substantially reduce running times.
 
-In case of the example dataset, we calculated all 3 preservation statistics and opted for using jackknifing:
+In case of the example dataset, we calculated both preservation statistics and opted for using jackknifing:
 
 ```{r pres_stats}
 pres_stats_jk <- calculatePresStats(pruned_modules, 
                                     network_list,
-                                    c("cor_adj", "cor_adj_regulator", "cor_kIM"), 
-                                    clone2species,
+                                    c("cor_adj", "cor_kIM"), 
+                                    replicate2species,
                                     jackknifing = TRUE)
 random_pres_stats_jk <- calculatePresStats(random_modules, 
                                            network_list,
-                                           c("cor_adj", "cor_adj_regulator", "cor_kIM"), 
-                                           clone2species,
+                                           c("cor_adj", "cor_kIM"), 
+                                           replicate2species,
                                            jackknifing = TRUE)
 ```
 
 ```{r glimpse_at_pres_stats_jk, eval = TRUE, echo = FALSE}
 readRDS("pres_stats_jk_sample.rds") %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Preservation statistics of the POU5F1 module and one of its jackknifed module versions for a couple of example clone pairs</span>", digits = 3, align = rep("c", 11)) %>% 
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Preservation statistics of the POU5F1 module and one of its jackknifed module versions for a couple of example replicate pairs</span>", digits = 3, align = rep("c", 11)) %>% 
   kable_styling(font_size = 13)
 ```
 
@@ -599,17 +605,12 @@ random_pres_stats <- summarizeJackknifeStats(random_pres_stats_jk)
 ```
 
 ```{r glimpse_at_pres_stats, eval = TRUE, echo = FALSE}
-readRDS("pres_stats_sample.rds")[, 1:9] %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Preservation statistics of the POU5F1 module for a couple of example clone pairs, after summarizing the values of all jackknifed module versions</span>", digits = c(3,3,3,3,3,3,6,3,3), align = rep("c", 9)) %>% 
-  kable_styling(font_size = 13) %>% 
-  column_spec(1:6, "1.6cm") %>% 
-  column_spec(7:9, "2.2cm")
-readRDS("pres_stats_sample.rds")[, 10:17] %>% 
-  kbl(row.names = FALSE, digits = c(3,6,3,3,3,6,3,3), align = rep("c", 8)) %>% 
-  kable_styling(font_size = 13) %>% 
-  column_spec(1, "1.7cm") %>% 
-  column_spec(2:4, "2.2cm") %>% 
-  column_spec(5:8, "2.3cm")
+readRDS("pres_stats_sample.rds")[, 1:7] %>%
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Preservation statistics of the POU5F1 module for a couple of example replicate pairs, after summarizing the values of all jackknifed module versions</span>", digits = c(rep(3, 6), 6), align = rep("c", 7)) %>%
+  kable_styling(font_size = 13)
+readRDS("pres_stats_sample.rds")[, 8:13] %>%
+  kbl(row.names = FALSE, digits = c(3,3,3,6,3,3), align = rep("c", 6)) %>%
+  kable_styling(font_size = 13)
 ```
 
 There are 3 easy-to-check expectations that a statistic has to fulfill if it is a good measure of module preservation:
@@ -620,26 +621,36 @@ There are 3 easy-to-check expectations that a statistic has to fulfill if it is 
 
 * The difference between the within-species and cross-species scores is expected to increase with increasing phylogenetic distance between the two species compared. 
 
-As a visual check, the function <tt>plotPresStatDistributions</tt> plots the distributions of the preservation scores for the actual and random modules and for within-species and cross-species clone pairs, whereas the function <tt>plotPresStats</tt> plots the cross-species scores against the within-species scores per species pair:
+As a visual check, the function <tt>plotPresStatDistributions</tt> plots the distributions of the preservation scores for the actual and random modules and for within-species and cross-species replicate pairs, whereas the function <tt>plotPresStats</tt> plots the cross-species scores against the within-species scores per species pair:
 
 ```{r plot_pres_stat_distr}
 plotPresStatDistributions(pres_stats, 
                           random_pres_stats, 
-                          stats = c("cor_adj", "cor_adj_regulator", "cor_kIM"))
+                          c("cor_adj", "cor_kIM"))
 ```
 
-```{r pres_stat_distr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "70%", fig.align = 'center', fig.cap = 'Distribution of preservation statistics within and across species, for the actual and random modules.'}
+```{r pres_stat_distr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "67%", fig.align = 'center', fig.cap = 'Distribution of preservation statistics within and across species, for the actual and random modules.'}
 knitr::include_graphics("pres_stat_distributions.png")
 ```
 
 ```{r plot_pres_stats_across_vs_within}
 plotPresStats(pres_stats, 
               random_pres_stats, 
-              c("cor_adj", "cor_adj_regulator", "cor_kIM"))
+              c("cor_adj", "cor_kIM"))
 ```
 
 ```{r pres_stats_across_vs_within, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'Cross-species VS within-species preservation scores per species pair for the actual and random modules.'}
 knitr::include_graphics("pres_stat_across_vs_within.png")
+```
+
+```{r plot_pres_stat_comparison}
+comparePresStats(pres_stats, 
+                 random_pres_stats, 
+                 tree)
+```
+
+```{r pres_stat_comparison, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = "Difference of the <em>cor.kIM</em> / <em>cor.adj</em> scores between each actual and the corresponding random module (left) and inverted Pearson's correlation (-<em>r</em> ) between <em>cor.kIM</em> / <em>cor.adj</em> and phylogenetic distance (right)."}
+knitr::include_graphics("pres_stat_comparison.png")
 ```
 
 The plots show that when applied to the example dataset, both *cor.kIM* and *cor.adj* fulfill all 3 expectations, but since the differences between the actual and random modules as well as between the within-species and cross-species comparisons tend to be higher for *cor.kIM*, we use this statistic for the rest of the analysis.
@@ -659,7 +670,7 @@ The resulting object is a list, where each list element stores the distance meas
 
 ```{r glimpse_at_dist_jk, eval = TRUE, echo = FALSE}
 readRDS("dist_jk_sample.rds") %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Distance measures of the jackknifed POU5F1 module version \"POU5F1_jk_APOE\" for a couple of example clone pairs</span>", digits = 3, align = rep("c", 11)) %>% 
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Distance measures of the jackknifed POU5F1 module version \"POU5F1_jk_APOE\" for a couple of example replicate pairs</span>", digits = 3, align = rep("c", 11)) %>% 
   kable_styling(font_size = 13)
 ```
 
@@ -679,7 +690,7 @@ It is apparent based on these 6 examples that the distance patterns vary quite a
 
 ## Tree reconstruction
 
-To be able to quantitatively compare these different patterns of preservation, the distance measures are summarized as trees in the next step of the workflow. Each of the resulting trees stands for a single module (an original or jackknifed module version, if jackknifing is used): the tips represent the clones and the branch lengths represent the dissimilarity of module topology between the networks of 2 clones. 
+To be able to quantitatively compare these different patterns of preservation, the distance measures are summarized as trees in the next step of the workflow. Each of the resulting trees stands for a single module (an original or jackknifed module version, if jackknifing is used): the tips represent the replicates and the branch lengths represent the dissimilarity of module topology between the networks of 2 replicates. 
 
 The trees are reconstructed using the neighbor-joining algorithm implemented by <tt>ape:nj</tt>. The function <tt>reconstructTrees</tt> is a wrapper around this, tailored for the specific purpose:
 
@@ -702,7 +713,7 @@ plotTrees(tree_examples, species_colors = spec_colors)
 knitr::include_graphics("tree_examples.png")
 ```
 
-In line with the differences among the distance matrices, the trees also differ from module to module. FEZF2, the module with generally low distance measures (i.e. high preservation scores), tends to have short branch lengths in its tree, while NEUROD4, the module with generally high distance measures (i.e. low preservation scores), has a large tree with long branches. In case of the SALL4 module that had similar within-species and cross-species distance measures, the clones of different species are intermixed within the tree, while in case of the POU5F1 module that has much higher ape-cynomolgus distances than ape-ape or cynomolgus-cynomolgus distances, the ape and cynomolgus clones are clearly separated within the tree and connected by a long internal branch.
+In line with the differences among the distance matrices, the trees also differ from module to module. FEZF2, the module with generally low distance measures (i.e. high preservation scores), tends to have short branch lengths in its tree, while NEUROD4, the module with generally high distance measures (i.e. low preservation scores), has a large tree with long branches. In case of the SALL4 module that had similar within-species and cross-species distance measures, the replicates of different species are intermixed within the tree, while in case of the POU5F1 module that has much higher ape-cynomolgus distances than ape-ape or cynomolgus-cynomolgus distances, the ape and cynomolgus replicates are clearly separated within the tree and connected by a long internal branch.
 
 ## Calculating tree-based statistics
 
@@ -710,13 +721,13 @@ To quantify these tell-tale characteristics of the module trees, various tree-ba
 
 * **Total tree length**: The total length of all branches in the tree; measures module variability both within and across species.
 
-* **Diversity of a species**: The total length of the branches connecting the clones of the given species to each other; measures module variability within this particular species.
+* **Diversity of a species**: The total length of the branches connecting the replicates of the given species to each other; measures module variability within this particular species.
 
 * **Within-species diversity**: The sum of the diversity values across all species; measures module variability within species in general.
 
-* **Monophyleticity of a species**: Indicates whether the tree is monophyletic for the clones of the given species. Only if a module tree is monophyletic for a species of interest can the module be tested for divergence between this species and all others.
+* **Monophyleticity of a species**: Indicates whether the tree is monophyletic for the replicates of the given species. Only if a module tree is monophyletic for a species of interest can the module be tested for divergence between this species and all others.
 
-* **Species-to-other branch length**: The length of the internal branch that connects the subtree of the clones belonging to the given species and the subtree of all other clones; measures module variability between the species of interest  and all others. Undefined if the tree is not monophyletic for the given species.
+* **Branch length of a species**: The length of the internal branch that connects the subtree of the replicates belonging to the given species and the subtree of all other replicates; measures module variability between the species of interest  and all others. Undefined if the tree is not monophyletic for the given species.
 
 ```{r tree_stats_explained, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'Tree-based statistics to characterize the cross-species conservation of network modules.'}
 knitr::include_graphics("tree_based_stats.png")
@@ -744,12 +755,12 @@ Similarly to the preservation statistics, the tree-based statistics can also be 
 tree_stats <- summarizeJackknifeStats(tree_stats_jk, 
                                       c("total_tree_length", 
                                         "within_species_diversity", 
-                                        "human_to_other_branch_length", 
+                                        "human_branch_length", 
                                         "human_diversity"))
 random_tree_stats <- summarizeJackknifeStats(random_tree_stats_jk, 
                                              c("total_tree_length", 
                                                "within_species_diversity", 
-                                               "human_to_other_branch_length", 
+                                               "human_branch_length", 
                                                "human_diversity"))
 ```
 
@@ -761,21 +772,21 @@ plotTreeStatDistributions(tree_stats,
                           c("within_species_diversity", 
                             "total_tree_length", 
                             "human_diversity", 
-                            "human_to_other_branch_length"))
+                            "human_branch_length"))
 ```
 
 ```{r tree_stat_distr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'Distribution of the tree-based statistics for the actual and random modules.'}
 knitr::include_graphics("tree_stat_distributions.png")
 ```
 
-For the first 3 statistics (within-species diversity, total tree length and human diversity), the distributions of the actual and random modules differ as expected. The 4th statistic (human-to-other branch length) is only defined for modules that are monophyletic for the human clones, that is why it could be calculated only for 57 actual modules and 1 random module. Thus the distributions cannot be compared, but finding fewer monophyletic random modules goes again in the same direction: higher diversity (lower preservation) among the human clones in case of the random modules than in case of the actual modules.
+For the first 3 statistics (within-species diversity, total tree length and human diversity), the distributions of the actual and random modules differ as expected. The 4th statistic (human branch length) is only defined for modules that are monophyletic for the human replicates, that is why it could be calculated only for 57 actual modules and 1 random module. Thus the distributions cannot be compared, but finding fewer monophyletic random modules goes again in the same direction: higher diversity (lower preservation) among the human replicates in case of the random modules than in case of the actual modules.
 
 <br>
 <br>
 
 # Quantifying cross-species conservation of network modules
 
-After having calculated first pairwise preservation scores between clones and then higher-level tree-based statistics to characterize how different the topologies of the modules are within and across species, we are ready to quantify the evolutionary conservation of modules. But why do we need the within-species differences in the first place? Why is the extent of cross-species differences not directly the answer to evolutionary conservation? 
+After having calculated first pairwise preservation scores between replicates and then higher-level tree-based statistics to characterize how different the topologies of the modules are within and across species, we are ready to quantify the evolutionary conservation of modules. But why do we need the within-species differences in the first place? Why is the extent of cross-species differences not directly the answer to evolutionary conservation? 
 
 There are several sources of module topology differences when we compare 2 species: there is of course true evolutionary divergence between the species which is what we are primarily interested in, but this is convoluted with diversity across individuals of the same species, technical noise and low statistical power. In the end, if we find that the topology of a module is different between 2 species, it is difficult to say to what extent it is actually due to divergence. This is why the within-species differences also become valuable sources of information: they provide an estimate of the variability originating from the other, confounding sources and thus can be used to discern the signal of real divergence.
 
@@ -783,7 +794,7 @@ There are several sources of module topology differences when we compare 2 speci
 
 To apply this concept for the quantification of overall conservation across all species, we used 2 tree-based statistics: within-species diversity and total tree length. The two metrics are based on the same trees and calculated using in part the same branches, so they are clearly not independent. Their general relationship can be captures by linear regression, that in biological terms describes which part of the total module variability is due to sources other than cross-species divergence (e.g. due to diversity, noise and power).
 
-Where a module is located along the regression line informs us about detection robustness. Modules that have both low within-species diversity and low total tree length are well-preserved both within and across species, meaning that these modules could be robustly detected in all clones, whereas modules, for which both metrics are high, are poorly preserved not just across but also within species, indicating a high detection uncertainty ("wobbliness"). 
+Where a module is located along the regression line informs us about detection robustness. Modules that have both low within-species diversity and low total tree length are well-preserved both within and across species, meaning that these modules could be robustly detected in all replicates, whereas modules, for which both metrics are high, are poorly preserved not just across but also within species, indicating a high detection uncertainty ("wobbliness"). 
 
 But more importantly, the residuals of the modules in the regression model informs us about their cross-species conservation: the outlier modules that do not follow the general trend are the most conserved and diverged ones. The modules that are located above the trend line have a higher total tree length than expected based on their within-species diversity, meaning that they tend to have long internal branches connecting the species, which indicates divergence. In contrast, the modules that fall below the trend line have a lower total tree length than expected based on their within-species diversity, meaning that the species are not well-separated within the tree but rather mixed amog each other which hints towards conservation.
 
@@ -912,13 +923,13 @@ plotTrees(trees, species_colors = spec_colors, ncol = 5)
 knitr::include_graphics("trees_cons_div.png")
 ```
 
-The contrast between the conserved and diverged modules in terms of their distance matrices and module trees is clearly visible. The conserved modules tend to have balanced distance matrices with similarly low distance measures for all within-species and cross-species comparisons, and correspondingly, tree reconstructions without any species separation, with clones from the same species being as close to each other as clones from different species. 
+The contrast between the conserved and diverged modules in terms of their distance matrices and module trees is clearly visible. The conserved modules tend to have balanced distance matrices with similarly low distance measures for all within-species and cross-species comparisons, and correspondingly, tree reconstructions without any species separation, with replicates from the same species being as close to each other as replicates from different species. 
 
 In contrast, diverged modules tend to have much higher distance measures across species than within species for 1 or more species pairs (in case of the example modules it is always the human-cynomolgus and gorilla-cynomolgus species pairs). This also results in trees where these species are strikingly distinct, with short branches within the species or clades and a long internal branch separating these subtrees from each other.
 
 ### Finding conserved and diverged edges
 
-A divergence score can be calculated not just for a module as a whole, but also for each edge within a module, which can pinpoint individual edges or regions of neighboring edges that are particularly conserved or diverged. This score is calculated based on the different edge weights of a given edge in the networks of the different clones. The edge weights are compared across species using an ANOVA, and the log~10~ of the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence. 
+A divergence score can be calculated not just for a module as a whole, but also for each edge within a module, which can pinpoint individual edges or regions of neighboring edges that are particularly conserved or diverged. This score is calculated based on the different edge weights of a given edge in the networks of the different replicates. The edge weights are compared across species using an ANOVA, and the log~10~ of the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence. 
 
 These scores can be returned as a data frame using <tt>calculateEdgeDivergence</tt> or directly plotted using <tt>plotNetworks</tt> with <tt>color_by</tt> set to "edge_divergence". Below we plot the 300 strongest edges within each of the 5 most conserved and most diverged modules colored by edge divergence:
 
@@ -927,7 +938,7 @@ plotNetworks(top5_cons_div_modules,
              pruned_modules, 
              consensus_network, 
              network_list, 
-             clone2species, 
+             replicate2species, 
              color_by = "edge_divergence",
              ncol = 5)
 ```
@@ -957,9 +968,19 @@ POU5F1_target_conservation <- findConservedDivergedTargets("POU5F1",
 ```
 
 ```{r glimpse_at_pou5f1_target_cons, eval = TRUE, echo = FALSE}
-readRDS("POU5F1_target_conservation_sample.rds") %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Cross-species conservation measures for a few example target genes of POU5F1</span>", digits = 3, align = rep("c", 11)) %>% 
-  kable_styling(font_size = 12.4)
+readRDS("POU5F1_target_conservation_sample.rds")[, 1:6] %>% 
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Cross-species conservation measures for a few example target genes of POU5F1</span>", digits = 3, align = rep("c", 6)) %>% 
+  column_spec(5, "2.3cm") %>% 
+  column_spec(1, "2cm") %>% 
+  column_spec(2, "2.1cm") %>% 
+  column_spec(3, "1.7cm") %>%
+  column_spec(4, "3.1cm") %>%
+  column_spec(6, "2.6cm") %>%
+  kable_styling(font_size = 13)
+readRDS("POU5F1_target_conservation_sample.rds")[, 7:12] %>% 
+  kbl(row.names = FALSE, digits = 3, align = rep("c", 6)) %>% 
+  column_spec(1:6, "2.3cm")%>% 
+  kable_styling(font_size = 13)
 ```
 
 The original and jackknifed versions of a module can be plotted along the regression line with the help of the function <tt>plotConservedDivergedTargets</tt>. The prediction interval of the regression line is shown as a grey area and assumed to have a constant width for a given module. This is how jackknifing affects the position compared to the regression line in case of the POU5F1 module:
@@ -1000,11 +1021,11 @@ Several target genes of POU5F1 that are diverged in terms of network topology (S
 
 The approach described above characterizes the overall degree of module conservation - all species within a tree are treated the same. This is the most suitable approach for finding conserved modules and for finding the highest signal of divergence irrespective of phylogeny. In case of the example dataset, most of the diverged modules detected this way are diverged between cynomolgus macaques and great apes (rather than within the great apes) simply because longer phylogenetic distances generally give rise to bigger differences.
 
-However, if the focus of interest is divergence on a particular lineage, for example on the human lineage, a different approach needs to be applied. In contrast to the overall test of conservation where there are no constraints in terms of tree structure, here it makes sense to restrict the testing only to module trees that are monophyletic for the human clones. This step pre-selects modules that fulfill a minimal citeria of lineage-specific divergence and makes it possible to compare a more specific tree characteristic, namely the human-to-other branch length. To again correct for the unwanted sources of variation, this branch length is contrasted against variation within the lineage, i.e. the human diversity. An analogous approach can be applied to find diverged modules between any species and the rest of the tree as well.
+However, if the focus of interest is divergence on a particular lineage, for example on the human lineage, a different approach needs to be applied. In contrast to the overall test of conservation where there are no constraints in terms of tree structure, here it makes sense to restrict the testing only to module trees that are monophyletic for the human replicates. This step pre-selects modules that fulfill a minimal citeria of lineage-specific divergence and makes it possible to compare a more specific tree characteristic, namely the human branch length. To again correct for the unwanted sources of variation, this branch length is contrasted against variation within the lineage, i.e. the human diversity. An analogous approach can be applied to find diverged modules between any species and the rest of the tree as well.
 
 ### Finding conserved and diverged modules
 
-The modules that are diverged on the human lineage can be defined using a (weighted) linear regression between the human-to-other branch length and the human diversity, implemented in <tt>fitTreeStatsLm</tt> with <tt>focus</tt> set to "human" and <tt>findConservedDivergedModules</tt>. Similarly to the overall conservation and divergence, the 95% prediction interval of the regression line is calculated and the modules that have a higher human-to-other branch length than the upper bound of the 95% prediction interval are considered diverged. It is important to note that the modules that fall below the lower bound of the 95% prediction interval cannot be interpreted as conserved in this case, because 1) the human-monophyletic module trees have already been pre-selected, and 2) conservation is per definition not a lineage-specific feature.
+The modules that are diverged on the human lineage can be defined using a (weighted) linear regression between the human branch length and the human diversity, implemented in <tt>fitTreeStatsLm</tt> with <tt>focus</tt> set to "human" and <tt>findConservedDivergedModules</tt>. Similarly to the overall conservation and divergence, the 95% prediction interval of the regression line is calculated and the modules that have a higher human branch length than the upper bound of the 95% prediction interval are considered diverged. It is important to note that the modules that fall below the lower bound of the 95% prediction interval cannot be interpreted as conserved in this case, because 1) the human-monophyletic module trees have already been pre-selected, and 2) conservation is per definition not a lineage-specific feature.
 
 Below, this approach is applied to the example dataset:
 
@@ -1031,7 +1052,7 @@ readRDS("module_conservation_human_sample.rds")[, 8:16] %>%
 module_conservation_human <- readRDS("module_conservation_human.rds")
 ```
 
-In total, there are 57 modules that fulfill the minimum criteria of being monophyletic for the human clones:
+In total, there are 57 modules that fulfill the minimum criteria of being monophyletic for the human replicates:
 
 ```{r eval = TRUE, results = 'markup'}
 nrow(module_conservation_human)
@@ -1049,7 +1070,7 @@ The results can also be plotted using <tt>plotConservedDivergedModules</tt>, the
 plotConservedDivergedModules(module_conservation_human)
 ```
 
-```{r div_mod_human, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'Weighted linear regression between the human-to-other branch length and human diversity, with the diverged modules marked.'}
+```{r div_mod_human, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'Weighted linear regression between the human branch length and human diversity, with the diverged modules marked.'}
 knitr::include_graphics("module_conservation_human.png")
 ```
 
@@ -1082,11 +1103,11 @@ plotTrees(trees, species_colors = spec_colors)
 knitr::include_graphics("trees_human_div.png")
 ```
 
-The signal - unsurprisingly - is not as strong as in case of the modules diverged between cynomolgus and great apes, but it is still apparent that the human-gorilla and human-cynomolgus distance measures are the higher than the rest. This also translates into a way longer human-to-other branch length than expected based on the phylogeny and observed in most module trees.
+The signal - unsurprisingly - is not as strong as in case of the modules diverged between cynomolgus and great apes, but it is still apparent that the human-gorilla and human-cynomolgus distance measures are the higher than the rest. This also translates into a way longer human branch length than expected based on the phylogeny and observed in most module trees.
 
 ### Finding conserved and diverged target genes
 
-Similar to the approach in case of the overall conservation and divergence, jackknifing can inform us about target genes that contribute the most to human-specific divergence. In this case, the residuals of the jackknifed modules versions are calculated with regard to the regression model between the human-to-other branch length and the human diversity. The target genes that result in the lowest residuals (lowest signal is of divergence) when removed are considered the most diverged in the original module.
+Similar to the approach in case of the overall conservation and divergence, jackknifing can inform us about target genes that contribute the most to human-specific divergence. In this case, the residuals of the jackknifed modules versions are calculated with regard to the regression model between the human branch length and the human diversity. The target genes that result in the lowest residuals (lowest signal is of divergence) when removed are considered the most diverged in the original module.
 
 We performed this analysis for the ARID1B module:
 
@@ -1097,9 +1118,19 @@ ARID1B_target_conservation <- findConservedDivergedTargets("ARID1B",
 ```
 
 ```{r glimpse_at_arid1b_target_cons, eval = TRUE, echo = FALSE}
-readRDS("ARID1B_target_conservation_sample.rds") %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Cross-species conservation measures for a few example target genes of ARID1B</span>", digits = 3, align = rep("c", 11)) %>% 
-  kable_styling(font_size = 12.4)
+readRDS("ARID1B_target_conservation_sample.rds")[, 1:6] %>% 
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Cross-species conservation measures for a few example target genes of ARID1B</span>", digits = 3, align = rep("c", 6)) %>% 
+  column_spec(5, "2.4cm") %>% 
+  column_spec(1, "2.1cm") %>% 
+  column_spec(2, "2.1cm") %>% 
+  column_spec(3, "1.9cm") %>%
+  column_spec(4, "3.1cm") %>%
+  column_spec(6, "2.2cm") %>%
+  kable_styling(font_size = 13)
+readRDS("ARID1B_target_conservation_sample.rds")[, 7:12] %>% 
+  kbl(row.names = FALSE, digits = 3, align = rep("c", 6)) %>% 
+  column_spec(1:6, "2.3cm")%>% 
+  kable_styling(font_size = 13)
 ```
 
 ```{r}

@@ -14,8 +14,8 @@ reconstructTrees(dist_list, n_cores = 1L)
 \item{type}{Character, module type ("orig" = original or "jk" = jackknifed, only needed if the distances were calculated with jackknifing).}
 \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type "jk" and nameOfRegulator_orig in case of module type "orig", only needed if the distances were calculated with jackknifing).}
 \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type "orig", only needed if the distances were calculated with jackknifing).}
-\item{clone1, clone2}{Character the names of the clones compared.}
-\item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+\item{replicate1, replicate2}{Character the names of the replicates compared.}
+\item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 \item{dist}{Numeric, the distance measure to be used for the tree reconstruction.}
 }}
 
@@ -25,14 +25,14 @@ reconstructTrees(dist_list, n_cores = 1L)
 A named list containing the neighbor-joining trees as \code{\link{phylo}} objects for all modules or jackknifed module versions in the input \code{dist_list}. All trees contain a component \code{species} that specifies which species each tip belongs to and a component \code{info} that stores metadata of the module/jackknifed module version in a data frame format.
 }
 \description{
-Reconstructs neighbor-joining trees based on pairwise distance measures between clones.
+Reconstructs neighbor-joining trees based on pairwise distance measures between replicates.
 }
 \details{
-As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species, to quantify how similar module connectivity patterns are between the networks of two clones (see \code{\link{calculatePresStats}}). These preservation scores are then converted into distance measures (see \code{\link{convertPresToDist}}).
+As part of the CroCoNet approach, pairwise module preservation scores are calculated between replicates, both within and across species, to quantify how similar module connectivity patterns are between the networks of two replicates (see \code{\link{calculatePresStats}}). These preservation scores are then converted into distance measures (see \code{\link{convertPresToDist}}).
 
-This function first sorts the distance measures of each module/jackknifed module version into a distance matrix of all clones, then based on this distance matrix reconstructs a tree using the neighbor-joining algorithm.
+This function first sorts the distance measures of each module/jackknifed module version into a distance matrix of all replicates, then based on this distance matrix reconstructs a tree using the neighbor-joining algorithm.
 
-The procedure results in a single tree per module/jackknifed module version (depending on whether the preservation statistics were calculated with or without jackknifing, see see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). The tips of the trees represent the clones and the branch lengths represent the dissimilarity of module topology between the networks of 2 clones. The trees are output as a list of \code{\link{phylo}} objects.
+The procedure results in a single tree per module/jackknifed module version (depending on whether the preservation statistics were calculated with or without jackknifing, see see the parameter \code{jackknife} in the function \code{\link{calculatePresStats}}). The tips of the trees represent the replicates and the branch lengths represent the dissimilarity of module topology between the networks of 2 replicates. The trees are output as a list of \code{\link{phylo}} objects.
 
 In the next steps of the pipeline, statistics based on these trees can be used to identify conserved and diverged modules and pinpoint target genes within these modules that contribute the most to conservation/divergence (see \code{\link{calculateTreeStats}}, \code{\link{fitTreeStatsLm}}, \code{\link{findConservedDivergedModules}} and \code{\link{findConservedDivergedTargets}}).
 }

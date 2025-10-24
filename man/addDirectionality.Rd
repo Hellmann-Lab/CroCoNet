@@ -7,9 +7,9 @@
 addDirectionality(network, sce, assay = "logcounts", n_cores = 1L)
 }
 \arguments{
-\item{network}{An \code{\link{igraph}} object containing the consensus network or the network of a clone.}
+\item{network}{An \code{\link{igraph}} object containing the consensus network or the network of a replicate.}
 
-\item{sce}{A \code{\link{SingleCellExperiment}} object containing the expression data either for all clones (in case \code{network} is the consensus network) or for the clone of interest (in case \code{network} is a clonewise network). If \code{sce} contains the expression data of all clones, it is also expected to have a metadata column "clone" specifying which clone each cell belongs to; this will be used to define the blocking levels.}
+\item{sce}{A \code{\link{SingleCellExperiment}} object containing the expression data either for all replicates (in case \code{network} is the consensus network) or for the replicate of interest (in case \code{network} is a replicate-wise network). If \code{sce} contains the expression data of all replicates, it is also expected to have a metadata column "replicate" specifying which replicate each cell belongs to; this will be used to define the blocking levels.}
 
 \item{assay}{Character, the name of the assay in \code{sce} that should be used for the calculation of gene-gene correlations (default: "logcounts").}
 
@@ -35,6 +35,6 @@ The calculation of directionality relies on the approximate version of the Spear
 }
 \examples{
 consensus_network <- network_list \%>\%
- createConsensus(clone2species, tree) \%>\%
+ createConsensus(replicate2species, tree) \%>\%
  addDirectionality(sce)
 }

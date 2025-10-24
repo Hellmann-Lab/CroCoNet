@@ -3,32 +3,7 @@
 \docType{data}
 \name{network_list_raw}
 \alias{network_list_raw}
-\title{#' SCE object list of the primate neural differentiation dataset
-#'
-#' A subset of the primate neural differentiation scRNA-seq dataset as a list of SCE objects. The data was collected during the early neural differentiation of human, gorilla and cynomolgus macaque iPS cells with 3 human, 2 gorilla and 4 cynomolgus cell lines (clones). Using a directed differentiation protocol, cells were differentiated into neural progenitor cells (NPCs) over the course of 9 days, and scRNA-seq data was obtained at six time points (days 0, 1, 3, 5, 7 and 9) during this process. Each element of the list is the SCE object of a clone with 300 genes and 100 cells, containing the raw counts, log-normalized counts and randomized quantile residuals as well as the metadata.
-#'
-#' @format A named list of 9 SCE objects. Each SCE object has 300 rows, 100 columns, 9 metadata columns and 3 assays.
-#'
-#' Metadata columns:
-#' \describe{
-#' \item{species}{Name of the species.}
-#' \item{clone}{Name of the clone/cell line.}
-#' \item{day}{The day when the cell was collected.}
-#' \item{n_UMIs}{Number of UMIs detected.}
-#' \item{n_genes}{Number of genes detected.}
-#' \item{perc_mito}{Percent of mitochondrial reads.}
-#' \item{sizeFactor}{Size factor for scaling normalization, calculated per clone using [scran::computeSumFactors] and [scran::quickCluster].}
-#' \item{pseudotime}{Pseudotime inferred by [SCORPIUS::infer_trajectory].}
-#' \item{cell_type}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
-#' }
-#' Assays:
-#' \describe{
-#' \item{counts}{Raw counts.}
-#' \item{logcounts}{Log-normalized counts created by calculating size factors per clone using [scran::computeSumFactors] and [scran::quickCluster], log-normalizing by [scuttle::logNormCounts].}
-#' \item{rand_quantile_res}{Randomized quantile residuals calculated by [transformGamPoi::transformGamPoi].}
-#' }
-"sce_list"
-List of raw networks}
+\title{List of raw networks}
 \format{
 A named list of 9 [igraph] objects. Each network contains 300 nodes, and has 1 node and 2 edge attributes:
 
@@ -39,13 +14,12 @@ Node attributes:
 Edge attributes:
 \describe{
 \item{weight}{Edge weight, the importance score calculate by GRNBoost2.}
-\item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
 }
 }
 \usage{
 network_list_raw
 }
 \description{
-List of networks per clone with raw edge weights. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged.
+List of networks per replicate with raw edge weights. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged.
 }
 \keyword{datasets}

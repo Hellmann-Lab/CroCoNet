@@ -17,18 +17,18 @@ A data frame with 232 rows and 16 columns:
 \item{human_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the human tips.}
 \item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
 \item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
-\item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human clones.}
-\item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
-\item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
-\item{human_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the human clones to the subtree of all other clones. NA if the tree is not monophyletic for the human clones.}
-\item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monophyletic for the gorilla clones.}
-\item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monophyletic for the cynomolgus clones.}
+\item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human replicates.}
+\item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla replicates.}
+\item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus replicates.}
+\item{human_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the human replicates and includes the internal branch connecting the human replicates to the rest of the tree. NA if the tree is not monophyletic for the human replicates.}
+\item{gorilla_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the gorilla replicates and includes the internal branch connecting the gorilla replicates to the rest of the tree. NA if the tree is not monophyletic for the gorilla replicates.}
+\item{cynomolgus_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the cynomolgus replicates and includes the internal branch connecting the cynomolgus replicates to the rest of the tree. NA if the tree is not monophyletic for the cynomolgus replicates.}
 }
 }
 \usage{
 tree_stats_jk
 }
 \description{
-Tree-based statistics calculated for the original and all jackknifed versions of the pruned modules. For each module version, a tree was reconstructed based on the module preservation scores within and across species. The tips of resulting tree represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between the clones. Branches between clones of different species carry information about cross-species differences, while the branches between clones of the same species carry information about the within-species diversity.
+Tree-based statistics calculated for the original and all jackknifed versions of the pruned modules. For each module version, a tree was reconstructed based on the module preservation scores within and across species. The tips of resulting tree represent the replicates and the branch lengths represent the dissimilarity of connectivity patterns between the replicates. Branches between replicates of different species carry information about cross-species differences, while the branches between replicates of the same species carry information about the within-species diversity.
 }
 \keyword{datasets}

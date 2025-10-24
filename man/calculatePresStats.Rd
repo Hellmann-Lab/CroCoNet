@@ -7,8 +7,8 @@
 calculatePresStats(
   pruned_modules,
   network_list,
-  stats = c("cor_adj", "cor_adj_regulator", "cor_kIM"),
-  clone2species = NULL,
+  stats = c("cor_adj", "cor_kIM"),
+  replicate2species = NULL,
   jackknife = TRUE,
   signed = FALSE,
   n_cores = 1L,
@@ -22,20 +22,20 @@ calculatePresStats(
 \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
 }}
 
-\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones.}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all replicates.}
 
-\item{stats}{Character or character vector specifying which preservation statistics to calculate (one or more of "cor_adj", "cor_adj_regulator", "cor_kIM", default: c("cor_adj", "cor_adj_regulator", "cor_kIM")).}
+\item{stats}{Character or character vector specifying which preservation statistics to calculate (one or more of "cor_adj", "cor_kIM", default: c("cor_adj", "cor_kIM")).}
 
-\item{clone2species}{A data frame specifying which species each clone belongs to, required columns:
+\item{replicate2species}{A data frame specifying which species each replicate belongs to, required columns:
 \describe{
-\item{clone}{Character, name of the clone.}
+\item{replicate}{Character, name of the replicate.}
 \item{species}{Character, name of the species.}
 }
 If NULL (default), the output will contain no species information.}
 
 \item{jackknife}{Logical specifying whether jackknifing should be performed or not (default: TRUE).}
 
-\item{signed}{Logical indicating whether the networks in \code{network_list} are signed (default: FALSE, see also \code{\link{normalizeEdgeWeights}}). If set to FALSE and \code{network_list} contains the edge attribute "direction", the edge weights in the network with direction "-" are negated for the calculation of "cor_adj" and "cor_adj_regulator".}
+\item{signed}{Logical indicating whether the networks in \code{network_list} are signed (default: FALSE, see also \code{\link{normalizeEdgeWeights}}). If set to FALSE and \code{network_list} contains the edge attribute "direction", the edge weights in the network with direction "-" are negated for the calculation of "cor_adj".}
 
 \item{n_cores}{Integer, the number of cores (default: 1).}
 
@@ -49,23 +49,23 @@ Data frame of the preservation statistics with the following columns:
 \item{type}{Character, module type ("orig" = original or "jk" = jackknifed, only present if parameter \code{jackknife} is set to TRUE).}
 \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type "jk" and nameOfRegulator_orig in case of module type "orig", only present if parameter \code{jackknife} is set to TRUE).}
 \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type "orig", only present if parameter \code{jackknife} is set to TRUE).}
-\item{clone1, clone2}{Character, the names of the clones compared.}
-\item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively (only present if \code{clone2species} is not NULL).}
+\item{replicate1, replicate2}{Character, the names of the replicates compared.}
+\item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively (only present if \code{replicate2species} is not NULL).}
 \item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the preservation statistics specified by the parameter \code{stats}.}
 }
 }
 \description{
-Calculates one or more preservation statistics - correlation of adjacencies (cor_adj), correlation of regulator-target adjacencies (cor_adj_regulator), correlation of intramodular connectivities (cor_kIM) - for all modules and clone pairs with or without jackknifing.
+Calculates one or both of two preservation statistics - correlation of adjacencies (cor_adj) and correlation of intramodular connectivities (cor_kIM) - for all modules and replicate pairs with or without jackknifing.
 }
 \details{
-The function calculates one or more preservation statistics adapted from WGCNA (cor_adj, cor_adj_regulator and cor_kIM) for each module and each clone pair. All three statistics quantify how well the topology of a module is preserved between the networks of two clones. The statistic cor_adj is the correlation of all edge weights within the module in the network of clone1 VS in the network of clone2. The statistic cor_adj_regulator is the correlation of all edge weights between the regulator and its module members in the network of clone1 VS in the network of clone2. Finally, the statistic cor_kIM is the correlation of the intramodular connectivities per module member gene in the network of clone1 VS in the network of clone2.
+The function calculates two preservation statistics adapted from WGCNA (cor_adj and cor_kIM) for each module and each replicate pair. Both statistics quantify how well the topology of a module is preserved between the networks of two replicates. The statistic cor_adj is the correlation of all edge weights within the module in the network of replicate1 VS in the network of replicate2, while the statistic cor_kIM is the correlation of the intramodular connectivities per module member gene in the network of replicate1 VS in the network of replicate2.
 
-All statistics assume a joint module assignment (typically derived from the consensus network) but compare topological properties directly between the clonewise networks. In this approach, a module is always defined as the same set of genes, but the adjacencies/edge weights among these genes could differ from clone to clone; poorly preserved modules are expected to have many, while well-preserved modules are expected to have few such differences.
+All statistics assume a joint module assignment (typically derived from the consensus network) but compare topological properties directly between the replicate-wise networks. In this approach, a module is always defined as the same set of genes, but the adjacencies/edge weights among these genes could differ from replicate to replicate; poorly preserved modules are expected to have many, while well-preserved modules are expected to have few such differences.
 
 If \code{jackknife} is set to TRUE (the default), the function creates all possible jackknifed versions of each input module by removing each target gene assigned to that module (the regulator is never excluded), then it calculates the preservation statistics for all of these jackknifed module versions in addition to the original module. This way, a confidence interval can be calculated for each module and statistic (see \code{\link{summarizeJackknifeStats}}). Later on in the pipeline, jackknifing can also provide information about which target genes within a conserved/diverged module are particularly responsible for the conservation/divergence (see \code{\link{findConservedDivergedTargets}}). If jackknifing is not desired, please set \code{jackknife} to FALSE. This will also substantially reduce running times.
 }
 \examples{
-pres_stats_jk <- calculatePresStats(pruned_modules, network_list, "cor_kIM", clone2species)
+pres_stats_jk <- calculatePresStats(pruned_modules, network_list, "cor_kIM", replicate2species)
 }
 \references{
 Langfelder, P., Luo, R., Oldham, M. C., & Horvath, S. (2011). Is my network module preserved and reproducible? PLoS Computational Biology, 7(1), 1001057.

@@ -7,14 +7,14 @@
 applyPower(network_list, power, n_cores = 1L)
 }
 \arguments{
-\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones.}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all replicates.}
 
 \item{power}{Numeric, the power to raise the edge weights to.}
 
 \item{n_cores}{Integer, the number of cores (default: 1).}
 }
 \value{
-A named list of \code{\link{igraph}} objects containing the networks of all clones after the scale-free transformation on the edge weights
+A named list of \code{\link{igraph}} objects containing the networks of all replicates after the scale-free transformation on the edge weights
 }
 \description{
 Apply soft-thresholding

@@ -8,7 +8,8 @@
 summarizeJackknifeStats(
   stats_df,
   stats = setdiff(colnames(stats_df), c("regulator", "type", "id", "gene_removed",
-    "module_size", "clone", "species", "clone1", "clone2", "species1", "species2")),
+    "module_size", "replicate", "species", "replicate1", "replicate2", "species1",
+    "species2")),
   summary_method = ifelse(endsWith(stats, "monophyl"), "mean", "median"),
   conf_level = 0.95
 )
@@ -21,10 +22,10 @@ summarizeJackknifeStats(
 \item{type}{Character, module type (orig = original or jk = jackknifed).}
 \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig').}
 \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig').}
-\item{clone}{Character, the name of the clone (optional, only needed if the statistics are calculated per clone).}
-\item{species}{Character, the name of the species (optional, only needed if the statistics are calculated per clone or per species).}
-\item{clone1, clone2}{Character, the names of the clones compared (optional, only needed if the statistics are calculated per clone pair).}
-\item{species1, species2}{Character, the names of the species compared (optional, only needed if the statistics are calculated per clone pair or species pair).}
+\item{replicate}{Character, the name of the replicate (optional, only needed if the statistics are calculated per replicate).}
+\item{species}{Character, the name of the species (optional, only needed if the statistics are calculated per replicate or per species).}
+\item{replicate1, replicate2}{Character, the names of the replicates compared (optional, only needed if the statistics are calculated per replicate pair).}
+\item{species1, species2}{Character, the names of the species compared (optional, only needed if the statistics are calculated per replicate pair or species pair).}
 \item{\{\{nameOfStat\}\}}{Numeric, integer or logical, one or more columns containing the values of the statistic(s) specified in 'stats'.}
 }}
 
@@ -39,9 +40,9 @@ A data frame of the statistics per module:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{module_size}{Module size, the numer of target genes assigned to a regulator.}
-\item{clone}{The name of the clone (only if the column is present in the input 'stats_df').}
+\item{replicate}{The name of the replicate (only if the column is present in the input 'stats_df').}
 \item{species}{The name of the species (only if the column is present in the input 'stats_df').}
-\item{clone1, clone2}{The names of the clones compared (only if the column is present in the input 'stats_df').}
+\item{replicate1, replicate2}{The names of the replicates compared (only if the column is present in the input 'stats_df').}
 \item{species1, species2}{The names of the species compared (only if the column is present in the input 'stats_df').}
 \item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the estimates (mean or median) of the statistic(s) specified in 'stats'.}
 \item{var_\{\{nameOfStat\}\}}{Numeric, one or more columns containing the variances of the statistic(s) specified in 'stats'.}

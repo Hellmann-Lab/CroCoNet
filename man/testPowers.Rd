@@ -7,7 +7,7 @@
 testPowers(network_list, powers = 1:20, n_cores = 1L)
 }
 \arguments{
-\item{network_list}{A named list that contains the networks of each clone and the consensus network in an \code{\link{igraph}} format.}
+\item{network_list}{A named list that contains the networks of each replicate and the consensus network in an \code{\link{igraph}} format.}
 
 \item{powers}{A numeric or integer vector specifying the soft-thresholding powers to test.}
 

@@ -66,7 +66,7 @@ convertToDT <- function(network_list) {
 #' Convert a tree to a data frame
 #'
 #' @description Converts a tree to a data frame where each row corresponds to a branch in the tree.
-#' @param tree Object of class [phylo] with clones as tips. It is expected to have a component 'species' that specifies which species each tip belongs to.
+#' @param tree Object of class [phylo] with replicates as tips. It is expected to have a component 'species' that specifies which species each tip belongs to.
 #'
 #' @return A data frame of tree branches.
 #' @export
@@ -119,22 +119,5 @@ wrapLongNames <- function(names) {
     gsub(" ", "", paste0(strwrap(gsub("_", "_ ", name), width = 20), collapse = "\n"))
 
   })
-
-}
-
-#' Remove outliers using the IQR method
-#'
-#' @param names Numeric vector.
-#'
-#' @return Numeric vector after the removal of outliers.
-#' @noRd
-remove_outliers <- function(vec) {
-
-  Q1 <- stats::quantile(vec, 0.25, na.rm = TRUE)
-  Q3 <- stats::quantile(vec, 0.75, na.rm = TRUE)
-  IQR_value <- Q3 - Q1
-  lower_bound <- Q1 - 1.5 * IQR_value
-  upper_bound <- Q3 + 1.5 * IQR_value
-  vec[vec >= lower_bound & vec <= upper_bound]
 
 }

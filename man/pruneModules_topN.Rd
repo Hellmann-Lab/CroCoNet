@@ -11,7 +11,7 @@ pruneModules_topN(initial_modules, N = 50L)
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{target}{Character, member gene of the regulator's initial module.}
-\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 }}
 
 \item{N}{Either an integer specifying a single desired pruned module size for all modules or a named integer vector specifying the desired pruned module size for each regulator (default: 50).}
@@ -22,7 +22,7 @@ Data frame of the pruned modules with the following columns:
 \item{regulator}{Character, transcriptional regulator.}
 \item{module_size}{Integer, the numer of genes assigned to a regulator.}
 \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of clonewise edge weights.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted mean of replicate-wise edge weights.}
 }
 Additional columns present in \code{initial_modules} will also be preserved in \code{pruned_modules}.
 }

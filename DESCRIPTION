@@ -37,7 +37,8 @@ Imports:
     farver,
     ggraph,
     grDevices,
-    mvtnorm
+    mvtnorm,
+    ggpubr
 Depends: 
     R (>= 3.5.0)
 LazyData: true

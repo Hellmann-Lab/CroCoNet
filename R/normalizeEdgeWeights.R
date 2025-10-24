@@ -14,12 +14,12 @@
 #'
 #' After normalization by either of the approaches above, it is not possible to tell anymore which edges had a positive and which edges had a negative weight originally. Since this can be a useful piece of information (it can specify the mode of regulation: activation or repression), the information about the sign is stored as a new edge attribute "direction" in the output \code{\link{igraph}} objects ("+" if the original edge weight was positive and "-" is the original edge weight was negative). If all original edge weights were positive, the edge attribute "direction" is not added.
 #'
-#' @param network_list A named list of \code{\link{igraph}} objects containing the networks of all clones.
+#' @param network_list A named list of \code{\link{igraph}} objects containing the networks of all replicates.
 #' @param signed Logical indicating whether a signed network is desired (default: FALSE, see \code{Details}).
 #' @param min_weight,max_weight Numeric, the theoretical minimum and maximum values of the edge weights. If set to NULL (default), the normalization is performed using the empirical minimum and maximum. For correlation-based edge weights, please set \code{min_weight} and \code{max_weight} to -1 and 1, respectively.
 #' @param n_cores Integer, the number of cores (default: 1).
 #'
-#' @return A named list of \code{\link{igraph}} objects containing the networks of all clones, with the edge weights normalized between 0 and 1. If originally there were both positive and negative edge weights present in the data, a new edge attribute is added to all \code{\link{igraph}} objects:
+#' @return A named list of \code{\link{igraph}} objects containing the networks of all replicates, with the edge weights normalized between 0 and 1. If originally there were both positive and negative edge weights present in the data, a new edge attribute is added to all \code{\link{igraph}} objects:
 #' \describe{
 #' \item{direction}{Character, the direction of the interaction between the 2 genes that form the edge ("+" or "-" depending on the sign of the edge weight before normalization).}
 #' }

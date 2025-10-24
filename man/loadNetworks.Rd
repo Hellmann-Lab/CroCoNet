@@ -6,7 +6,7 @@
 \usage{
 loadNetworks(
   path,
-  clone_names = NULL,
+  replicate_names = NULL,
   rep = 1L,
   directed = TRUE,
   min_occurrence = 2L,
@@ -16,9 +16,9 @@ loadNetworks(
 \arguments{
 \item{path}{Character, the path where the files containing the gene-gene edge weights can be found.}
 
-\item{clone_names}{Character vector, the names of the clones that were used for network reconstruction. These are expected to be the base names of the TSV files (format: nameOfClone.tsv or nameOfClone_index.tsv). If set to NULL (default), the names are deduced from the file names by stripping anything starting with "_" and ".tsv".}
+\item{replicate_names}{Character vector, the names of the replicates that were used for network reconstruction. These are expected to be the base names of the TSV files (format: nameOfReplicate.tsv or nameOfReplicate_index.tsv). If set to NULL (default), the names are deduced from the file names by stripping anything starting with "_" and ".tsv".}
 
-\item{rep}{Integer, the number of output files per clone, e.g. the number of different subsamplings or the number of independent runs in case of a stochastic network inference algorithm (default: 1). If \code{rep} > 1, the TSV files are expected to be indexed from 1 to \code{rep} for each clone (format: nameOfClone_index.tsv).}
+\item{rep}{Integer, the number of output files per replicate, e.g. the number of different subsamplings or the number of independent runs in case of a stochastic network inference algorithm (default: 1). If \code{rep} > 1, the TSV files are expected to be indexed from 1 to \code{rep} for each replicate (format: nameOfReplicate_index.tsv).}
 
 \item{directed}{Logical indicating whether the network inference method produces a directed output, i.e. whether geneA-geneB and geneB-geneA can both be present among the edges (default: TRUE). For GRNBoost2 this has to be left as TRUE, while for correlation-based methods this has to most likely be set to FALSE.}
 
@@ -27,26 +27,21 @@ loadNetworks(
 \item{n_cores}{Integer, the number of cores (default: 1).}
 }
 \value{
-A named list of \code{\link{igraph}} objects containing the networks per clone. The list names are taken from \code{clone_names}. Each \code{\link{igraph}} object contains the following edge attributes:
-\describe{
-\item{weight}{Numeric, the edge weight (taken from the 3rd column of the input TSV files).}
-\item{n_supporting_edges}{Integer, the number of times an edge appears across the different subsamplings/runs and the 2 possible directions (only present if the network inference was run several times per clone). The highest possible number of occurrence for each edge is 2×\code{rep} in case of a directed network inference method and \code{rep} in case of an undirected network inference method.}
-}
-Starting from the 4th column of the input TSV files, all columns are preserved as edge attributes with unchanged names.
+A named list of \code{\link{igraph}} objects containing the networks per replicate. The list names are taken from \code{replicate_names}. Each \code{\link{igraph}} object contains the edge attribute "weight" (taken from the 3rd column of the input TSV files). Starting from the 4th column of the input TSV files, all columns are preserved as edge attributes with unchanged names.
 }
 \description{
-Loads the TSV files containing the gene-gene edge weights and summarizes them as a list of \code{\link{igraph}} objects per clone (i.e. cell line or biological replicate within a species).
+Loads the TSV files containing the gene-gene edge weights and summarizes them as a list of \code{\link{igraph}} objects per replicate (i.e. cell line or biological replicate within a species).
 }
 \details{
-The functions reads and formats the TSV files in the directory specified by \code{path}. The base names of the TSV files of interest can be specified using the parameter \code{clone_names} (in this case the files are expected to be named using the format: nameOfClone.tsv or nameOfClone_index.tsv). If  \code{clone_names} is set to NULL (default), all TSV files in \code{path} are read and the clone names are deduced from the file names by stripping anything starting with "_" and ".tsv".
+The functions reads and formats the TSV files in the directory specified by \code{path}. The base names of the TSV files of interest can be specified using the parameter \code{replicate_names} (in this case the files are expected to be named using the format: nameOfReplicate.tsv or nameOfReplicate_index.tsv). If  \code{replicate_names} is set to NULL (default), all TSV files in \code{path} are read and the replicate names are deduced from the file names by stripping anything starting with "_" and ".tsv".
 
 As the first 3 columns, each input TSV file is expected to contain the first gene that forms the edge, the second gene that forms the edge and the edge weight. There can be additional columns as well, these will be preserved as edge attributes in the \code{\link{igraph}} objects.
 
-If the edge weights were calculated on different subsamplings of cells per clone, or a network inference algorithm involving stochastic steps (e.g. GRNBoost2) was run several times on each clone, the edge weights are averaged across these subsamplings/runs, and a single combined \code{\link{igraph}} object is returned per clone. The number of subsamplings/runs has to be specified by the parameter \code{rep}. The TSV files corresponding to the same clone but different subsamplings/runs are expected to have the same base name with different indices: nameOfClone_index.tsv.
+If the edge weights were calculated on different subsamplings of cells per replicate, or a network inference algorithm involving stochastic steps (e.g. GRNBoost2) was run several times on each replicate, the edge weights are averaged across these subsamplings/runs, and a single combined \code{\link{igraph}} object is returned per replicate. The number of subsamplings/runs has to be specified by the parameter \code{rep}. The TSV files corresponding to the same replicate but different subsamplings/runs are expected to have the same base name with different indices: nameOfReplicate_index.tsv.
 
 If the network inference method produces an output with directed edges, i.e. geneA-geneB and geneB-geneA can both be present, the parameter \code{directed} should be set to TRUE (this is the case e.g. for GRNBoost2). In this case the edge weights inferred between the same gene pair but in opposite directions are averaged. If the edge in one of the directions is missing, it is regarded as a 0. For correlation-based methods (e.g. \code{\link{correlatePairs}}), \code{directed} has to most likely be set to FALSE. In both cases, \code{loadNetworks} returns an undirected network.
 
-Rarely occurring edges can be removed altogether by specifying \code{min_occurrence}. This is not relevant if the network inference was done only once per clone (\code{rep} = 1), therefore in this case the value of \code{min_occurrence} is ignored. If the network inference was done several times for each clone (\code{rep} > 1), the highest possible number of occurrences for each edge is 2×\code{rep} in case of a directed network inference method and \code{rep} in case of an undirected network inference method. If an edge occurs less often than the specified value of \code{min_occurrence}, the edge is removed. This can be helpful to 1) denoise the networks and 2) decrease the computational power needed for the next steps.
+Rarely occurring edges can be removed altogether by specifying \code{min_occurrence}. This is not relevant if the network inference was done only once per replicate (\code{rep} = 1), therefore in this case the value of \code{min_occurrence} is ignored. If the network inference was done several times for each replicate (\code{rep} > 1), the highest possible number of occurrences for each edge is 2×\code{rep} in case of a directed network inference method and \code{rep} in case of an undirected network inference method. If an edge occurs less often than the specified value of \code{min_occurrence}, the edge is removed. This can be helpful to 1) denoise the networks and 2) decrease the computational power needed for the next steps.
 }
 \examples{
 network_list_raw <- loadNetworks(path = system.file("extdata", package = "CroCoNet"),

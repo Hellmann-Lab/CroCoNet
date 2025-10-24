@@ -4,14 +4,14 @@
 \alias{createConsensus}
 \title{Create consensus network}
 \usage{
-createConsensus(network_list, clone2species, tree = NULL)
+createConsensus(network_list, replicate2species, tree = NULL)
 }
 \arguments{
-\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all clones.}
+\item{network_list}{A named list of \code{\link{igraph}} objects containing the networks of all replicates.}
 
-\item{clone2species}{A data frame specifying which species each clone belongs to, required columns:
+\item{replicate2species}{A data frame specifying which species each replicate belongs to, required columns:
 \describe{
-\item{clone}{Character, name of the clone.}
+\item{replicate}{Character, name of the replicate.}
 \item{species}{Character, name of the species.}
 }}
 
@@ -20,23 +20,23 @@ createConsensus(network_list, clone2species, tree = NULL)
 \value{
 Consensus network in an \code{\link{igraph}} format with the following edge attributes:
 \describe{
-\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise edge weights.}
-\item{n_supporting_clones}{Integer, the number of clones where the edge was detected.}
-\item{supporting_clones}{Character, the list of clones where the edge was detected.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of replicate-wise edge weights.}
+\item{n_supporting_replicates}{Integer, the number of replicates where the edge was detected (only added if more than 10\% of the edges are not present in all replicates).}
+\item{supporting_replicates}{Character, the list of replicates where the edge was detected (only added if more than 10\% of the edges are not present in all replicates).}
 }
 }
 \description{
-Integrates networks across different clones and different species into a single consensus network in a phylogeny-aware manner.
+Integrates networks across different replicates and different species into a single consensus network in a phylogeny-aware manner.
 }
 \details{
-The input networks should all contain the same nodes (genes). The output consensus network contains the same nodes and all edges that were detected in at least 1 of the clones.
+The input networks should all contain the same nodes (genes). The output consensus network contains the same nodes and all edges that were detected in at least 1 of the replicates.
 
-For each edge, the consensus edge weight (adjacency) is calculated as the weighted mean of clonewise edge weights. The weighted mean corrects for 1) the phylogenetic distances between species (if the phylogenetic tree is provided) and 2) the different numbers of clones per species. As a result, the approach downweighs the edge weights of the clones that 1) belong to closely related species or 2) belong to species with many clones, so that an imbalanced sampling across the phylogenetic tree does not bias the consensus network.
+For each edge, the consensus edge weight (adjacency) is calculated as the weighted mean of replicate-wise edge weights. The weighted mean corrects for 1) the phylogenetic distances between species (if the phylogenetic tree is provided) and 2) the different numbers of replicates per species. As a result, the approach downweighs the edge weights of the replicates that 1) belong to closely related species or 2) belong to species with many replicates, so that an imbalanced sampling across the phylogenetic tree does not bias the consensus network.
 
-If an edge is not present in one of the clones, the edge weight in that clone is regarded as 0 for the calculation of the weighted mean. The number of clones and the names of clone where an edge was detected are saved as 2 new edge attributes ("n_supporting_clones" and "supporting_clones", respectively) in the output consensus network.
+If an edge is not present in one of the replicates, the edge weight in that replicate is regarded as 0 for the calculation of the weighted mean. If there are more than 10\% such missing/zero-weight edges, the number of replicates and the names of replicate where an edge was detected are saved as 2 new edge attributes ("n_supporting_replicates" and "supporting_replicates", respectively) in the output consensus network.
 
 In the next steps of the pipeline, this consensus network can be used to assign modules jointly for all species while avoiding species bias (see \code{\link{assignInitialModules}} and \code{\link{pruneModules}}).
 }
 \examples{
-consensus_network <- createConsensus(network_list, clone2species, tree)
+consensus_network <- createConsensus(network_list, replicate2species, tree)
 }

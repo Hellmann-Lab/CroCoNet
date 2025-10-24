@@ -6,6 +6,8 @@
 \alias{CroCoNet-package}
 \title{CroCoNet: Cross-species Comparison of Networks}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 A tool to quantitatively compare gene regulatory networks across species and identify conserved and diverged modules.
 }
 \seealso{

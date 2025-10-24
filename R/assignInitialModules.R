@@ -8,7 +8,7 @@
 #'
 #' The function creates as many modules as there are regulators, each containing the regulator and its \code{N} best target genes. When choosing the best targets, the genes are ranked based on how strongly they are connected to the regulator (regulator-target edge weight/adjacency). \code{N} should be greater than or equal to the minimum number of targets per regulator across all regulators.
 #'
-#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and clones.
+#' @param consensus_network \code{\link{igraph}} object, the consensus network across all species and replicates.
 #' @param regulators Character vector of transcriptional regulators (default: transcriptional regulators with at least 1 annotated motif in the JASPAR 2024 vertebrate core collection that are present as network nodes in the consensus network).
 #' @param N Integer, the initial module size, i.e. the number of target genes to keep for each regulator.
 #'
@@ -16,7 +16,7 @@
 #'\describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, member gene of the regulator's initial module.}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise edge weights.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of replicate-wise edge weights.}
 #' }
 #' If the input \code{consensus_network} had more edge attributes, those appear as additional columns in the data frame.
 #' @export

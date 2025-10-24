@@ -7,7 +7,7 @@
 assignInitialModules(consensus_network, regulators = NULL, N = 3000L)
 }
 \arguments{
-\item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and clones.}
+\item{consensus_network}{\code{\link{igraph}} object, the consensus network across all species and replicates.}
 
 \item{regulators}{Character vector of transcriptional regulators (default: transcriptional regulators with at least 1 annotated motif in the JASPAR 2024 vertebrate core collection that are present as network nodes in the consensus network).}
 
@@ -18,7 +18,7 @@ A data frame of initial modules with 3 core columns:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{target}{Character, member gene of the regulator's initial module.}
-\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise edge weights.}
+\item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of replicate-wise edge weights.}
 }
 If the input \code{consensus_network} had more edge attributes, those appear as additional columns in the data frame.
 }

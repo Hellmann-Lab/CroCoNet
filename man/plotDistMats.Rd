@@ -2,16 +2,16 @@
 % Please edit documentation in R/plotDistMats.R
 \name{plotDistMats}
 \alias{plotDistMats}
-\title{Plot the distance matrices of clones based on module connectivity patterns}
+\title{Plot the distance matrices of replicates based on module connectivity patterns}
 \usage{
 plotDistMats(dist_dfs, colors = NULL, font_size = 14, ncol = NULL)
 }
 \arguments{
-\item{dist_dfs}{Data frame or a named list of data frames containing the distance measures per clone pair for one or more modules. Required columns for each data frame:
+\item{dist_dfs}{Data frame or a named list of data frames containing the distance measures per replicate pair for one or more modules. Required columns for each data frame:
 \describe{
-\item{clone1, clone2}{Character the names of the clones compared.}
-\item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
-\item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{clone1} and \code{clone2}.}
+\item{replicate1, replicate2}{Character the names of the replicates compared.}
+\item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
+\item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the preservation score of the given module between \code{replicate1} and \code{replicate2}.}
 }}
 
 \item{colors}{Character vector, the colors to visualize the distances. The vector can contain any number of colors that will be passed on to and converted into a continuous scale by \code{scale_color_gradientn}.}
@@ -24,12 +24,12 @@ plotDistMats(dist_dfs, colors = NULL, font_size = 14, ncol = NULL)
 A \code{\link{ggplot}} object in case \code{dist_dfs} is a single data frame and a \code{\link{patchwork}} object in case \code{dist_dfs} is a list of data frames.
 }
 \description{
-Plots the pairwise distances between clones based on module connectivity patterns for one or more modules.
+Plots the pairwise distances between replicates based on module connectivity patterns for one or more modules.
 }
 \details{
-As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module connectivity patterns are preserved between the networks of two clones. They can be converted into distance measures using the formula \code{dist = (1 - pres)/2} (see \code{\link{convertPresToDist}}).
+As part of the CroCoNet approach, pairwise module preservation scores are calculated between replicates, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module connectivity patterns are preserved between the networks of two replicates. They can be converted into distance measures using the formula \code{dist = (1 - pres)/2} (see \code{\link{convertPresToDist}}).
 
-This function plots the distance measures as a tile plot where each tile corresponds to a pair of clones and the color of the tile corresponds to the distance based on module connectivity patterns between this pair of clones. The distance of a clone with itself is always 0 and thus not meaningful, therefore these tiles are colored grey.
+This function plots the distance measures as a tile plot where each tile corresponds to a pair of replicates and the color of the tile corresponds to the distance based on module connectivity patterns between this pair of replicates. The distance of a replicate with itself is always 0 and thus not meaningful, therefore these tiles are colored grey.
 
 If the aim is to plot distance matrices for several modules together, the input should be a named list of data frames, each containing the distances for one of the modules. The tile plots are in this case combined together into a single \code{\link{patchwork}} object with the titles of the subplots matching the names of the input list. All subplots have the same scale so that the distances are comparable across modules.
 }

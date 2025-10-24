@@ -13,7 +13,7 @@
 #' @param sce \code{\link{SingleCellExperiment}} object containing the expression data (logcounts and metadata) for all network genes. Required metadata columns:
 #'\describe{
 #' \item{species}{Character, the name of the species.}
-#' \item{clone}{Character, the name of the clone/cell line.}
+#' \item{replicate}{Character, the name of the replicate/cell line.}
 #' }
 #' @param source Character or character vector specifying the source of known transcriptional regulators. It can be one or more of "jaspar_core" (JASPAR 2024 vertebrate core, the default), "jaspar_unvalidated" (JASPAR 2024 unvalidated), and "image" (IMAGE database from Madsen et al. 2018), or alternatively, it can be a  custom list of regulators provided by the user.
 #' @param ... Additional arguments passed to \code{\link{getTopHVGs}}.
@@ -38,8 +38,8 @@ getRegulators <- function(sce, source = "jaspar_core", ...) {
   if (!("logcounts" %in% names(SummarizedExperiment::assays(sce))))
     stop("The argument \"sce\" should contain the assay \"logcounts\".")
 
-  if (is.null(sce$species) || is.null(sce$clone))
-    stop("The argument \"sce\" should contain the metadata columns \"species\" and \"clone\".")
+  if (is.null(sce$species) || is.null(sce$replicate))
+    stop("The argument \"sce\" should contain the metadata columns \"species\" and \"replicate\".")
 
   if (!inherits(source, "character"))
     stop("The argument \"source\" should be a character or character vector. It can be one or more of \"jaspar_core\", \"jaspar_unvalidated\"  and \"image\", or alternatively, it can be a custom list of regulators provided by the user.")
@@ -57,7 +57,7 @@ getRegulators <- function(sce, source = "jaspar_core", ...) {
     sce_species <- sce[,sce$species == species_name]
 
     # compute variance and mean expression, fit trend to the variance against the mean, get the biological component of variation as the residual from the trend
-    gene_var_fit <- scran::modelGeneVar(sce_species, block = sce_species$clone)
+    gene_var_fit <- scran::modelGeneVar(sce_species, block = sce_species$replicate)
 
     # get genes with a positive biological variance
     scran::getTopHVGs(gene_var_fit, ...)

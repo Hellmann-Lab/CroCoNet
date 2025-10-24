@@ -19,17 +19,17 @@ plotPresStats(
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
 \item{module_size}{Integer, the numer of target genes assigned to a regulator (only needed if the data points are desired to be colored by module size).}
-\item{clone1, clone2}{Character, the names of the clones compared.}
-\item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belongs to, respectively.}
-\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the preservation statistic of interest per module and clone pair.}
+\item{replicate1, replicate2}{Character, the names of the replicates compared.}
+\item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belongs to, respectively.}
+\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the preservation statistic of interest per module and replicate pair.}
 }}
 
 \item{random_pres_stats}{Data frame of the preservation statistics for the random modules (optional). If provided, the following columns are required:
 \describe{
 \item{regulator}{Character, transcriptional regulator.}
-\item{clone1, clone2}{The names of the clones compared.}
-\item{species1, species2}{The names of the species \code{clone1} and \code{clone2} belongs to, respectively.}
-\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the preservation statistic(s) of interest per module and clone pair.}
+\item{replicate1, replicate2}{The names of the replicates compared.}
+\item{species1, species2}{The names of the species \code{replicate1} and \code{replicate2} belongs to, respectively.}
+\item{\{\{nameOfStat\}\}}{Numeric, one or more columns containing the preservation statistic(s) of interest per module and replicate pair.}
 }}
 
 \item{stats}{Character or character vector, the name(s) of the column(s) containing the statistics of interest.}
@@ -49,11 +49,11 @@ A scatterplot as a \code{\link{ggplot}} object showing the cross-species VS with
 Plots the cross-species VS within-species preservation scores for all possible species pairs. If a statistic is a good measure of module preservation, the within-species scores are expected to be higher than the cross-species scores for all species pairs, and the difference is expected to increase with increasing phylogenetic distance between the two species compared.
 }
 \details{
-As part of the CroCoNet approach, pairwise module preservation scores are calculated between clones, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module topology is preserved between the networks of two clones.
+As part of the CroCoNet approach, pairwise module preservation scores are calculated between replicates, both within and across species (see \code{\link{calculatePresStats}}) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module topology is preserved between the networks of two replicates.
 
 For each possible speciesA-speciesB pair in the data, the function first subsets the within-species scores for speciesA, the within-species scores for speciesB and the cross-species scores between speciesA and speciesB, then calculates the mean of the within-species scores as well as the mean of the cross-species scores per module.
 
-For example, if there are 2 species, human and gorilla, with 3 human clones (\emph{h1}, \emph{h2} and \emph{h3}), and 2 gorilla clones (\emph{g1} and \emph{g2}), for a single module there will be 3 preservation scores within the human clones (\eqn{p_{h1-h2}}, \eqn{p_{h1-h3}} and \eqn{p_{h2-h3}}), 1 preservation score within the gorilla clones (\eqn{p_{g1-g2}}) and 6 preservation scores across the 2 species (\eqn{p_{h1-g1}}, \eqn{p_{h1-g2}}, \eqn{p_{h2-g1}}, \eqn{p_{h2-g2}}, \eqn{p_{h3-g1}} and \eqn{p_{h3-g2}}). For this module and the human-gorilla species pair, the summarized within-species score will then be the mean of the 4 within-species scores (\eqn{mean(p_{h1-h2}, p_{h1-h3}, p_{h2-h3}, p_{g1-g2})}) and the cross-species score will be the mean of the 6 cross-species scores (\eqn{mean(p_{h1-g1}, p_{h1-g2}, p_{h2-g1}, p_{h2-g2}, p_{h3-g1}, p_{h3-g2})}).
+For example, if there are 2 species, human and gorilla, with 3 human replicates (\emph{h1}, \emph{h2} and \emph{h3}), and 2 gorilla replicates (\emph{g1} and \emph{g2}), for a single module there will be 3 preservation scores within the human replicates (\eqn{p_{h1-h2}}, \eqn{p_{h1-h3}} and \eqn{p_{h2-h3}}), 1 preservation score within the gorilla replicates (\eqn{p_{g1-g2}}) and 6 preservation scores across the 2 species (\eqn{p_{h1-g1}}, \eqn{p_{h1-g2}}, \eqn{p_{h2-g1}}, \eqn{p_{h2-g2}}, \eqn{p_{h3-g1}} and \eqn{p_{h3-g2}}). For this module and the human-gorilla species pair, the summarized within-species score will then be the mean of the 4 within-species scores (\eqn{mean(p_{h1-h2}, p_{h1-h3}, p_{h2-h3}, p_{g1-g2})}) and the cross-species score will be the mean of the 6 cross-species scores (\eqn{mean(p_{h1-g1}, p_{h1-g2}, p_{h2-g1}, p_{h2-g2}, p_{h3-g1}, p_{h3-g2})}).
 
 After calculating the summarized scores for all modules and species pairs, the cross-species scores are plotted against the within-species scores faceted by species pair. The within-species scores are expected to be higher than the cross-species scores, thus the data points are expected to fall under the diagonal in all facets. However, the more phylogenetically distant two species are, the bigger deviation we expect from the diagonal.
 
@@ -68,6 +68,7 @@ plotPresStats(pres_stats, stats = "cor_kIM")
 }
 \seealso{
 Other functions to plot preservation statistics: 
+\code{\link{comparePresStats}()},
 \code{\link{plotPresStatDistributions}()}
 }
 \concept{functions to plot preservation statistics}

@@ -19,6 +19,7 @@ A data frame with 23 rows and 12 columns:
 \item{lwr_fit}{Numeric, the lower bound of the prediction interval of the fit.}
 \item{upr_fit}{Numeric, the upper bound of the prediction interval of the fit.}
 \item{residual}{Numeric, the residual of the jackknife module version in the linear model. It is calculated as the difference between the observed and expected (fitted) total tree lengths.}
+\item{contribution}{Numeric, the contribution score of the removed target gene.}
 }
 }
 \usage{

@@ -38,74 +38,47 @@
 "image_TRs"
 
 
-#' Clone-species conversion
+#' Replicate-species conversion
 #'
-#' A data frame that specifies which clone belongs to which species.
+#' A data frame that specifies which replicate belongs to which species.
 #'
 #' @format A data frame with 9 rows and 2 columns:
 #' \describe{
-#' \item{clone}{Name of the clone/cell line.}
+#' \item{replicate}{Name of the replicate/cell line.}
 #' \item{species}{Name of the species.}
 #' }
-"clone2species"
+"replicate2species"
 
 
 #' SCE object of the primate neural differentiation dataset
 #'
-#' A subset of the primate neural differentiation scRNA-seq dataset in an SCE format. The data was collected during the early neural differentiation of human, gorilla and cynomolgus macaque iPS cells with 3 human, 2 gorilla and 4 cynomolgus cell lines (clones). Using a directed differentiation protocol, cells were differentiated into neural progenitor cells (NPCs) over the course of 9 days, and scRNA-seq data was obtained at six time points (days 0, 1, 3, 5, 7 and 9) during this process. The SCE object contains the raw and log-normalized counts as well as the metadata for 300 genes and 900 cells (100 cells per clone).
+#' A subset of the primate neural differentiation scRNA-seq dataset in an SCE format. The data was collected during the early neural differentiation of human, gorilla and cynomolgus macaque iPS cells with 3 human, 2 gorilla and 4 cynomolgus cell lines (replicates). Using a directed differentiation protocol, cells were differentiated into neural progenitor cells (NPCs) over the course of 9 days, and scRNA-seq data was obtained at six time points (days 0, 1, 3, 5, 7 and 9) during this process. The SCE object contains the raw and log-normalized counts as well as the metadata for 300 genes and 900 cells (100 cells per replicate).
 #'
 #' @format An SCE object with 300 rows, 900 columns, 9 metadata columns and 2 assays.
 #'
 #' Metadata columns:
 #' \describe{
 #' \item{species}{Name of the species.}
-#' \item{clone}{Name of the clone/cell line.}
+#' \item{replicate}{Name of the replicate/cell line.}
 #' \item{day}{The day when the cell was collected.}
 #' \item{n_UMIs}{Number of UMIs detected.}
 #' \item{n_genes}{Number of genes detected.}
 #' \item{perc_mito}{Percent of mitochondrial reads.}
-#' \item{sizeFactor}{Size factor for scaling normalization, calculated first per clone using [scran::computeSumFactors] and [scran::quickCluster], then adjusted by [batchelor::multiBatchNorm] to remove systematic differences in covergae across clones.}
+#' \item{sizeFactor}{Size factor for scaling normalization, calculated first per replicate using [scran::computeSumFactors] and [scran::quickCluster], then adjusted by [batchelor::multiBatchNorm] to remove systematic differences in covergae across replicates.}
 #' \item{pseudotime}{Pseudotime inferred by [SCORPIUS::infer_trajectory].}
 #' \item{cell_type}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
 #' }
 #' Assays:
 #' \describe{
 #' \item{counts}{Raw counts.}
-#' \item{logcounts}{Log-normalized counts created by first calculating size factors per clone using [scran::computeSumFactors] and [scran::quickCluster], then adjusted them to remove systematic differences in covergae across clones and log-normalizing by [batchelor::multiBatchNorm].}
+#' \item{logcounts}{Log-normalized counts created by first calculating size factors per replicate using [scran::computeSumFactors] and [scran::quickCluster], then adjusted them to remove systematic differences in covergae across replicates and log-normalizing by [batchelor::multiBatchNorm].}
 #' }
 "sce"
 
 
-#' #' SCE object list of the primate neural differentiation dataset
-#' #'
-#' #' A subset of the primate neural differentiation scRNA-seq dataset as a list of SCE objects. The data was collected during the early neural differentiation of human, gorilla and cynomolgus macaque iPS cells with 3 human, 2 gorilla and 4 cynomolgus cell lines (clones). Using a directed differentiation protocol, cells were differentiated into neural progenitor cells (NPCs) over the course of 9 days, and scRNA-seq data was obtained at six time points (days 0, 1, 3, 5, 7 and 9) during this process. Each element of the list is the SCE object of a clone with 300 genes and 100 cells, containing the raw counts, log-normalized counts and randomized quantile residuals as well as the metadata.
-#' #'
-#' #' @format A named list of 9 SCE objects. Each SCE object has 300 rows, 100 columns, 9 metadata columns and 3 assays.
-#' #'
-#' #' Metadata columns:
-#' #' \describe{
-#' #' \item{species}{Name of the species.}
-#' #' \item{clone}{Name of the clone/cell line.}
-#' #' \item{day}{The day when the cell was collected.}
-#' #' \item{n_UMIs}{Number of UMIs detected.}
-#' #' \item{n_genes}{Number of genes detected.}
-#' #' \item{perc_mito}{Percent of mitochondrial reads.}
-#' #' \item{sizeFactor}{Size factor for scaling normalization, calculated per clone using [scran::computeSumFactors] and [scran::quickCluster].}
-#' #' \item{pseudotime}{Pseudotime inferred by [SCORPIUS::infer_trajectory].}
-#' #' \item{cell_type}{Cell type labels predicted by [SingleR::classifySingleR] using the embryoid body dataset from Rhodes et al. 2022 as reference.}
-#' #' }
-#' #' Assays:
-#' #' \describe{
-#' #' \item{counts}{Raw counts.}
-#' #' \item{logcounts}{Log-normalized counts created by calculating size factors per clone using [scran::computeSumFactors] and [scran::quickCluster], log-normalizing by [scuttle::logNormCounts].}
-#' #' \item{rand_quantile_res}{Randomized quantile residuals calculated by [transformGamPoi::transformGamPoi].}
-#' #' }
-#' "sce_list"
-
-
 #' List of raw networks
 #'
-#' List of networks per clone with raw edge weights. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged.
+#' List of networks per replicate with raw edge weights. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged.
 #'
 #' @format A named list of 9 [igraph] objects. Each network contains 300 nodes, and has 1 node and 2 edge attributes:
 #'
@@ -116,7 +89,6 @@
 #' Edge attributes:
 #' \describe{
 #' \item{weight}{Edge weight, the importance score calculate by GRNBoost2.}
-#' \item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
 #' }
 "network_list_raw"
 
@@ -149,7 +121,7 @@
 
 #' List of networks
 #'
-#' List of networks per clone with edge weights re-scaled between 0 and 1, and gene pairs (edges) with overlapping annotations removed. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all clones. Gene pairs that have overlapping annotations in any of the species' genomes were removed from all networks.
+#' List of networks per replicate with edge weights re-scaled between 0 and 1, and gene pairs (edges) with overlapping annotations removed. The networks were inferred using GRNBoost2 based on a subset of the primate neural differentiation scRNA-seq dataset. All 300 genes in the subsetted data were used as potential regulators. To circumvent the stochastic nature of the algorithm, GRNBoost2 was run 10 times on the same count matrices, then the results were averaged across runs, and rarely occurring edges were removed altogether. In addition, edges inferred between the same gene pair but in opposite directions were also averaged. Edge weights were scaled by the maximum edge weight across all replicates. Gene pairs that have overlapping annotations in any of the species' genomes were removed from all networks.
 #'
 #' @format A named list of 9 [igraph] objects. Each network contains 300 nodes, and has 1 node attribute and 3 edge attributes:
 #'
@@ -160,7 +132,6 @@
 #' Edge attributes:
 #' \describe{
 #' \item{weight}{Edge weight, the importance score calculate by GRNBoost2 rescaled between 0 and 1.}
-#' \item{n_supporting_edges}{The number of times an edge appears across 10 independent GRNBoost2 runs and the 2 possible directions (maximum value: 10 runs * 2 direction = 20).}
 #' \item{genomic_dist}{Numeric, the genomic distance of the 2 genes that form the edge (Inf if the 2 genes are annotated on different chromosomes/contigs).}
 #' }
 "network_list"
@@ -177,7 +148,7 @@
 
 #' Consensus network
 #'
-#' Consensus network of the 9 primate clones in the example dataset. For each edge, the consensus adjacency was calculated as the weighted average of clonewise adjacencies using weights that correct for 1) the phylogenetic distances between species and 2) the different numbers of clones per species. If an edge was not detected in certain clone, the adjacency of that clone was regarded as 0 for the calculation of the consensus. The directionality of each edge was determined based on a modified Spearman's correlation between the corresponding 2 genes' expression profiles (positive expression correlation - activating interaction, negative expression correlation - repressing interaction). The correlations were calculated per clone, then the mean correlation was taken across all clones.
+#' Consensus network of the 9 primate replicates in the example dataset. For each edge, the consensus adjacency was calculated as the weighted average of replicate-wise adjacencies using weights that correct for 1) the phylogenetic distances between species and 2) the different numbers of replicates per species. If an edge was not detected in certain replicate, the adjacency of that replicate was regarded as 0 for the calculation of the consensus. The directionality of each edge was determined based on a modified Spearman's correlation between the corresponding 2 genes' expression profiles (positive expression correlation - activating interaction, negative expression correlation - repressing interaction). The correlations were calculated per replicate, then the mean correlation was taken across all replicates.
 #'
 #' @format An [igraph] object with 300 nodes, and has 1 node attribute and 3 edge attributes:
 #'
@@ -187,9 +158,7 @@
 #' }
 #' Edge attributes:
 #' \describe{
-#' \item{weight}{Consensus edge weight/adjacency, the weighted average of clonewise adjacencies.}
-#' \item{n_supporting_clones}{The number of clones where the edge was detected.}
-#' \item{supporting_clones}{The list of clones where the edge was detected.}
+#' \item{weight}{Consensus edge weight/adjacency, the weighted average of replicate-wise adjacencies.}
 #' \item{rho}{Approximate Spearman's correlation coefficient of the 2 genes' expression profiles that form the edge.}
 #' \item{p.adj}{BH-corrected approximate p-value of rho.}
 #' \item{direction}{Direction of the interaction between the 2 genes that form the edge ("+" or "-").}
@@ -205,9 +174,7 @@
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Target gene of the transcriptional regulator (member of the regulator's initial module).}
-#' \item{weight}{Consensus edge weight/adjacency, the weighted average of clonewise adjacencies.}
-#' \item{n_supporting_clones}{The number of clones where the edge was detected.}
-#' \item{supporting_clones}{The list of clones where the edge was detected.}
+#' \item{weight}{Consensus edge weight/adjacency, the weighted average of replicate-wise adjacencies.}
 #' \item{rho}{Approximate Spearman's correlation coefficient of the 2 genes' expression profiles that form the edge.}
 #' \item{p.adj}{BH-corrected approximate p-value of rho.}
 #' \item{direction}{Direction of the interaction between the 2 genes that form the edge ("+" or "-").}
@@ -223,9 +190,7 @@
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{target}{Character, target gene of the transcriptional regulator (member of the regulator's pruned module).}
-#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of clonewise adjacencies.}
-#' \item{n_supporting_clones}{The number of clones where the edge was detected.}
-#' \item{supporting_clones}{The list of clones where the edge was detected.}
+#' \item{weight}{Numeric, consensus edge weight/adjacency, the weighted average of replicate-wise adjacencies.}
 #' \item{rho}{Approximate Spearman's correlation coefficient of the 2 genes' expression profiles that form the edge.}
 #' \item{p.adj}{BH-corrected approximate p-value of rho.}
 #' \item{direction}{Character specifying the direction of regulation between the regulator and the target, either "+" or "-".}
@@ -285,7 +250,7 @@
 
 #' Preservation statistics of the original and jackknifed pruned modules
 #'
-#' Correlation of intramodular connectivities (cor_kIM) per clone pair for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The preservation statistic cor.kIM was then calculated for the original module as well as each jackknife module version by comparing each clone to all others, both within and across species. cor.kIM quantifies how well the connectivity patterns are preserved between the networks of two clones, mathematically it is the correlation of the intramodular connectivities per module member gene in the network of the 1st clone VS the intramodular connectivities per module member gene in the network of the 2nd clone.
+#' Correlation of intramodular connectivities (cor_kIM) per replicate pair for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The preservation statistic cor.kIM was then calculated for the original module as well as each jackknife module version by comparing each replicate to all others, both within and across species. cor.kIM quantifies how well the connectivity patterns are preserved between the networks of two replicates, mathematically it is the correlation of the intramodular connectivities per module member gene in the network of the 1st replicate VS the intramodular connectivities per module member gene in the network of the 2nd replicate.
 #'
 #' @format A data frame with 8352 rows and 8 columns:
 #' \describe{
@@ -294,16 +259,17 @@
 #' \item{type}{Character, module type (orig = original or jk = jackknifed).}
 #' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig').}
 #' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig').}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
-#' \item{cor_kIM}{Correlation of intramodular connectivities.}
+#' \item{replicate1, replicate2}{Character, the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
+#' \item{cor_adj}{Numeric, correlation of adjacencies.}
+#' \item{cor_kIM}{Numeric, correlation of intramodular connectivities.}
 #' }
 "pres_stats_jk"
 
 
 #' Preservation statistics of the the original and jackknifed random modules
 #'
-#' Correlation of intramodular connectivities (cor_kIM) per clone pair for the original and all jackknifed versions of the random modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The preservation statistic cor.kIM was then calculated for the original module as well as each jackknife module version by comparing each clone to all others, both within and across species. cor.kIM quantifies how well the connectivity patterns are preserved between the networks of two clones, mathematically it is the correlation of the intramodular connectivities per module member gene in the network of the 1st clone VS the intramodular connectivities per module member gene in the network of the 2nd clone.
+#' Correlation of intramodular connectivities (cor_kIM) per replicate pair for the original and all jackknifed versions of the random modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The preservation statistic cor.kIM was then calculated for the original module as well as each jackknife module version by comparing each replicate to all others, both within and across species. cor.kIM quantifies how well the connectivity patterns are preserved between the networks of two replicates, mathematically it is the correlation of the intramodular connectivities per module member gene in the network of the 1st replicate VS the intramodular connectivities per module member gene in the network of the 2nd replicate.
 #'
 #' @format A data frame with 8352 rows and 8 columns:
 #' \describe{
@@ -312,16 +278,17 @@
 #' \item{type}{Character, module type (orig = original or jk = jackknifed).}
 #' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig').}
 #' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig').}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
-#' \item{cor_kIM}{Correlation of intramodular connectivities.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
+#' \item{cor_adj}{Numeric, correlation of adjacencies.}
+#' \item{cor_kIM}{Numeric, correlation of intramodular connectivities.}
 #' }
 "random_pres_stats_jk"
 
 
 #' Distance measures of the original and jackknifed pruned modules
 #'
-#' Distance measures per clone pair for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \eqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknifed/original module version and contains the distance measures between all possible pairs of clones for this module version.
+#' Distance measures per replicate pair for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \eqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknifed/original module version and contains the distance measures between all possible pairs of replicates for this module version.
 #'
 #' @format A named list with 232 elements containing the distance measures per (original or jackknifed) module version. Each element is a data frame with 72 rows and 10 columns:
 #' \describe{
@@ -330,8 +297,8 @@
 #' \item{type}{Character, module type (orig = original or jk = jackknifed).}
 #' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig').}
 #' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig').}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 #' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the correlation of intramodular connectivities.}
 #' }
 "dist_jk"
@@ -339,16 +306,16 @@
 
 #' Distance measures of the pruned modules
 #'
-#' Distance measures per clone pair for the original (i.e. not jackknifed) pruned modules.
+#' Distance measures per replicate pair for the original (i.e. not jackknifed) pruned modules.
 #'
-#' The distance measures were calculated based on the correlation of intramodular connectivities: \deqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds to a module and contains the distance measures between all possible pairs of clones for this module.
+#' The distance measures were calculated based on the correlation of intramodular connectivities: \deqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds to a module and contains the distance measures between all possible pairs of replicates for this module.
 #'
 #' @format A named list with 12 elements containing the distance measures per module. Each element is a data frame with 72 rows and 7 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{module_size}{Integer, the numer of target genes assigned to a regulator.}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 #' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the correlation of intramodular connectivities.}
 #' }
 "dist"
@@ -356,9 +323,9 @@
 
 #' Distance measures of the the original and jackknifed random modules
 #'
-#' Distance measures per clone pair for the original and all jackknifed versions of the random modules.
+#' Distance measures per replicate pair for the original and all jackknifed versions of the random modules.
 #'
-#' The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \deqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknife module version and contains the distance measures between all possible pairs of clones for this module version.
+#' The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). The distance measures were calculated based on the correlation of intramodular connectivities: \deqn{dist = \frac{1 - cor.kIM}{2}} (a correlation of 1 corresponds to a distance of 0, whereas a correlation of -1 corresponds to a distance of 1). Each element of the list corresponds a jackknife module version and contains the distance measures between all possible pairs of replicates for this module version.
 #'
 #' @format A named list with 232 elements containing the distance measures per (original or jackknifed) module version. Each element is a data frame with 72 rows and 10 columns:
 #' \describe{
@@ -367,8 +334,8 @@
 #' \item{type}{Character, module type (orig = original or jk = jackknifed).}
 #' \item{id}{Character, the unique ID of the module version (format: nameOfRegulator_jk_nameOfGeneRemoved in case of module type 'jk' and nameOfRegulator_orig in case of module type 'orig').}
 #' \item{gene_removed}{Character, the name of the gene removed by jackknifing (NA in case of module type 'orig').}
-#' \item{clone1, clone2}{Character the names of the clones compared.}
-#' \item{species1, species2}{Character, the names of the species \code{clone1} and \code{clone2} belong to, respectively.}
+#' \item{replicate1, replicate2}{Character the names of the replicates compared.}
+#' \item{species1, species2}{Character, the names of the species \code{replicate1} and \code{replicate2} belong to, respectively.}
 #' \item{dist}{Numeric, distance measure ranging from 0 to 1, calculated based on the correlation of intramodular connectivities.}
 #' }
 "random_dist_jk"
@@ -376,28 +343,28 @@
 
 #' Trees of the original and jackknifed pruned modules
 #'
-#' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate clones for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). For each of these module versions, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible clone pairs, then they were converted into a distance matrix of clones, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree for each original or jackknife module where the tips represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between these clones.
+#' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate replicates for the original and all jackknifed versions of the pruned modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). For each of these module versions, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible replicate pairs, then they were converted into a distance matrix of replicates, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree for each original or jackknife module where the tips represent the replicates and the branch lengths represent the dissimilarity of connectivity patterns between these replicates.
 #' @format A named list with 232 elements containing the neighbor-joining trees as [phylo] objects.
 "trees_jk"
 
 
 #' Trees of the pruned modules
 #'
-#' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate clones for the original (i.e. not jackknifed) pruned modules. For each of the modules, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible clone pairs, then they were converted into a distance matrix of clones, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree per module where the tips represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between these clones.
+#' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate replicates for the original (i.e. not jackknifed) pruned modules. For each of the modules, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible replicate pairs, then they were converted into a distance matrix of replicates, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree per module where the tips represent the replicates and the branch lengths represent the dissimilarity of connectivity patterns between these replicates.
 #' @format A named list with 12 elements containing the neighbor-joining trees as [phylo] objects.
 "trees"
 
 
 #' Trees of the original and jackknifed random modules
 #'
-#' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate clones for the original and all jackknifed versions of the random modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). For each of these module versions, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible clone pairs, then they were converted into a distance matrix of clones, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree for each original or jackknife module where the tips represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between these clones.
+#' Neighbor-joining trees representing the similarities of connectivity patterns across the 9 primate replicates for the original and all jackknifed versions of the random modules. The jackknifed versions of the modules were created by removing each target gene assigned to a module (the regulators were never excluded). For each of these module versions, the trees were inferred based on the preservation statistic cor.kIM (correlation of intramodular connectivities): first, the preservation scores were calculated between all possible replicate pairs, then they were converted into a distance matrix of replicates, and finally trees were reconstructed based on this distance matrix using the neighbor-joining algorithm. The result is a single tree for each original or jackknife module where the tips represent the replicates and the branch lengths represent the dissimilarity of connectivity patterns between these replicates.
 #' @format A named list with 232 elements containing the neighbor-joining trees as [phylo] objects.
 "random_trees_jk"
 
 
 #' Tree-based statistics of the original and jackknifed pruned modules
 #'
-#' Tree-based statistics calculated for the original and all jackknifed versions of the pruned modules. For each module version, a tree was reconstructed based on the module preservation scores within and across species. The tips of resulting tree represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between the clones. Branches between clones of different species carry information about cross-species differences, while the branches between clones of the same species carry information about the within-species diversity.
+#' Tree-based statistics calculated for the original and all jackknifed versions of the pruned modules. For each module version, a tree was reconstructed based on the module preservation scores within and across species. The tips of resulting tree represent the replicates and the branch lengths represent the dissimilarity of connectivity patterns between the replicates. Branches between replicates of different species carry information about cross-species differences, while the branches between replicates of the same species carry information about the within-species diversity.
 #' @format A data frame with 232 rows and 16 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
@@ -410,19 +377,19 @@
 #' \item{human_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the human tips.}
 #' \item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
 #' \item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
-#' \item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human clones.}
-#' \item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
-#' \item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
-#' \item{human_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the human clones to the subtree of all other clones. NA if the tree is not monophyletic for the human clones.}
-#' \item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monophyletic for the gorilla clones.}
-#' \item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monophyletic for the cynomolgus clones.}
+#' \item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human replicates.}
+#' \item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla replicates.}
+#' \item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus replicates.}
+#' \item{human_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the human replicates and includes the internal branch connecting the human replicates to the rest of the tree. NA if the tree is not monophyletic for the human replicates.}
+#' \item{gorilla_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the gorilla replicates and includes the internal branch connecting the gorilla replicates to the rest of the tree. NA if the tree is not monophyletic for the gorilla replicates.}
+#' \item{cynomolgus_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the cynomolgus replicates and includes the internal branch connecting the cynomolgus replicates to the rest of the tree. NA if the tree is not monophyletic for the cynomolgus replicates.}
 #' }
 "tree_stats_jk"
 
 
 #' Tree-based statistics of the original and jackknifed random modules
 #'
-#' Tree-based statistics calculated for the original and all jackknifed versions of the random modules. For each module version, a tree was reconstructed based on the module preservation scores within and across species. The tips of resulting tree represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between the clones. Branches between clones of different species carry information about cross-species differences, while the branches between clones of the same species carry information about the within-species diversity.
+#' Tree-based statistics calculated for the original and all jackknifed versions of the random modules. For each module version, a tree was reconstructed based on the module preservation scores within and across species. The tips of resulting tree represent the replicates and the branch lengths represent the dissimilarity of connectivity patterns between the replicates. Branches between replicates of different species carry information about cross-species differences, while the branches between replicates of the same species carry information about the within-species diversity.
 #' @format A data frame with 232 rows and 16 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
@@ -435,57 +402,65 @@
 #' \item{human_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the human tips.}
 #' \item{gorilla_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the gorilla tips.}
 #' \item{cynomolgus_diversity}{Numeric, the sum of the branch lengths in the subtree that contains only the cynomolgus tips.}
-#' \item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human clones.}
-#' \item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla clones.}
-#' \item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus clones.}
-#' \item{human_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the human clones to the subtree of all other clones. NA if the tree is not monophyletic for the human clones.}
-#' \item{gorilla_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the gorilla clones to the subtree of all other clones. NA if the tree is not monophyletic for the gorilla clones.}
-#' \item{cynomolgus_to_other_branch_length}{Numeric, the length of the internal branch that connects the subtree of the cynomolgus clones to the subtree of all other clones. NA if the tree is not monophyletic for the cynomolgus clones.}
+#' \item{human_monophyl}{Logical indicating whether the tree is monophyletic for the human replicates.}
+#' \item{gorilla_monophyl}{Logical indicating whether the tree is monophyletic for the gorilla replicates.}
+#' \item{cynomolgus_monophyl}{Logical indicating whether the tree is monophyletic for the cynomolgus replicates.}
+#' \item{human_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the human replicates and includes the internal branch connecting the human replicates to the rest of the tree. NA if the tree is not monophyletic for the human replicates.}
+#' \item{gorilla_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the gorilla replicates and includes the internal branch connecting the gorilla replicates to the rest of the tree. NA if the tree is not monophyletic for the gorilla replicates.}
+#' \item{cynomolgus_subtree_length}{Numeric, the sum of the branch lengths in the subtree that is defined by the cynomolgus replicates and includes the internal branch connecting the cynomolgus replicates to the rest of the tree. NA if the tree is not monophyletic for the cynomolgus replicates.}
 #' }
 "random_tree_stats_jk"
 
 
 #' Preservation statistics of the pruned modules
 #'
-#' Correlation of intramodular connectivities (cor_kIM) per clone pair and module. The preservation statistic cor.kIM quantifies how well the connectivity patterns are preserved between the networks of two clones, mathematically it is the correlation of the intramodular connectivities per module member gene in the network of the 1st clone VS the intramodular connectivities per module member gene in the network of the 2nd clone.
-#' This statistic was calculated for all possible jackknifed versions of the modules, each of which was created by removing a target gene assigned to the given module (the regulators were never excluded). Each jackknifed module was compared between all posible pairs of clones, both within and across species, resulting in a cor.kIM value per jackknifed module version and clone pair. Finally, the cor.kIM values were summarized per module and clone pair by taking the median and its 95\% confidence interval across all jackknifed module versions.
+#' Correlation of intramodular connectivities (cor_kIM) per replicate pair and module. The preservation statistic cor.kIM quantifies how well the connectivity patterns are preserved between the networks of two replicates, mathematically it is the correlation of the intramodular connectivities per module member gene in the network of the 1st replicate VS the intramodular connectivities per module member gene in the network of the 2nd replicate.
+#' This statistic was calculated for all possible jackknifed versions of the modules, each of which was created by removing a target gene assigned to the given module (the regulators were never excluded). Each jackknifed module was compared between all posible pairs of replicates, both within and across species, resulting in a cor.kIM value per jackknifed module version and replicate pair. Finally, the cor.kIM values were summarized per module and replicate pair by taking the median and its 95\% confidence interval across all jackknifed module versions.
 #'
 #' @format A data frame with 252 rows and 10 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{module_size}{Module size, the numer of target genes assigned to a regulator.}
-#' \item{clone1, clone2}{The names of the clones compared.}
-#' \item{species1, species2}{The names of the species 'clone1' and 'clone2' belongs to, respectively.}
+#' \item{replicate1, replicate2}{The names of the replicates compared.}
+#' \item{species1, species2}{The names of the species 'replicate1' and 'replicate2' belongs to, respectively.}
 #' \item{cor_kIM}{The median of cor.kIM across all jackknifed versions of the module.}
 #' \item{var_cor_kIM}{The variance of cor.kIM across all jackknifed versions of the module.}
 #' \item{lwr_cor_kIM}{The lower bound of the 95\% confidence interval of cor.kIM calculated by jackknifing.}
 #' \item{upr_cor_kIM}{The upper bound of the 95\% confidence interval of cor.kIM calculated by jackknifing.}
+#' \item{cor_adj}{The median of cor.adj across all jackknifed versions of the module.}
+#' \item{var_cor_adj}{The variance of cor.adj across all jackknifed versions of the module.}
+#' \item{lwr_cor_adj}{The lower bound of the 95\% confidence interval of cor.adj calculated by jackknifing.}
+#' \item{upr_cor_adj}{The upper bound of the 95\% confidence interval of cor.adj calculated by jackknifing.}
 #' }
 "pres_stats"
 
 
 #' Preservation statistics of the random modules
 #'
-#' Correlation of intramodular connectivities (cor_kIM) per clone pair and random module. The preservation statistic cor.kIM quantifies how well the connectivity patterns are preserved between the networks of two clones, mathematically it is the correlation of the intramodular connectivities per module member gene in the network of the 1st clone VS the intramodular connectivities per module member gene in the network of the 2nd clone.
-#' This statistic was calculated for all possible jackknifed versions of the modules, each of which was created by removing a target gene assigned to the given module (the regulators were never excluded). Each jackknifed module was compared between all posible pairs of clones, both within and across species, resulting in a cor.kIM value per jackknifed module version and clone pair. Finally, the cor.kIM values were summarized per module and clone pair by taking the median and its 95\% confidence interval across all jackknifed module versions.
+#' Correlation of intramodular connectivities (cor_kIM) per replicate pair and random module. The preservation statistic cor.kIM quantifies how well the connectivity patterns are preserved between the networks of two replicates, mathematically it is the correlation of the intramodular connectivities per module member gene in the network of the 1st replicate VS the intramodular connectivities per module member gene in the network of the 2nd replicate.
+#' This statistic was calculated for all possible jackknifed versions of the modules, each of which was created by removing a target gene assigned to the given module (the regulators were never excluded). Each jackknifed module was compared between all posible pairs of replicates, both within and across species, resulting in a cor.kIM value per jackknifed module version and replicate pair. Finally, the cor.kIM values were summarized per module and replicate pair by taking the median and its 95\% confidence interval across all jackknifed module versions.
 #'
 #' @format A data frame with 252 rows and 10 columns:
 #' \describe{
 #' \item{regulator}{Character, transcriptional regulator.}
 #' \item{module_size}{Module size, the numer of target genes assigned to a regulator.}
-#' \item{clone1, clone2}{The names of the clones compared.}
-#' \item{species1, species2}{The names of the species 'clone1' and 'clone2' belongs to, respectively.}
+#' \item{replicate1, replicate2}{The names of the replicates compared.}
+#' \item{species1, species2}{The names of the species 'replicate1' and 'replicate2' belongs to, respectively.}
 #' \item{cor_kIM}{The median of cor.kIM across all jackknifed versions of the module.}
 #' \item{var_cor_kIM}{The variance of cor.kIM across all jackknifed versions of the module.}
 #' \item{lwr_cor_kIM}{The lower bound of the 95\% confidence interval of cor.kIM calculated by jackknifing.}
 #' \item{upr_cor_kIM}{The upper bound of the 95\% confidence interval of cor.kIM calculated by jackknifing.}
+#' \item{cor_adj}{The median of cor.adj across all jackknifed versions of the module.}
+#' \item{var_cor_adj}{The variance of cor.adj across all jackknifed versions of the module.}
+#' \item{lwr_cor_adj}{The lower bound of the 95\% confidence interval of cor.adj calculated by jackknifing.}
+#' \item{upr_cor_adj}{The upper bound of the 95\% confidence interval of cor.adj calculated by jackknifing.}
 #' }
 "random_pres_stats"
 
 
 #' Tree-based statistics of the pruned modules
 #'
-#' Tree-based statistics per module. The trees were reconstructed based on module preservation scores (cor.kIM) within and across species. The tips of resulting tree represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between the clones. The total tree length is the sum of all branch lengths in the tree and it measures module variability both within and across species, while the within-species_diversity is the sum of the human, gorilla and cynomolgus within-species branch lengths and it measures module variability within species only.
+#' Tree-based statistics per module. The trees were reconstructed based on module preservation scores (cor.kIM) within and across species. The tips of resulting tree represent the replicates and the branch lengths represent the dissimilarity of connectivity patterns between the replicates. The total tree length is the sum of all branch lengths in the tree and it measures module variability both within and across species, while the within-species_diversity is the sum of the human, gorilla and cynomolgus within-species branch lengths and it measures module variability within species only.
 #' These statistics were calculated for all possible jackknifed versions of the modules, each of which was created by removing a target gene assigned to the given module (the regulators were never excluded). Then the statistics were summarized per module by taking the median and its 95\% confidence interval across all jackknifed module versions.
 #'
 #' @format A data frame with 7 rows and 10 columns:
@@ -506,7 +481,7 @@
 
 #' Tree-based statistics of the random modules
 #'
-#' Tree-based statistics per random module. The trees were reconstructed based on module preservation scores (cor.kIM) within and across species. The tips of resulting tree represent the clones and the branch lengths represent the dissimilarity of connectivity patterns between the clones. The total tree length is the sum of all branch lengths in the tree and it measures module variability both within and across species, while the within-species_diversity is the sum of the human, gorilla and cynomolgus within-species branch lengths and it measures module variability within species only.
+#' Tree-based statistics per random module. The trees were reconstructed based on module preservation scores (cor.kIM) within and across species. The tips of resulting tree represent the replicates and the branch lengths represent the dissimilarity of connectivity patterns between the replicates. The total tree length is the sum of all branch lengths in the tree and it measures module variability both within and across species, while the within-species_diversity is the sum of the human, gorilla and cynomolgus within-species branch lengths and it measures module variability within species only.
 #' These statistics were calculated for all possible jackknifed versions of the modules, each of which was created by removing a target gene assigned to the given module (the regulators were never excluded). Then the statistics were summarized per module by taking the median and its 95\% confidence interval across all jackknifed module versions.
 #'
 #' @format A data frame with 7 rows and 10 columns:
@@ -537,7 +512,7 @@
 #'
 #' Cross-species conservation measures of the 12 modules in the subsetted early neuronal differentiation dataset. Modules that were found to be conserved or diverged overall (across all species) are labelled as "conserved" or "diverged" in the column \code{conservation}.
 #'
-#' To determine whether a module as whole is conserved or diverged overall, module trees were reconstructed from pairwise preservation scores between clones and based on these trees 2 useful statistics were calculated for each module: the total tree length and the within-species diversity (for details please see \code{\link{calculatePresStats}}, \code{\link{reconstructTrees}}, \code{\link{calculateTreeStats}}). After fitting a weighted linear model between the total tree length and within-species diversity values of all modules, a module was considered diverged if it fell above the prediction interval of the regression line, while a module was considered conserved if it fell below the prediction interval of the regression line (for details please see \code{\link{fitTreeStatsLm}} and \code{\link{findConservedDivergedModules}}. The degree of conservation/divergence can be further compared between the modules categorized as conserved/diverged using 2 measures, the residual and the t-score.
+#' To determine whether a module as whole is conserved or diverged overall, module trees were reconstructed from pairwise preservation scores between replicates and based on these trees 2 useful statistics were calculated for each module: the total tree length and the within-species diversity (for details please see \code{\link{calculatePresStats}}, \code{\link{reconstructTrees}}, \code{\link{calculateTreeStats}}). After fitting a weighted linear model between the total tree length and within-species diversity values of all modules, a module was considered diverged if it fell above the prediction interval of the regression line, while a module was considered conserved if it fell below the prediction interval of the regression line (for details please see \code{\link{fitTreeStatsLm}} and \code{\link{findConservedDivergedModules}}. The degree of conservation/divergence can be further compared between the modules categorized as conserved/diverged using 2 measures, the residual and the t-score.
 #'
 #' @format A data frame with 12 rows and 16 columns:
 #' \describe{
@@ -581,5 +556,6 @@
 #' \item{lwr_fit}{Numeric, the lower bound of the prediction interval of the fit.}
 #' \item{upr_fit}{Numeric, the upper bound of the prediction interval of the fit.}
 #' \item{residual}{Numeric, the residual of the jackknife module version in the linear model. It is calculated as the difference between the observed and expected (fitted) total tree lengths.}
+#' \item{contribution}{Numeric, the contribution score of the removed target gene.}
 #' }
 "POU5F1_target_conservation"

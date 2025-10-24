@@ -8,8 +8,8 @@
 #'
 #' The calculation of directionality relies on the approximate version of the Spearman's rho, significance testing and blocking implemented by \code{\link{correlatePairs}}. The results are summarized as 3 new edge attributes in the \code{\link{igraph}} object: rho (approximate Spearman's correlation coefficient), p.adj (BH-corrected approximate p-value) and direction ("+" or "-").
 #'
-#' @param network An \code{\link{igraph}} object containing the consensus network or the network of a clone.
-#' @param sce A \code{\link{SingleCellExperiment}} object containing the expression data either for all clones (in case \code{network} is the consensus network) or for the clone of interest (in case \code{network} is a clonewise network). If \code{sce} contains the expression data of all clones, it is also expected to have a metadata column "clone" specifying which clone each cell belongs to; this will be used to define the blocking levels.
+#' @param network An \code{\link{igraph}} object containing the consensus network or the network of a replicate.
+#' @param sce A \code{\link{SingleCellExperiment}} object containing the expression data either for all replicates (in case \code{network} is the consensus network) or for the replicate of interest (in case \code{network} is a replicate-wise network). If \code{sce} contains the expression data of all replicates, it is also expected to have a metadata column "replicate" specifying which replicate each cell belongs to; this will be used to define the blocking levels.
 #' @param assay Character, the name of the assay in \code{sce} that should be used for the calculation of gene-gene correlations (default: "logcounts").
 #' @param n_cores Integer, the number of cores (default: 1).
 #'
@@ -24,7 +24,7 @@
 #'
 #' @examples
 #' consensus_network <- network_list %>%
-#'  createConsensus(clone2species, tree) %>%
+#'  createConsensus(replicate2species, tree) %>%
 #'  addDirectionality(sce)
 addDirectionality <- function(network, sce, assay = "logcounts", n_cores = 1L) {
 
@@ -58,7 +58,7 @@ addDirectionality <- function(network, sce, assay = "logcounts", n_cores = 1L) {
   pairings <- as.matrix(dt[, .(from, to)])
 
   # block info (if present)
-  block <- sce$clone
+  block <- sce$replicate
   if (!is.null(block)) block <- as.factor(block)
 
   # set seed and schedule the restoration of the old seed
