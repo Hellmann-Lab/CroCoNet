@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>CroCoNet • CroCoNet</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" sizes="any" href="../favicon.ico">
+<link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -111,40 +116,64 @@ text-align: justify
 }
 
 </style>
-<p><tt>CroCoNet</tt> (<strong>Cro</strong>ss-species
+<p><br><tt>CroCoNet</tt> (<strong>Cro</strong>ss-species
 <strong>Co</strong>mparison of <strong>Net</strong>works) is a
 computational pipeline and R package to quantitatively compare
-gene-regulatory networks across species. In this vignette, we present
-the workflow step by step, exemplified by an scRNA-seq dataset of early
-primate neural differentiation. The corresponding data files can be
-found at the following Zenodo repository: <br><br></p>
+gene-regulatory networks across species. The approach hinges on
+contrasting network variability within and across species in order to
+distinguish divergence from detection uncertainty. By enabling robust
+network analyses, CroCoNet contributes towards finding meaningful
+cross-species differences in gene regulation.</p>
+<p>In this vignette, we demonstrate the complete CroCoNet workflow using
+a single-cell RNA-seq dataset of early primate neural differentiation as
+an example. The corresponding input data are available in the associated
+Zenodo repository, under the compressed archive
+“neural_differentiation_dataset.zip”. All file paths used in the
+examples below are relative to this master folder.</p>
+<p>Through this tutorial, users will learn how to:</p>
+<ul>
+<li><p>Prepare and format input data for CroCoNet (including
+preprocessing and network inference)</p></li>
+<li><p>Process networks and build the consensus network</p></li>
+<li><p>Assign and characterize modules</p></li>
+<li><p>Calculate module preservation scores within and across
+species</p></li>
+<li><p>Quantify module conservation across all species and along
+specific lineages</p></li>
+<li><p>Visualize modules using network- and tree-based representations
+<br><br></p></li>
+</ul>
 <div class="section level2">
 <h2 id="input-data">Input data<a class="anchor" aria-label="anchor" href="#input-data"></a>
 </h2>
 <div class="section level3">
 <h3 id="experimental-design">Experimental design<a class="anchor" aria-label="anchor" href="#experimental-design"></a>
 </h3>
-<p><tt>CroCoNet</tt> was designed to be used on scRNA-seq data with
-multiple species and multiple replicates (clones) per species. To
-reliably infer networks, the dataset should have sufficient expression
-variance across cells (several different conditions, time-series
-experiment over a dynamic process or a mixture of cell types). For a
-meaningful analysis, the conditions, pseudotemporal trajectory and cell
-type composition should be as comparable across species as possible.</p>
-<p>The example dataset contains 3 species: human, gorilla and cynomolgus
-macaque with 3 human clones from 3 individuals (H1c1, H2c1, and H3c1), 2
-gorilla clones from 1 individual (G1c1, and G1c2) and 4 cynomolgus
-macaque clones from 2 individuals (C1c1, C1c2, C2c1 and C2c2).</p>
-<p>At several steps in the pipeline, the clones need to be matched to
-species. To make this possible, a data frame <tt>clone2species</tt> has
-to be created that specifies which species each clone belongs to. How
-this looks like for the example data is shown below:</p>
+<p><tt>CroCoNet</tt> was designed to analyze scRNA-seq data from
+multiple species, with multiple replicates per species. For a meaningful
+analysis, the conditions, pseudotemporal trajectory and cell type
+composition should be as comparable across species as possible. To
+reliably infer networks, the dataset should in addition have sufficient
+expression variance across cells (several different conditions,
+time-series experiment over a dynamic process or a mixture of cell
+types).</p>
+<p>To generate the example data, three iPS cell lines from three humans,
+two iPS cell lines from one gorilla and four iPS cell lines from two
+cynomolgus macaques were differentiated into neural progenitor cells
+(NPCs) over the course of nine days. Samples from six different time
+points were sequenced using scRNA-seq. The protocol and timeline were
+the same for all species to make the results comparable.</p>
+<p>At several steps of the CroCoNet workflow, the replicates need to be
+matched to species. To make this possible, a data frame
+<tt>replicate2species</tt> has to be created that specifies which
+species each replicate belongs to. How this looks like for the example
+data is shown below:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">clone2species</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"RDS/clone2species.rds"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">replicate2species</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"processed_data/replicate2species.rds"</span><span class="op">)</span></span></code></pre></div>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <thead><tr>
 <th style="text-align:left;">
-clone
+replicate
 </th>
 <th style="text-align:left;">
 species
@@ -225,11 +254,6 @@ cynomolgus
 </tr>
 </tbody>
 </table>
-<p>To generate the example data, all of these 9 iPS cell lines were
-differentiated into neural progenitor cells (NPCs) over the course of 9
-days, and samples from 6 different time points were sequenced using
-scRNA-seq. The protocol and the timeline were the same for all species
-to make the results comparable.</p>
 </div>
 <div class="section level3">
 <h3 id="initial-processing">Initial processing<a class="anchor" aria-label="anchor" href="#initial-processing"></a>
@@ -237,22 +261,23 @@ to make the results comparable.</p>
 <p>The pipeline assumes that the user has already done the standard
 processing steps on the transcriptomic data, including mapping, QC and
 normalization. In addition, it is required to have a shared feature
-space across all species. The genes can be matched using orthology
-information or in case of closely related species by transferring the
-annotation of one species to the genomes of others using the tool
-<em>Liftoff</em> <span class="citation">[1]</span>. It is also
-recommended to perform cell type annotation and pseudotime inference if
-applicable. After these steps, a SingleCellExperiment (SCE) object
-should be created that contains the raw counts, normalized counts and
-metadata (including information on species, clone, cell type assignment
-and inferred pseudotime).</p>
-<p>In case of the primate single-cell dataset, we created a shared
+space across all species. In case of closely related species, genes can
+be matched by transferring the annotation of one species to the genomes
+of others using the tool <em>Liftoff</em> <span class="citation">[1]</span>. It is of course also possible to use
+orthology information or even protein language model-based macrogenes
+<span class="citation">[2]</span>.</p>
+<p>It is also recommended to perform cell type annotation and pseudotime
+inference if applicable. After these steps, a SingleCellExperiment (SCE)
+object should be created that contains the raw counts, normalized counts
+and metadata (including information on species, replicate, cell type
+assignment and inferred pseudotime).</p>
+<p>In case of the primate differentiation dataset, we created a shared
 feature space by transferring the human genome annotation to the gorGor6
 and macFas6 genomes via <em>Liftoff</em>. We performed the nornalization
-using <tt>scran</tt> <span class="citation">[2]</span>, pseudotime
-inference using <tt>SCORPIUS</tt> <span class="citation">[3]</span> and
-cell type annotation using <tt>singleR</tt> <span class="citation">[4]</span> with the embryoid body dataset from Rhodes
-et al. <span class="citation">[5]</span> as the reference. We found that
+using <tt>scran</tt> <span class="citation">[3]</span>, pseudotime
+inference using <tt>SCORPIUS</tt> <span class="citation">[4]</span> and
+cell type annotation using <tt>singleR</tt> <span class="citation">[5]</span> with the embryoid body dataset from Rhodes
+et al. <span class="citation">[6]</span> as the reference. We found that
 the pseudotime trajectories are reasonably well-aligned across the 3
 species, confirming comparability.</p>
 <div class="figure" style="text-align: center">
@@ -261,45 +286,39 @@ Pseudotime trajectory of the early primate neural differentiation
 dataset coloured by sampling day, pseudotime, species and cell type.
 </p>
 </div>
-<!-- At the beginning, colors for species and cell types can also be defined: -->
-<!-- ```{r load_basic_objects} -->
-<!-- spec_colors <- setNames(c("#4DAF4A", "#377EB8", "#9a1ebd"),  -->
-<!--                         c("human", "gorilla", "cynomolgus")) -->
-<!-- ct_colors <- setNames(c("#86C1E6", "#F4AB62", "#CA6102"),  -->
-<!--                       c("Pluripotent_Cells", "Early_Ectoderm",  "Neurons")) -->
-<!-- ``` -->
 </div>
 <div class="section level3">
 <h3 id="network-inference">Network inference<a class="anchor" aria-label="anchor" href="#network-inference"></a>
 </h3>
-<p>Before applying the pipeline, the user also has to infer
-co-expression networks per clone using a method of choice, for example
-<em>GRNBoost2</em> <span class="citation">[6]</span> (metric: decision
-tree-based importance scores) or <em>correlatePairs</em> <span class="citation">[2]</span> (metric: Spearman’s correlation). The
+<p>Before applying the pipeline, the user must first infer co-expression
+networks per replicate using a method of their choice, for example
+<em>GRNBoost2</em> <span class="citation">[7]</span> (metric: gradient
+boosting-based importance scores) or <em>correlatePairs</em> <span class="citation">[3]</span> (metric: Spearman’s correlation). The
 networks should not be restricted to connections between transcriptional
 regulators and their target genes, because <tt>CroCoNet</tt> relies also
 on connections between the target genes themselves.</p>
-<p>If the clones have very different cell type compositions, it is
-recommended to downsample them in a way that the proprtions of the cell
-types are always the same, in order to disentangle the species and cell
-type differences. It can make sense to create several downsamplings of
-each clone and run the network inference on each of them, this way
-valuable data is not discarded.</p>
-<p>If the network inference algorithm involving stochastic steps (this
-is the case e.g. for GRNBoost2), it can make the results more robust to
-run the algorithm several times on the same data with different random
-seeds.</p>
-<p>The network reconstructions should be available as TSV files where
-each row corresponds to an edge. There should be at least 3 columns
+<p>If the replicates differ substantially in cell type composition, it
+is recommended to downsample them so that the proportions of cell types
+are consistent across replicates. This helps disentangle
+species-specific effects from cell type differences. It can be
+beneficial to create multiple downsampled versions of each replicate and
+run network inference on each, ensuring that valuable data are not
+discarded.</p>
+<p>If the chosen network inference algorithm involves stochastic steps
+(as is the case for <em>GRNBoost2</em>), the results can be made more
+robust by running the algorithm multiple times on the same data with
+different random seeds.</p>
+<p>The network reconstructions should be stored as TSV files where each
+row corresponds to an edge. There should be at least 3 columns
 containing 1) the 1st gene that forms the edge, 2) the 2nd gene that
-forms the edge, and 3) the edge weight. The TSV files should be named
-using the following convention: <em>nameOfClone.tsv</em> if there is
-only 1 network output per clone or <em>nameOfClone_index.tsv</em> if
-there are several network outputs per clone.</p>
+forms the edge, and 3) the edge weight. The TSV files should follow the
+naming convention <em>nameOfReplicate.tsv</em> (if there is a single
+network per replicate) or <em>nameOfReplicate_index.tsv</em> (if
+multiple network outputs are generated per replicate).</p>
 <p>In case of example dataset, we inferred networks using GRNBoost2 with
 all genes as potential regulators. We run the algorithm 10 times on the
-count matrix of each clones, which produced 9×10 TSV files stored in the
-directory <tt>GRNBoost2_output/</tt>. <br><br></p>
+count matrix of each replicate, producing a total of 9×10 TSV files
+stored in the directory <tt>network_inference/output/</tt>. <br><br></p>
 </div>
 </div>
 <div class="section level2">
@@ -308,55 +327,57 @@ directory <tt>GRNBoost2_output/</tt>. <br><br></p>
 <p>In the first part of the workflow, the output files of the network
 inference are loaded as <tt>igraph</tt> objects, the edges are filtered
 and the edge weights are normalized (if desired), and finally, a
-phylogeny-aware consensus network is calculated across all clones and
-species. If the network inference algorithm does not distinguish
-correlated and anti-correlated gene pairs, this piece of information can
-also be added by calculating a Spearman’s correlation for each gene
-pair.</p>
+phylogeny-aware consensus network is calculated across all replicates
+and species. If the network inference algorithm does not distinguish
+positively and negatively correlated gene pairs, this information can
+also be added at this stage.</p>
 <div class="section level3">
 <h3 id="loading-the-networks-as-igraphs">Loading the networks as igraphs<a class="anchor" aria-label="anchor" href="#loading-the-networks-as-igraphs"></a>
 </h3>
 <p>As the first step, the TSV files containing the network
 reconstructions are loaded and summarized as a list of <tt>igraph</tt>
-<span class="citation">[7]</span> objects per clone with the help of the
-<tt>loadNetworks</tt> function.</p>
-<p>If there are several versions of network reconstruction per clone due
-to different subsamplings/runs (needs to be specified in parameter
-<tt>rep</tt>), the edge weights are averaged across these, and a single
-combined <tt>igraph</tt> object is returned for each clone. If the
-network inference method produces an output with directed edges,
-i.e. geneA-geneB and geneB-geneA can both be present (needs to be
-specified in parameter <tt>directed</tt>), the edge weights inferred
-between the same gene pair but in opposite directions are also averaged.
-If an edge is missing in one of the network versions/directions, it is
-regarded as 0 for the calculation of the mean. The number of times an
-edge occurs across the different versions and directions can also be
-used as a filter and rare edges can be removed altogether (needs to be
-specified in parameter <tt>min_occurrence</tt>). This can be helpful to
-1) denoise the networks and 2) decrease the computational power needed
-for the next steps.</p>
+<span class="citation">[8]</span> objects per replicate with the help of
+the <tt>loadNetworks</tt> function.</p>
+<p>If there are several versions of network reconstruction per replicate
+due to different subsamplings or repeated runs (specified via the
+parameter <tt>rep</tt>), the edge weights are averaged across these
+versions, and a single combined <tt>igraph</tt> object is returned for
+each replicate. If the network inference method produces an output with
+directed edges, i.e. geneA-geneB and geneB-geneA can both be present
+(specified via the parameter <tt>directed</tt>), the edge weights
+inferred between the same gene pair but in opposite directions are also
+averaged. Edges that fall below the detection threshold in a network
+version/direction are assigned an edge weight of 0 for the calculation
+of the mean. If an edge meets the detection criteria in too few
+versions/directions (specified via the parameter
+<tt>min_occurrence</tt>), it is assigned a final weight of 0 in the
+corresponding replicate, regardless of its mean weight. This filtering
+approach helps to 1) denoise the networks and 2) decrease the
+computational power needed for the next steps. The steps relying on a
+detection threshold are not applicable to correlation-based
+networks.</p>
 <p>In case of the example dataset, the 9×10 TSV files located in the
-“GRNBoost2_output/” directory are loaded as a list of 9 <tt>igraph</tt>
-objects (1 network reconstruction for each of the 9 clones). The
-parameter <tt>rep</tt> is set to 10 as GRNBoost2 has been run 10 times
-on each clone, and the parameter <tt>directed</tt> is left at TRUE (the
-default), as GRNBoost2 produces a directed output. As a result, the edge
-weights are averaged across the 10 runs and 2 directions for each edge.
-Since the parameter <tt>min_occurrece</tt> is left at 2 (the default),
-edges that occur only once across all runs and directions are
-removed.</p>
+<tt>network_inference/output/</tt> directory were loaded as a list of 9
+<tt>igraph</tt> objects (one network reconstruction for each of the 9
+replicates). The parameter <tt>rep</tt> was set to 10 as GRNBoost2 had
+been run 10 times on each replicate, and the parameter <tt>directed</tt>
+was left at the default value of TRUE, as GRNBoost2 produces a directed
+output. As a result, the edge weights were averaged across the 10 runs
+and 2 directions for each edge and replicate. Since the parameter
+<tt>min_occurrece</tt> was left at its default value of 2, edges that
+occurred zero or one times across all runs and directions were assigned
+a weight of 0.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">network_list_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadNetworks.html">loadNetworks</a></span><span class="op">(</span><span class="st">"GRNBoost2_output/"</span>, </span>
-<span>                                 clone_names <span class="op">=</span> <span class="va">clone2species</span><span class="op">$</span><span class="va">clone</span>,</span>
+<code class="sourceCode R"><span><span class="va">network_list_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadNetworks.html">loadNetworks</a></span><span class="op">(</span><span class="st">"network_inference/output/"</span>, </span>
+<span>                                 replicate_names <span class="op">=</span> <span class="va">replicate2species</span><span class="op">$</span><span class="va">replicate</span>,</span>
 <span>                                 rep <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>                                 directed <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                                 min_occurrence <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p>The resulting igraph objects store the edge weight and number of
-occurrences for each edge:</p>
+<p>The resulting igraph objects store the weights for each edge:</p>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">A few example edges from the raw network of
-the clone C2c2</span>
+the replicate C2c2</span>
 </caption>
 <thead><tr>
 <th style="text-align:center;">
@@ -367,9 +388,6 @@ to
 </th>
 <th style="text-align:center;">
 weight
-</th>
-<th style="text-align:center;">
-n_supporting_edges
 </th>
 </tr></thead>
 <tbody>
@@ -383,9 +401,6 @@ ACAT2
 <td style="text-align:center;">
 0.0041
 </td>
-<td style="text-align:center;">
-2
-</td>
 </tr>
 <tr>
 <td style="text-align:center;">
@@ -396,9 +411,6 @@ ACBD4
 </td>
 <td style="text-align:center;">
 0.0107
-</td>
-<td style="text-align:center;">
-2
 </td>
 </tr>
 <tr>
@@ -411,9 +423,6 @@ ACTR10
 <td style="text-align:center;">
 0.0187
 </td>
-<td style="text-align:center;">
-2
-</td>
 </tr>
 <tr>
 <td style="text-align:center;">
@@ -424,9 +433,6 @@ ACVR2A
 </td>
 <td style="text-align:center;">
 0.0184
-</td>
-<td style="text-align:center;">
-2
 </td>
 </tr>
 <tr>
@@ -439,9 +445,6 @@ ADAM9
 <td style="text-align:center;">
 0.0545
 </td>
-<td style="text-align:center;">
-3
-</td>
 </tr>
 <tr>
 <td style="text-align:center;">
@@ -452,9 +455,6 @@ ADARB1
 </td>
 <td style="text-align:center;">
 0.0317
-</td>
-<td style="text-align:center;">
-2
 </td>
 </tr>
 <tr>
@@ -467,9 +467,6 @@ ADM5
 <td style="text-align:center;">
 0.0404
 </td>
-<td style="text-align:center;">
-4
-</td>
 </tr>
 <tr>
 <td style="text-align:center;">
@@ -481,9 +478,6 @@ ADO
 <td style="text-align:center;">
 0.0180
 </td>
-<td style="text-align:center;">
-3
-</td>
 </tr>
 </tbody>
 </table>
@@ -494,24 +488,25 @@ ADO
 <p>Mapping and counting is problematic for overlapping genomic features:
 parts of the reads from one gene can be assigned to the other gene,
 leading to correlated expression profiles simply due to genomic
-position. This has only a marginal effect on the results of a DE
-analysis, but can cause false positive edges with very high edge weights
-in case of a network analysis. Such potential artefacts can be
-circumvented by removing all edges between genes that have overlapping
-annotations in the genome(s) of at least 1 species.</p>
+position. This has only a marginal effect on the results of a
+differential expression analysis, but can cause false positive edges
+with very high edge weights in case of a network analysis. Such
+potential artefacts can be circumvented by removing all edges between
+genes that have overlapping annotations in the genome(s) of at least one
+species.</p>
 <p>To do this, the genome annotations are needed in a list format:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">gtf_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>human <span class="op">=</span> <span class="fu">plyranges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/plyranges/man/io-gff-read.html" class="external-link">read_gff</a></span><span class="op">(</span><span class="st">"genome_annotations/hg38.gtf"</span><span class="op">)</span>,</span>
-<span>                 gorilla <span class="op">=</span> <span class="fu">plyranges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/plyranges/man/io-gff-read.html" class="external-link">read_gff</a></span><span class="op">(</span><span class="st">"genome_annotations/gorGor6_liftoff.gtf"</span><span class="op">)</span>,</span>
-<span>                 cynomolgus <span class="op">=</span> <span class="fu">plyranges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/plyranges/man/io-gff-read.html" class="external-link">read_gff</a></span><span class="op">(</span><span class="st">"genome_annotations/macFas6_liftoff.gtf"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">gtf_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>human <span class="op">=</span> <span class="fu">plyranges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/plyranges/man/io-gff-read.html" class="external-link">read_gff</a></span><span class="op">(</span><span class="st">"genomes/hg38.gtf"</span><span class="op">)</span>,</span>
+<span>                 gorilla <span class="op">=</span> <span class="fu">plyranges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/plyranges/man/io-gff-read.html" class="external-link">read_gff</a></span><span class="op">(</span><span class="st">"genomes/gorGor6.gtf"</span><span class="op">)</span>,</span>
+<span>                 cynomolgus <span class="op">=</span> <span class="fu">plyranges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/plyranges/man/io-gff-read.html" class="external-link">read_gff</a></span><span class="op">(</span><span class="st">"genomes/macFas6.gtf"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Then the function <tt>removeOverlappingGenePairs</tt> determines the
 genomic positions of the network genes based on the GTFs, identifies
-gene pairs with overlapping annotations in each genome and removed these
+gene pairs with overlapping annotations in each genome and removes these
 gene pairs from all networks:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">network_list_raw_filt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/removeOverlappingGenePairs.html">removeOverlappingGenePairs</a></span><span class="op">(</span><span class="va">network_list_raw</span>, </span>
 <span>                                                    gtf_list <span class="op">=</span> <span class="va">gtf_list</span>, </span>
-<span>                                                    clone2species <span class="op">=</span> <span class="va">clone2species</span>, </span>
+<span>                                                    replicate2species <span class="op">=</span> <span class="va">replicate2species</span>, </span>
 <span>                                                    gene_col <span class="op">=</span> <span class="st">"gene_name"</span><span class="op">)</span></span></code></pre></div>
 <p>During this step, the genomic distance is also added for each gene
 pair of the network (the distance is regarded as Inf if the two genes
@@ -519,7 +514,7 @@ are located on different chromosomes):</p>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">A few example edges from the network of the
-clone C2c2 after removing gene pairs with overlapping annotation and
+replicate C2c2 after removing gene pairs with overlapping annotation and
 adding genomic distances</span>
 </caption>
 <thead><tr>
@@ -531,9 +526,6 @@ to
 </th>
 <th style="text-align:center;">
 weight
-</th>
-<th style="text-align:center;">
-n_supporting_edges
 </th>
 <th style="text-align:center;">
 genomic_dist
@@ -551,9 +543,6 @@ ACAT2
 0.0041
 </td>
 <td style="text-align:center;">
-2
-</td>
-<td style="text-align:center;">
 Inf
 </td>
 </tr>
@@ -566,9 +555,6 @@ ACBD4
 </td>
 <td style="text-align:center;">
 0.0107
-</td>
-<td style="text-align:center;">
-2
 </td>
 <td style="text-align:center;">
 Inf
@@ -585,9 +571,6 @@ ACTR10
 0.0187
 </td>
 <td style="text-align:center;">
-2
-</td>
-<td style="text-align:center;">
 Inf
 </td>
 </tr>
@@ -600,9 +583,6 @@ ACVR2A
 </td>
 <td style="text-align:center;">
 0.0184
-</td>
-<td style="text-align:center;">
-2
 </td>
 <td style="text-align:center;">
 Inf
@@ -619,9 +599,6 @@ ADAM9
 0.0545
 </td>
 <td style="text-align:center;">
-3
-</td>
-<td style="text-align:center;">
 Inf
 </td>
 </tr>
@@ -634,9 +611,6 @@ ADARB1
 </td>
 <td style="text-align:center;">
 0.0317
-</td>
-<td style="text-align:center;">
-2
 </td>
 <td style="text-align:center;">
 Inf
@@ -653,9 +627,6 @@ ADM5
 0.0404
 </td>
 <td style="text-align:center;">
-4
-</td>
-<td style="text-align:center;">
 8270693
 </td>
 </tr>
@@ -668,9 +639,6 @@ ADO
 </td>
 <td style="text-align:center;">
 0.0180
-</td>
-<td style="text-align:center;">
-3
 </td>
 <td style="text-align:center;">
 Inf
@@ -717,7 +685,7 @@ the former high positive values.</p></li>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">A few example edges from the network of the
-clone C2c2 after normalizing edge weights</span>
+replicate C2c2 after normalizing edge weights</span>
 </caption>
 <thead><tr>
 <th style="text-align:center;">
@@ -728,9 +696,6 @@ to
 </th>
 <th style="text-align:center;">
 weight
-</th>
-<th style="text-align:center;">
-n_supporting_edges
 </th>
 <th style="text-align:center;">
 genomic_dist
@@ -748,9 +713,6 @@ ACAT2
 0.000048
 </td>
 <td style="text-align:center;">
-2
-</td>
-<td style="text-align:center;">
 Inf
 </td>
 </tr>
@@ -763,9 +725,6 @@ ACBD4
 </td>
 <td style="text-align:center;">
 0.000127
-</td>
-<td style="text-align:center;">
-2
 </td>
 <td style="text-align:center;">
 Inf
@@ -782,9 +741,6 @@ ACTR10
 0.000222
 </td>
 <td style="text-align:center;">
-2
-</td>
-<td style="text-align:center;">
 Inf
 </td>
 </tr>
@@ -797,9 +753,6 @@ ACVR2A
 </td>
 <td style="text-align:center;">
 0.000218
-</td>
-<td style="text-align:center;">
-2
 </td>
 <td style="text-align:center;">
 Inf
@@ -816,9 +769,6 @@ ADAM9
 0.000647
 </td>
 <td style="text-align:center;">
-3
-</td>
-<td style="text-align:center;">
 Inf
 </td>
 </tr>
@@ -831,9 +781,6 @@ ADARB1
 </td>
 <td style="text-align:center;">
 0.000376
-</td>
-<td style="text-align:center;">
-2
 </td>
 <td style="text-align:center;">
 Inf
@@ -850,9 +797,6 @@ ADM5
 0.000480
 </td>
 <td style="text-align:center;">
-4
-</td>
-<td style="text-align:center;">
 8270693
 </td>
 </tr>
@@ -865,9 +809,6 @@ ADO
 </td>
 <td style="text-align:center;">
 0.000214
-</td>
-<td style="text-align:center;">
-3
 </td>
 <td style="text-align:center;">
 Inf
@@ -885,12 +826,12 @@ distribution (the adjacencies range between 0 and 1, with a median of
 0.000213, while the connectivities range between 0 and ~17, with a
 median of 0.256). This is expected since connectivities in many
 biological networks, including gene regulatory networks, have been
-reported to follow scale-free distribution <span class="citation">[8–10]</span> (although the extent of this varies
-across systems and metrics <span class="citation">[11]</span>).</p>
+reported to follow scale-free distribution <span class="citation">[9–11]</span> (although the extent of this varies
+across systems and metrics <span class="citation">[12]</span>).</p>
 <div class="figure" style="text-align: center">
-<img src="edge_weight_con_distr.png" alt="The distribution od adjacencies and connectivities for the networks of the 9 clones." width="80%"><p class="caption">
+<img src="edge_weight_con_distr.png" alt="The distribution od adjacencies and connectivities for the networks of the 9 replicates." width="80%"><p class="caption">
 The distribution od adjacencies and connectivities for the networks of
-the 9 clones.
+the 9 replicates.
 </p>
 </div>
 </div>
@@ -898,37 +839,37 @@ the 9 clones.
 <h3 id="creating-the-consensus-network">Creating the consensus network<a class="anchor" aria-label="anchor" href="#creating-the-consensus-network"></a>
 </h3>
 <p>As the next step of the workflow, the networks across different
-clones and different species are integrated into a single consensus
+replicates and different species are integrated into a single consensus
 network in a phylogeny-aware manner.</p>
-<p>This consensus network contains all edges that were detected in at
-least 1 of the clones. For each edge, the consensus adjacency is
-calculated as the weighted mean of clonewise adjacencies. The weighted
-mean corrects for 1) the phylogenetic distances between species, and 2)
-the different numbers of clones per species. As a result, the approach
-downweighs the edge weights of the clones that 1) belong to closely
-related species, or 2) belong to species with many clones, so that an
-imbalanced sampling across the phylogenetic tree does not bias the
-consensus network. If an edge is not present in one of the clones, the
-edge weight in that clone is regarded as 0 for the calculation of the
-weighted mean.</p>
+<p>For each edge, the consensus adjacency is calculated as the weighted
+mean of replicate-wise adjacencies. The weighted mean corrects for 1)
+the phylogenetic distances between species, and 2) the different numbers
+of replicates per species. As a result, the approach downweighs the edge
+weights of the replicates that 1) belong to closely related species, or
+2) belong to species with many replicates, so that an imbalanced
+sampling across the phylogenetic tree does not bias the consensus
+network.</p>
 <p>If a phylogeny-aware consensus is desired, the phylogenetic tree has
 to be provided. In case of the example dataset, this is the mammalian
-tree from Bininda-Emonds et al. <span class="citation">[12]</span>
+tree from Bininda-Emonds et al. <span class="citation">[13]</span>
 subsetted for Homo sapiens (human), Gorilla gorilla (gorilla) and Macaca
 Fascicularis (cynomolgus):</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"RDS/tree.rds"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="st">"https://static-content.springer.com/esm/art%3A10.1038%2Fnature05634/MediaObjects/41586_2007_BFnature05634_MOESM362_ESM.txt"</span>, <span class="fu">here</span><span class="op">(</span><span class="va">wd</span>, <span class="st">"mammalian_tree.txt"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">tree</span> <span class="op">&lt;-</span> <span class="fu">read.tree</span><span class="op">(</span><span class="fu">here</span><span class="op">(</span><span class="va">wd</span>, <span class="st">"mammalian_tree.txt"</span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="st">"treemammalST_bestDates="</span><span class="op">]</span><span class="op">]</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">keep.tip</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Homo_sapiens"</span>,<span class="st">"Gorilla_gorilla"</span>, <span class="st">"Macaca_fascicularis"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cynomolgus"</span>, <span class="st">"gorilla"</span>, <span class="st">"human"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <img src="tree.png" alt="Phylogenetic tree of the species." width="28%"><p class="caption">
 Phylogenetic tree of the species.
 </p>
 </div>
-<p>Using the tree and the information which species each clone belongs
-to, the consensus network can be calculated with the help of the
-function <tt>createConsensus</tt>:</p>
+<p>Based on the phylogenetic tree and the species assignment of each
+replicate, the consensus network is computed using the function
+<tt>createConsensus</tt>:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">consensus_network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createConsensus.html">createConsensus</a></span><span class="op">(</span><span class="va">network_list</span>, </span>
-<span>                                     clone2species <span class="op">=</span> <span class="va">clone2species</span>, </span>
+<span>                                     replicate2species <span class="op">=</span> <span class="va">replicate2species</span>, </span>
 <span>                                     tree <span class="op">=</span> <span class="va">tree</span><span class="op">)</span></span></code></pre></div>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
@@ -946,10 +887,10 @@ to
 weight
 </th>
 <th style="text-align:center;">
-n_supporting_clones
+n_supporting_replicates
 </th>
 <th style="text-align:center;">
-supporting_clones
+supporting_replicates
 </th>
 </tr></thead>
 <tbody>
@@ -1095,31 +1036,29 @@ C2c1
 <div class="section level3">
 <h3 id="adding-the-direction-of-correlation">Adding the direction of correlation<a class="anchor" aria-label="anchor" href="#adding-the-direction-of-correlation"></a>
 </h3>
-<p>In case the networks were inferred using a method that does not
-distinguish positively and negatively correlated gene pairs, it is
-useful to add this information for lines of analysis where it makes
-sense to separate the two (e.g. it makes biological sense to calculate
-the eigengenes for the activated and repressed target genes of a
-transcriptional regulator separately). If the network inference method
-output edges with both positive and negative edge weights in the first
-place (e.g. correlation-based methods), this information is already
-added during the step “Normalizing edge weights” and does not have to be
+<p>If the networks were inferred using a method that does not
+distinguish between positively and negatively correlated gene pairs,
+this information can be added for analyses where it is meaningful to
+separate the two (e.g. when calculating eigengenes for activated VS
+repressed targets of a transcriptional regulator). If the inference
+method already outputs both positive and negative edge weights
+(e.g. correlation-based methods), this information is already added
+during the step “Normalizing edge weights” and does not have to be
 calculated again.</p>
-<p>If the step does need to be performed, the directionality is
-determined for each edge by calculating a modified Spearman’s
-correlation between the expression profiles of the 2 genes that form the
-edge and taking the sign of the modified Spearman’s rho as the
-direction. The calculation relies on the approximate version of the
-Spearman’s rho, significance testing and blocking implemented by
-<tt>correlatePairs</tt> <span class="citation">[2]</span>.</p>
+<p>If this step is required, the directionality of each edge is
+determined by calculating a modified Spearman’s correlation between the
+expression profiles of the two genes forming the edge and assigning the
+sign of the modified Spearman’s rho as the direction. The calculation
+uses the approximate Spearman’s rho, significance testing, and blocking
+implemented in <tt>correlatePairs</tt> <span class="citation">[3]</span>.</p>
 <p>In case of the example dataset, the networks were inferred using
 GRNBoost2 which does not provide information about the direction of
-regulation, therefore it is necessary to do this step. To get the
+regulation, therefore it is necessary to perform this step. To get the
 expression profiles of the network genes, the SCE object needs to be
 loaded:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"RDS/sce.rds"</span><span class="op">)</span></span></code></pre></div>
-<p>The calculation of directionality is done by the function
+<code class="sourceCode R"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"processed_data/sce.rds"</span><span class="op">)</span></span></code></pre></div>
+<p>Next, edge directionality is calculated with the function
 <tt>addDirectionality</tt>:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">consensus_network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/addDirectionality.html">addDirectionality</a></span><span class="op">(</span><span class="va">consensus_network</span>, <span class="va">sce</span><span class="op">)</span></span></code></pre></div>
@@ -1139,10 +1078,10 @@ to
 weight
 </th>
 <th style="text-align:center;">
-n_supporting_clones
+n_supporting_replicates
 </th>
 <th style="text-align:center;">
-supporting_clones
+supporting_replicates
 </th>
 <th style="text-align:center;">
 rho
@@ -1372,32 +1311,31 @@ C2c1
 <h2 id="module-assignment">Module assignment<a class="anchor" aria-label="anchor" href="#module-assignment"></a>
 </h2>
 <p>Once the consensus network is calculated, it can be used to assign
-co-expression modules jointly for all species. The resulting modules
-combine co-expression information from all species but the bias due to
-an uneven sampling across the phylogenetic tree is minimized. The center
-of each module is a transcriptional regulator and the modules are
-assigned in 2 main steps: 1) large initial modules are created by
-selecting a fixed number of target genes per regulator, and 2) the
-initial modules are pruned to keep only the best targets of each
+co-expression modules jointly for all species. The center of each module
+is a transcriptional regulator and the modules are assigned in 2 main
+steps: 1) large initial modules are created by selecting a fixed number
+of target genes per regulator, and 2) the initial modules are pruned
+using a dynamic filtering approach to keep only the best targets of each
 regulator.</p>
 <div class="section level3">
 <h3 id="selecting-key-transcriptional-regulators">Selecting key transcriptional regulators<a class="anchor" aria-label="anchor" href="#selecting-key-transcriptional-regulators"></a>
 </h3>
 <p>First, the transcriptional regulators that form the cores of the
 co-expression modules have to be selected. To identify regulators that
-are relevant for the biological process at hand, it is a useful approach
-to combine prior biological knowledge with information from the dataset
-(this is implemented by the function <tt>getRegulators</tt>).</p>
+are relevant for the biological process under study, it is a useful
+approach to combine prior biological knowledge with information derived
+from the dataset. This step is implemented by the function
+<tt>getRegulators</tt>.</p>
 <p>As for the prior biological knowledge, we recommend to select only
 transcriptional regulators with known binding motifs based on motif
 databases. To get this information, the user can choose the following
-databases: JASPAR 2024 vertebrate core <span class="citation">[13]</span>, JASPAR 2024 unvalidated <span class="citation">[13]</span>, the IMAGE database <span class="citation">[14]</span>, or any combination of the above.
+databases: JASPAR 2024 vertebrate core <span class="citation">[14]</span>, JASPAR 2024 unvalidated <span class="citation">[14]</span>, the IMAGE database <span class="citation">[15]</span>, or any combination of the above.
 Alternatively, the user can provide a custom list of regulators selected
 by their preferred method.</p>
 <p>As for the information from the dataset, we recommend to select only
 transcriptional regulators that are among the highly variable genes in
 the data. For defining highly variable genes, <tt>getRegulators</tt>
-relies on <tt>scran::getTopHVGs</tt> <span class="citation">[2]</span>.
+relies on <tt>scran::getTopHVGs</tt> <span class="citation">[3]</span>.
 Briefly, for each species a trend is fitted between the variance and
 mean of the log-expression values across all genes, and the fitted value
 of a gene is regarded as the technical component of variation, while the
@@ -1455,10 +1393,10 @@ target
 weight
 </th>
 <th style="text-align:center;">
-n_supporting_clones
+n_supporting_replicates
 </th>
 <th style="text-align:center;">
-supporting_clones
+supporting_replicates
 </th>
 <th style="text-align:center;">
 rho
@@ -1807,7 +1745,7 @@ connectivities alternately.</p></li>
 <p>The following figure shows the steps of the pruning process for the
 POU5F1 module:</p>
 <div class="figure" style="text-align: center">
-<img src="POU5F1_detailed_UIK_adj_kIM.png" alt="Stepwise dynamic pruning approach exemplified by the POU5F1 module. In each step, we calculated the cumulative sum curve of the regulator-target adjacency or intramodular connectivitiy of the target genes alternately, then kept the targets that fell below the knee point of the curve. We continued this process for 3 iterations - until the module sizes became as small as possible without falling below 20 genes." width="50%"><p class="caption">
+<img src="POU5F1_detailed_UIK_adj_kIM.png" alt="Stepwise dynamic pruning approach exemplified by the POU5F1 module. In each step, we calculated the cumulative sum curve of the regulator-target adjacency or intramodular connectivitiy of the target genes alternately, then kept the targets that fell below the knee point of the curve. We continued this process for 3 iterations - until the module sizes became as small as possible without falling below 20 genes." width="55%"><p class="caption">
 Stepwise dynamic pruning approach exemplified by the POU5F1 module. In
 each step, we calculated the cumulative sum curve of the
 regulator-target adjacency or intramodular connectivitiy of the target
@@ -1831,10 +1769,13 @@ target
 weight
 </th>
 <th style="text-align:center;">
-n_supporting_clones
+kIM
 </th>
 <th style="text-align:center;">
-supporting_clones
+n_supporting_ replicates
+</th>
+<th style="text-align:center;">
+supporting_ replicates
 </th>
 <th style="text-align:center;">
 rho
@@ -1861,9 +1802,12 @@ AP1S2
 0.026
 </td>
 <td style="text-align:center;">
-8
+0.4140710
 </td>
 <td style="text-align:center;width: 2.5cm; ">
+8
+</td>
+<td style="text-align:center;">
 H1c1,H2c1,H3c1, G1c2,C1c1,C1c2, C2c1,C2c2
 </td>
 <td style="text-align:center;">
@@ -1890,9 +1834,12 @@ APOE
 0.075
 </td>
 <td style="text-align:center;">
-9
+1.1619107
 </td>
 <td style="text-align:center;width: 2.5cm; ">
+9
+</td>
+<td style="text-align:center;">
 H1c1,H2c1,H3c1, G1c1,G1c2,C1c1, C1c2,C2c1,C2c2
 </td>
 <td style="text-align:center;">
@@ -1919,9 +1866,12 @@ CD24
 0.143
 </td>
 <td style="text-align:center;">
-9
+1.9220911
 </td>
 <td style="text-align:center;width: 2.5cm; ">
+9
+</td>
+<td style="text-align:center;">
 H1c1,H2c1,H3c1, G1c1,G1c2,C1c1, C1c2,C2c1,C2c2
 </td>
 <td style="text-align:center;">
@@ -1948,9 +1898,12 @@ CDH2
 0.036
 </td>
 <td style="text-align:center;">
-8
+0.6176581
 </td>
 <td style="text-align:center;width: 2.5cm; ">
+8
+</td>
+<td style="text-align:center;">
 H1c1,H2c1,H3c1, G1c1,G1c2,C1c1, C1c2,C2c2
 </td>
 <td style="text-align:center;">
@@ -1977,9 +1930,12 @@ CENPV
 0.025
 </td>
 <td style="text-align:center;">
-8
+0.4156734
 </td>
 <td style="text-align:center;width: 2.5cm; ">
+8
+</td>
+<td style="text-align:center;">
 H1c1,H3c1,G1c1, G1c2,C1c1,C1c2, C2c1,C2c2
 </td>
 <td style="text-align:center;">
@@ -2006,9 +1962,12 @@ CHCHD2
 0.031
 </td>
 <td style="text-align:center;">
-7
+0.5833867
 </td>
 <td style="text-align:center;width: 2.5cm; ">
+7
+</td>
+<td style="text-align:center;">
 H2c1,H3c1,G1c2, C1c1,C1c2,C2c1, C2c2
 </td>
 <td style="text-align:center;">
@@ -2035,9 +1994,12 @@ CLDN6
 0.033
 </td>
 <td style="text-align:center;">
-9
+0.5877413
 </td>
 <td style="text-align:center;width: 2.5cm; ">
+9
+</td>
+<td style="text-align:center;">
 H1c1,H2c1,H3c1, G1c1,G1c2,C1c1, C1c2,C2c1,C2c2
 </td>
 <td style="text-align:center;">
@@ -2064,9 +2026,12 @@ COX7C
 0.097
 </td>
 <td style="text-align:center;">
-9
+1.9427046
 </td>
 <td style="text-align:center;width: 2.5cm; ">
+9
+</td>
+<td style="text-align:center;">
 H1c1,H2c1,H3c1, G1c1,G1c2,C1c1, C1c2,C2c1,C2c2
 </td>
 <td style="text-align:center;">
@@ -2152,7 +2117,7 @@ analysis.</p>
 <div class="section level3">
 <h3 id="calculating-module-eigengenes">Calculating module eigengenes<a class="anchor" aria-label="anchor" href="#calculating-module-eigengenes"></a>
 </h3>
-<p>A concept adapted from WGCNA <span class="citation">[15]</span>, a
+<p>A concept adapted from WGCNA <span class="citation">[16]</span>, a
 module eigengene summarizes the expression profile of an entire module,
 and it is calculated as the first principal component of the module
 expression data. Effectively, it is a weighted mean of the individual
@@ -2179,7 +2144,7 @@ the activated targets of each module:</p>
 <span>                                  <span class="va">pruned_modules</span>, </span>
 <span>                                  <span class="va">sce</span>,</span>
 <span>                                  direction_of_regulation <span class="op">=</span> <span class="st">"+_only"</span><span class="op">)</span></span></code></pre></div>
-<table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
+<table class="table table" style="font-size: 12.9px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">Eigengene profile of the activated POU5F1
 module across a couple of example cells</span>
@@ -2446,11 +2411,11 @@ towards later stages of the differentiation process.</p>
 </h3>
 <p>Gene set enrichment analysis offers useful information for the
 functional annotation of the modules. Various databases and tools can be
-used for such an analysis, including Gene Ontology (GO) <span class="citation">[16, 17]</span> and the related R package
-<tt>topGO</tt> <span class="citation">[18]</span>, the Reactome Pathway
-Database <span class="citation">[19]</span> and the R package
-<tt>ReactomePA</tt> <span class="citation">[20]</span>, or STRING <span class="citation">[21]</span> and the R package <tt>STRINGdb</tt> <span class="citation">[21]</span>. It is also worth mentioning
-<tt>clusterProfiler</tt> <span class="citation">[22]</span> which
+used for such an analysis, including Gene Ontology (GO) <span class="citation">[17, 18]</span> and the related R package
+<tt>topGO</tt> <span class="citation">[19]</span>, the Reactome Pathway
+Database <span class="citation">[20]</span> and the R package
+<tt>ReactomePA</tt> <span class="citation">[21]</span>, or STRING <span class="citation">[22]</span> and the R package <tt>STRINGdb</tt> <span class="citation">[22]</span>. It is also worth mentioning
+<tt>clusterProfiler</tt> <span class="citation">[23]</span> which
 provides a universal interface for enrichment analysis based on various
 sources and makes it easy to analyze and compare several different gene
 sets in a single run.</p>
@@ -2501,17 +2466,17 @@ pathways related to the nerual lineage (e.g. <em>Axon guidance</em> and
 </h2>
 <p>In the next part of the CroCoNet workflow, we quantify how
 well-preseved the topologies of the modules are between different pairs
-of clones, both within and across species, and summarize these
+of replicates, both within and across species, and summarize these
 preservation scores as neighbour-joining trees per module.</p>
 <div class="section level3">
 <h3 id="calculating-module-preservation-statistics">Calculating module preservation statistics<a class="anchor" aria-label="anchor" href="#calculating-module-preservation-statistics"></a>
 </h3>
 <p>For the calculation of preservation statistics, we use the joint
 module assignment derived from the consensus network but compare
-topological properties directly between the clonewise networks. This
-way, a module is always defined as the same set of genes, but the
-adjacencies and connectivities of these genes can differ from clone to
-clone; poorly preserved modules are expected to have many, while
+topological properties directly between the replicate-wise networks.
+This way, a module is always defined as the same set of genes, but the
+adjacencies and connectivities of these genes can differ from replicate
+to replicate; poorly preserved modules are expected to have many, while
 well-preserved modules are expected to have few such topological
 differences.</p>
 <p>Compared to the standard approach of cross-species module comparison
@@ -2524,14 +2489,14 @@ extent this is due to real biological differences and to what extent
 this is just due to having a low power for module detection in the first
 place. In contrast, a comparison of network topology for a joint module
 assignment is much less dependent on the power.</p>
-<p>As part of the function <tt>calculatePresStats</tt>, 3 preservation
-statistics (adapted from WGCNA <span class="citation">[23]</span>) are
+<p>As part of the function <tt>calculatePresStats</tt>, two preservation
+statistics (adapted from WGCNA <span class="citation">[24]</span>) are
 implemented to quantify different aspects of this topological
 comparison:</p>
 <ul>
 <li><p><strong>Correlation of adjacencies</strong> (cor_adj): the
 correlation of all edge weights within the module in the network of
-clone1 VS in the network of clone2
+replicate1 VS in the network of replicate2
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>o</mi><mi>r</mi><mi>.</mi><mi>a</mi><mi>d</mi><msup><mi>j</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></msup><mo>=</mo><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>a</mi><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><mo>,</mo><msup><mi>a</mi><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mn>2</mn><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">cor.adj^{(q)} = \mathrm{cor}(a^{[net1](q)}, a^{[net2](q)})</annotation></semantics></math>
 where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>a</mi><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><annotation encoding="application/x-tex">a^{[net](q)}</annotation></semantics></math>
@@ -2539,20 +2504,9 @@ is the vector of intramodular adjacencies in module
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
 and network
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mi>e</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">net</annotation></semantics></math>.</p></li>
-<li><p><strong>Correlation of regulator-target adjacencies</strong>
-(cor_adj_regulator): the correlation of all edge weights between the
-transcriptional regulator and its module members in the network of
-clone1 VS in the network of clone2
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>o</mi><mi>r</mi><mi>.</mi><mi>a</mi><mi>d</mi><msubsup><mi>j</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><mo>=</mo><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>a</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi></mrow><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msubsup><mo>,</mo><msubsup><mi>a</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi></mrow><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mn>2</mn><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">cor.adj^{    (q)}_{\mathrm{regulator}} = \mathrm{cor}(a^{     [net1](q)}_{\mathrm{regulator}}, a^{     [net2](q)}_{\mathrm{regulator}})</annotation></semantics></math>
-where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>a</mi><mrow><mi mathvariant="normal">r</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">g</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">l</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi></mrow><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msubsup><annotation encoding="application/x-tex">a^{     [net](q)}_{\mathrm{regulator}}</annotation></semantics></math>
-is the vector of adjacencies between the regulator of module
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>
-and all its target genes in network
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mi>e</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">net</annotation></semantics></math>.</p></li>
 <li><p><strong>Correlation of intramodular connectivities</strong>
 (cor_kIM): the correlation of the intramodular connectivities per module
-member gene in the network of clone1 VS in the network of clone2
+member gene in the network of replicate1 VS in the network of replicate2
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mi>o</mi><mi>r</mi><mi>.</mi><mi>k</mi><mi>I</mi><msup><mi>M</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></msup><mo>=</mo><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>k</mi><mi>I</mi><msup><mi>M</mi><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><mo>,</mo><mi>k</mi><mi>I</mi><msup><mi>M</mi><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mn>2</mn><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">cor.kIM^{(q)} = \mathrm{cor}(kIM^{[net1](q)}, kIM^{[net2](q)})</annotation></semantics></math>
 where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mi>I</mi><msup><mi>M</mi><mrow><mrow><mo stretchy="true" form="prefix">[</mo><mi>n</mi><mi>e</mi><mi>t</mi><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msup></mrow><annotation encoding="application/x-tex">kIM^{[net](q)}</annotation></semantics></math>
@@ -2561,8 +2515,8 @@ is the vector of intramodular connetivities per gene in module
 and network
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mi>e</mi><mi>t</mi></mrow><annotation encoding="application/x-tex">net</annotation></semantics></math>.</p></li>
 </ul>
-<p>All of these statistics can be calculated with module jackknifing (by
-setting <tt>jackknife</tt> to TRUE). This means that the function
+<p>Both of these statistics can be calculated with module jackknifing
+(by setting <tt>jackknife</tt> to TRUE). This means that the function
 creates all possible jackknifed versions of each input module by
 removing each target gene assigned to that module (the regulator itself
 is never excluded), then it calculates the preservation statistics for
@@ -2574,24 +2528,24 @@ information about which target genes within a conserved/diverged module
 are particularly responsible for the conservation/divergence. If
 jackknifing is not desired, the user can just set <tt>jackknife</tt> to
 FALSE which will also substantially reduce running times.</p>
-<p>In case of the example dataset, we calculated all 3 preservation
+<p>In case of the example dataset, we calculated both preservation
 statistics and opted for using jackknifing:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pres_stats_jk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculatePresStats.html">calculatePresStats</a></span><span class="op">(</span><span class="va">pruned_modules</span>, </span>
 <span>                                    <span class="va">network_list</span>,</span>
-<span>                                    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_adj_regulator"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span>, </span>
-<span>                                    <span class="va">clone2species</span>,</span>
+<span>                                    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span>, </span>
+<span>                                    <span class="va">replicate2species</span>,</span>
 <span>                                    jackknifing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">random_pres_stats_jk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculatePresStats.html">calculatePresStats</a></span><span class="op">(</span><span class="va">random_modules</span>, </span>
 <span>                                           <span class="va">network_list</span>,</span>
-<span>                                           <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_adj_regulator"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span>, </span>
-<span>                                           <span class="va">clone2species</span>,</span>
+<span>                                           <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span>, </span>
+<span>                                           <span class="va">replicate2species</span>,</span>
 <span>                                           jackknifing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">Preservation statistics of the POU5F1
 module and one of its jackknifed module versions for a couple of example
-clone pairs</span>
+replicate pairs</span>
 </caption>
 <thead><tr>
 <th style="text-align:center;">
@@ -2607,10 +2561,10 @@ id
 gene_ removed
 </th>
 <th style="text-align:center;">
-clone1
+replicate1
 </th>
 <th style="text-align:center;">
-clone2
+replicate2
 </th>
 <th style="text-align:center;">
 species1
@@ -2620,9 +2574,6 @@ species2
 </th>
 <th style="text-align:center;">
 cor_adj
-</th>
-<th style="text-align:center;">
-cor_adj_ regulator
 </th>
 <th style="text-align:center;">
 cor_kIM
@@ -2658,9 +2609,6 @@ human
 0.589
 </td>
 <td style="text-align:center;">
-0.700
-</td>
-<td style="text-align:center;">
 0.726
 </td>
 </tr>
@@ -2691,9 +2639,6 @@ human
 </td>
 <td style="text-align:center;">
 0.543
-</td>
-<td style="text-align:center;">
-0.552
 </td>
 <td style="text-align:center;">
 0.696
@@ -2728,9 +2673,6 @@ gorilla
 0.474
 </td>
 <td style="text-align:center;">
-0.574
-</td>
-<td style="text-align:center;">
 0.644
 </td>
 </tr>
@@ -2761,9 +2703,6 @@ gorilla
 </td>
 <td style="text-align:center;">
 0.544
-</td>
-<td style="text-align:center;">
-0.583
 </td>
 <td style="text-align:center;">
 0.676
@@ -2798,9 +2737,6 @@ human
 0.585
 </td>
 <td style="text-align:center;">
-0.695
-</td>
-<td style="text-align:center;">
 0.724
 </td>
 </tr>
@@ -2831,9 +2767,6 @@ human
 </td>
 <td style="text-align:center;">
 0.537
-</td>
-<td style="text-align:center;">
-0.544
 </td>
 <td style="text-align:center;">
 0.688
@@ -2868,9 +2801,6 @@ gorilla
 0.489
 </td>
 <td style="text-align:center;">
-0.600
-</td>
-<td style="text-align:center;">
 0.666
 </td>
 </tr>
@@ -2903,9 +2833,6 @@ gorilla
 0.556
 </td>
 <td style="text-align:center;">
-0.584
-</td>
-<td style="text-align:center;">
 0.697
 </td>
 </tr>
@@ -2922,18 +2849,18 @@ interval if the median. This summarization is performed by the function
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">Preservation statistics of the POU5F1
-module for a couple of example clone pairs, after summarizing the values
-of all jackknifed module versions</span>
+module for a couple of example replicate pairs, after summarizing the
+values of all jackknifed module versions</span>
 </caption>
 <thead><tr>
 <th style="text-align:center;">
 regulator
 </th>
 <th style="text-align:center;">
-clone1
+replicate1
 </th>
 <th style="text-align:center;">
-clone2
+replicate2
 </th>
 <th style="text-align:center;">
 species1
@@ -2947,128 +2874,98 @@ cor_adj
 <th style="text-align:center;">
 var_cor_adj
 </th>
-<th style="text-align:center;">
-lwr_cor_adj
-</th>
-<th style="text-align:center;">
-upr_cor_adj
-</th>
 </tr></thead>
 <tbody>
 <tr>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 POU5F1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 H1c1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 H2c1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 human
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 human
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 0.590
 </td>
-<td style="text-align:center;width: 2.2cm; ">
+<td style="text-align:center;">
 0.000113
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.585
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.593
-</td>
 </tr>
 <tr>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 POU5F1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 H1c1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 H3c1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 human
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 human
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 0.544
 </td>
-<td style="text-align:center;width: 2.2cm; ">
+<td style="text-align:center;">
 0.000154
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.539
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.546
-</td>
 </tr>
 <tr>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 POU5F1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 H1c1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 G1c1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 human
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 gorilla
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 0.473
 </td>
-<td style="text-align:center;width: 2.2cm; ">
+<td style="text-align:center;">
 0.000251
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.470
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.478
 </td>
 </tr>
 <tr>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 POU5F1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 H1c1
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 G1c2
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 human
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 gorilla
 </td>
-<td style="text-align:center;width: 1.6cm; ">
+<td style="text-align:center;">
 0.545
 </td>
-<td style="text-align:center;width: 2.2cm; ">
+<td style="text-align:center;">
 0.000236
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.540
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.547
 </td>
 </tr>
 </tbody>
@@ -3076,16 +2973,10 @@ gorilla
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <thead><tr>
 <th style="text-align:center;">
-cor_adj_ regulator
+lwr_cor_adj
 </th>
 <th style="text-align:center;">
-var_cor_adj_ regulator
-</th>
-<th style="text-align:center;">
-lwr_cor_adj_ regulator
-</th>
-<th style="text-align:center;">
-upr_cor_adj_ regulator
+upr_cor_adj
 </th>
 <th style="text-align:center;">
 cor_kIM
@@ -3102,106 +2993,82 @@ upr_cor_kIM
 </tr></thead>
 <tbody>
 <tr>
-<td style="text-align:center;width: 1.7cm; ">
-0.699
+<td style="text-align:center;">
+0.585
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.000203
+<td style="text-align:center;">
+0.593
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.692
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.702
-</td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.727
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.000224
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.724
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.731
 </td>
 </tr>
 <tr>
-<td style="text-align:center;width: 1.7cm; ">
-0.549
+<td style="text-align:center;">
+0.539
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.000459
-</td>
-<td style="text-align:center;width: 2.2cm; ">
+<td style="text-align:center;">
 0.546
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.552
-</td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.695
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.000284
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.688
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.700
 </td>
 </tr>
 <tr>
-<td style="text-align:center;width: 1.7cm; ">
-0.573
+<td style="text-align:center;">
+0.470
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.000364
+<td style="text-align:center;">
+0.478
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.568
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.578
-</td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.641
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.000327
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.638
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.646
 </td>
 </tr>
 <tr>
-<td style="text-align:center;width: 1.7cm; ">
-0.581
+<td style="text-align:center;">
+0.540
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.000354
+<td style="text-align:center;">
+0.547
 </td>
-<td style="text-align:center;width: 2.2cm; ">
-0.574
-</td>
-<td style="text-align:center;width: 2.2cm; ">
-0.588
-</td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.673
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.000410
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.668
 </td>
-<td style="text-align:center;width: 2.3cm; ">
+<td style="text-align:center;">
 0.677
 </td>
 </tr>
@@ -3220,15 +3087,15 @@ between the two species compared.</p></li>
 </ul>
 <p>As a visual check, the function <tt>plotPresStatDistributions</tt>
 plots the distributions of the preservation scores for the actual and
-random modules and for within-species and cross-species clone pairs,
+random modules and for within-species and cross-species replicate pairs,
 whereas the function <tt>plotPresStats</tt> plots the cross-species
 scores against the within-species scores per species pair:</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotPresStatDistributions.html">plotPresStatDistributions</a></span><span class="op">(</span><span class="va">pres_stats</span>, </span>
 <span>                          <span class="va">random_pres_stats</span>, </span>
-<span>                          stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_adj_regulator"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>                          <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="pres_stat_distributions.png" alt="Distribution of preservation statistics within and across species, for the actual and random modules." width="70%"><p class="caption">
+<img src="pres_stat_distributions.png" alt="Distribution of preservation statistics within and across species, for the actual and random modules." width="67%"><p class="caption">
 Distribution of preservation statistics within and across species, for
 the actual and random modules.
 </p>
@@ -3236,11 +3103,23 @@ the actual and random modules.
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotPresStats.html">plotPresStats</a></span><span class="op">(</span><span class="va">pres_stats</span>, </span>
 <span>              <span class="va">random_pres_stats</span>, </span>
-<span>              <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_adj_regulator"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>              <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <img src="pres_stat_across_vs_within.png" alt="Cross-species VS within-species preservation scores per species pair for the actual and random modules." width="100%"><p class="caption">
 Cross-species VS within-species preservation scores per species pair for
 the actual and random modules.
+</p>
+</div>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/comparePresStats.html">comparePresStats</a></span><span class="op">(</span><span class="va">pres_stats</span>, </span>
+<span>                 <span class="va">random_pres_stats</span>, </span>
+<span>                 <span class="va">tree</span><span class="op">)</span></span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="pres_stat_comparison.png" alt="Difference of the &lt;em&gt;cor.kIM&lt;/em&gt; / &lt;em&gt;cor.adj&lt;/em&gt; scores between each actual and the corresponding random module (left) and inverted Pearson's correlation (-&lt;em&gt;r&lt;/em&gt; ) between &lt;em&gt;cor.kIM&lt;/em&gt; / &lt;em&gt;cor.adj&lt;/em&gt; and phylogenetic distance (right)." width="75%"><p class="caption">
+Difference of the <em>cor.kIM</em> / <em>cor.adj</em> scores between
+each actual and the corresponding random module (left) and inverted
+Pearson’s correlation (-<em>r</em> ) between <em>cor.kIM</em> /
+<em>cor.adj</em> and phylogenetic distance (right).
 </p>
 </div>
 <p>The plots show that when applied to the example dataset, both
@@ -3264,7 +3143,7 @@ is the distance measure and
 is the preservation statistic. The resulting distances range between 0
 and 1: a distance of 0 corresponds to a preservation score of 1, while a
 distance of 1 corresponds to a preservation score of -1.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dist_jk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/convertPresToDist.html">convertPresToDist</a></span><span class="op">(</span><span class="va">pres_stats_jk</span>, <span class="st">"cor_kIM"</span><span class="op">)</span></span>
 <span><span class="va">random_dist_jk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/convertPresToDist.html">convertPresToDist</a></span><span class="op">(</span><span class="va">random_pres_stats_jk</span>, <span class="st">"cor_kIM"</span><span class="op">)</span></span></code></pre></div>
 <p>The resulting object is a list, where each list element stores the
@@ -3273,7 +3152,7 @@ if jackknifing is used) in a data frame format:</p>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">Distance measures of the jackknifed POU5F1
-module version “POU5F1_jk_APOE” for a couple of example clone
+module version “POU5F1_jk_APOE” for a couple of example replicate
 pairs</span>
 </caption>
 <thead><tr>
@@ -3287,13 +3166,13 @@ type
 id
 </th>
 <th style="text-align:center;">
-gene_ removed
+gene_removed
 </th>
 <th style="text-align:center;">
-clone1
+replicate1
 </th>
 <th style="text-align:center;">
-clone2
+replicate2
 </th>
 <th style="text-align:center;">
 species1
@@ -3431,7 +3310,7 @@ organized into and plotted as a distance matrix. The function
 input: list of data frames), for example it can be used to visualize the
 distance matrices of the 6 example modules (the original module
 versions) side by side:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dist_examples</span> <span class="op">&lt;-</span> <span class="va">dist_jk</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">example_modules</span>, <span class="st">"_orig"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dist_examples</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">example_modules</span></span>
 <span><span class="fu"><a href="../reference/plotDistMats.html">plotDistMats</a></span><span class="op">(</span><span class="va">dist_examples</span><span class="op">)</span></span></code></pre></div>
@@ -3460,20 +3339,20 @@ drastically higher than the rest of the scores.</p>
 preservation, the distance measures are summarized as trees in the next
 step of the workflow. Each of the resulting trees stands for a single
 module (an original or jackknifed module version, if jackknifing is
-used): the tips represent the clones and the branch lengths represent
-the dissimilarity of module topology between the networks of 2
-clones.</p>
+used): the tips represent the replicates and the branch lengths
+represent the dissimilarity of module topology between the networks of 2
+replicates.</p>
 <p>The trees are reconstructed using the neighbor-joining algorithm
 implemented by <tt>ape:nj</tt>. The function <tt>reconstructTrees</tt>
 is a wrapper around this, tailored for the specific purpose:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">trees_jk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconstructTrees.html">reconstructTrees</a></span><span class="op">(</span><span class="va">dist_jk</span><span class="op">)</span></span>
 <span><span class="va">random_trees_jk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reconstructTrees.html">reconstructTrees</a></span><span class="op">(</span><span class="va">random_dist_jk</span><span class="op">)</span></span></code></pre></div>
 <p>The output is a list of <tt>phylo</tt> objects per (jackknifed or
 original) module. The function <tt>plotTrees</tt> can plot one or more
 of these module trees analogously to <tt>plotDistMats</tt>. Here we
 focus on the trees of the 6 example modules again:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spec_colors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>human <span class="op">=</span> <span class="st">"#4DAF4A"</span>, gorilla <span class="op">=</span> <span class="st">"#377EB8"</span>, cynomolgus <span class="op">=</span> <span class="st">"#9a1ebd"</span><span class="op">)</span></span>
 <span><span class="va">tree_examples</span> <span class="op">&lt;-</span> <span class="va">trees_jk</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">example_modules</span>, <span class="st">"_orig"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">tree_examples</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">example_modules</span></span>
@@ -3489,11 +3368,11 @@ distance measures (i.e. high preservation scores), tends to have short
 branch lengths in its tree, while NEUROD4, the module with generally
 high distance measures (i.e. low preservation scores), has a large tree
 with long branches. In case of the SALL4 module that had similar
-within-species and cross-species distance measures, the clones of
+within-species and cross-species distance measures, the replicates of
 different species are intermixed within the tree, while in case of the
 POU5F1 module that has much higher ape-cynomolgus distances than ape-ape
-or cynomolgus-cynomolgus distances, the ape and cynomolgus clones are
-clearly separated within the tree and connected by a long internal
+or cynomolgus-cynomolgus distances, the ape and cynomolgus replicates
+are clearly separated within the tree and connected by a long internal
 branch.</p>
 </div>
 <div class="section level3">
@@ -3506,20 +3385,22 @@ various tree-based statistics can be calculated:</p>
 branches in the tree; measures module variability both within and across
 species.</p></li>
 <li><p><strong>Diversity of a species</strong>: The total length of the
-branches connecting the clones of the given species to each other;
+branches connecting the replicates of the given species to each other;
 measures module variability within this particular species.</p></li>
 <li><p><strong>Within-species diversity</strong>: The sum of the
 diversity values across all species; measures module variability within
 species in general.</p></li>
 <li><p><strong>Monophyleticity of a species</strong>: Indicates whether
-the tree is monophyletic for the clones of the given species. Only if a
-module tree is monophyletic for a species of interest can the module be
-tested for divergence between this species and all others.</p></li>
-<li><p><strong>Species-to-other branch length</strong>: The length of
-the internal branch that connects the subtree of the clones belonging to
-the given species and the subtree of all other clones; measures module
-variability between the species of interest and all others. Undefined if
-the tree is not monophyletic for the given species.</p></li>
+the tree is monophyletic for the replicates of the given species. Only
+if a module tree is monophyletic for a species of interest can the
+module be tested for divergence between this species and all
+others.</p></li>
+<li><p><strong>Branch length of a species</strong>: The length of the
+internal branch that connects the subtree of the replicates belonging to
+the given species and the subtree of all other replicates; measures
+module variability between the species of interest and all others.
+Undefined if the tree is not monophyletic for the given
+species.</p></li>
 </ul>
 <div class="figure" style="text-align: center">
 <img src="tree_based_stats.png" alt="Tree-based statistics to characterize the cross-species conservation of network modules." width="100%"><p class="caption">
@@ -3529,7 +3410,7 @@ network modules.
 </div>
 <p>These statistics are all implemented in the function
 <tt>calculateTreeStats</tt>:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tree_stats_jk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculateTreeStats.html">calculateTreeStats</a></span><span class="op">(</span><span class="va">trees_jk</span><span class="op">)</span></span>
 <span><span class="va">random_tree_stats_jk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculateTreeStats.html">calculateTreeStats</a></span><span class="op">(</span><span class="va">random_trees_jk</span><span class="op">)</span></span></code></pre></div>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
@@ -3551,7 +3432,7 @@ id
 gene_ removed
 </th>
 <th style="text-align:center;">
-total_tree_ length
+total_ tree_length
 </th>
 <th style="text-align:center;">
 within_species_ diversity
@@ -3697,13 +3578,13 @@ gorilla_ monophyl
 cynomolgus_ monophyl
 </th>
 <th style="text-align:center;">
-human_to_other_ branch_length
+human_ subtree_length
 </th>
 <th style="text-align:center;">
-gorilla_to_other_ branch_length
+gorilla_ subtree_length
 </th>
 <th style="text-align:center;">
-cynomolgus_to_other_ branch_length
+cynomolgus_ subtree_length
 </th>
 </tr></thead>
 <tbody>
@@ -3718,33 +3599,13 @@ TRUE
 TRUE
 </td>
 <td style="text-align:center;">
-0.037
+0.258
 </td>
 <td style="text-align:center;">
-0.086
+0.120
 </td>
 <td style="text-align:center;">
-0.187
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-TRUE
-</td>
-<td style="text-align:center;">
-TRUE
-</td>
-<td style="text-align:center;">
-TRUE
-</td>
-<td style="text-align:center;">
-0.037
-</td>
-<td style="text-align:center;">
-0.089
-</td>
-<td style="text-align:center;">
-0.192
+0.661
 </td>
 </tr>
 <tr>
@@ -3758,13 +3619,13 @@ TRUE
 TRUE
 </td>
 <td style="text-align:center;">
-0.035
+0.257
 </td>
 <td style="text-align:center;">
-0.077
+0.123
 </td>
 <td style="text-align:center;">
-0.190
+0.662
 </td>
 </tr>
 <tr>
@@ -3778,13 +3639,33 @@ TRUE
 TRUE
 </td>
 <td style="text-align:center;">
-0.036
+0.256
 </td>
 <td style="text-align:center;">
-0.089
+0.113
 </td>
 <td style="text-align:center;">
-0.180
+0.666
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+TRUE
+</td>
+<td style="text-align:center;">
+TRUE
+</td>
+<td style="text-align:center;">
+TRUE
+</td>
+<td style="text-align:center;">
+0.261
+</td>
+<td style="text-align:center;">
+0.128
+</td>
+<td style="text-align:center;">
+0.649
 </td>
 </tr>
 </tbody>
@@ -3792,16 +3673,16 @@ TRUE
 <p>Similarly to the preservation statistics, the tree-based statistics
 can also be summarized over all jackknifed version of a module to obtain
 an overall estimate along with a confidence interval:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tree_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarizeJackknifeStats.html">summarizeJackknifeStats</a></span><span class="op">(</span><span class="va">tree_stats_jk</span>, </span>
 <span>                                      <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"total_tree_length"</span>, </span>
 <span>                                        <span class="st">"within_species_diversity"</span>, </span>
-<span>                                        <span class="st">"human_to_other_branch_length"</span>, </span>
+<span>                                        <span class="st">"human_branch_length"</span>, </span>
 <span>                                        <span class="st">"human_diversity"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">random_tree_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarizeJackknifeStats.html">summarizeJackknifeStats</a></span><span class="op">(</span><span class="va">random_tree_stats_jk</span>, </span>
 <span>                                             <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"total_tree_length"</span>, </span>
 <span>                                               <span class="st">"within_species_diversity"</span>, </span>
-<span>                                               <span class="st">"human_to_other_branch_length"</span>, </span>
+<span>                                               <span class="st">"human_branch_length"</span>, </span>
 <span>                                               <span class="st">"human_diversity"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>To confirm whether the tree-based statistics are well-suited for
 further analysis, the contrast between the actual and random modules can
@@ -3810,13 +3691,13 @@ be used again for sanity checking. Most tree-based statistics
 the actual modules than for the random modules. For the statistics of
 interest, the distributions can be plotted using the function
 <tt>plotTreeStatDistributions</tt>:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotTreeStatDistributions.html">plotTreeStatDistributions</a></span><span class="op">(</span><span class="va">tree_stats</span>, </span>
 <span>                          <span class="va">random_tree_stats</span>, </span>
 <span>                          <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"within_species_diversity"</span>, </span>
 <span>                            <span class="st">"total_tree_length"</span>, </span>
 <span>                            <span class="st">"human_diversity"</span>, </span>
-<span>                            <span class="st">"human_to_other_branch_length"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>                            <span class="st">"human_branch_length"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <img src="tree_stat_distributions.png" alt="Distribution of the tree-based statistics for the actual and random modules." width="60%"><p class="caption">
 Distribution of the tree-based statistics for the actual and random
@@ -3825,13 +3706,13 @@ modules.
 </div>
 <p>For the first 3 statistics (within-species diversity, total tree
 length and human diversity), the distributions of the actual and random
-modules differ as expected. The 4th statistic (human-to-other branch
-length) is only defined for modules that are monophyletic for the human
-clones, that is why it could be calculated only for 57 actual modules
-and 1 random module. Thus the distributions cannot be compared, but
-finding fewer monophyletic random modules goes again in the same
-direction: higher diversity (lower preservation) among the human clones
-in case of the random modules than in case of the actual modules.</p>
+modules differ as expected. The 4th statistic (human branch length) is
+only defined for modules that are monophyletic for the human replicates,
+that is why it could be calculated only for 57 actual modules and 1
+random module. Thus the distributions cannot be compared, but finding
+fewer monophyletic random modules goes again in the same direction:
+higher diversity (lower preservation) among the human replicates in case
+of the random modules than in case of the actual modules.</p>
 <p><br><br></p>
 </div>
 </div>
@@ -3839,12 +3720,12 @@ in case of the random modules than in case of the actual modules.</p>
 <h2 id="quantifying-cross-species-conservation-of-network-modules">Quantifying cross-species conservation of network modules<a class="anchor" aria-label="anchor" href="#quantifying-cross-species-conservation-of-network-modules"></a>
 </h2>
 <p>After having calculated first pairwise preservation scores between
-clones and then higher-level tree-based statistics to characterize how
-different the topologies of the modules are within and across species,
-we are ready to quantify the evolutionary conservation of modules. But
-why do we need the within-species differences in the first place? Why is
-the extent of cross-species differences not directly the answer to
-evolutionary conservation?</p>
+replicates and then higher-level tree-based statistics to characterize
+how different the topologies of the modules are within and across
+species, we are ready to quantify the evolutionary conservation of
+modules. But why do we need the within-species differences in the first
+place? Why is the extent of cross-species differences not directly the
+answer to evolutionary conservation?</p>
 <p>There are several sources of module topology differences when we
 compare 2 species: there is of course true evolutionary divergence
 between the species which is what we are primarily interested in, but
@@ -3871,9 +3752,9 @@ divergence (e.g. due to diversity, noise and power).</p>
 detection robustness. Modules that have both low within-species
 diversity and low total tree length are well-preserved both within and
 across species, meaning that these modules could be robustly detected in
-all clones, whereas modules, for which both metrics are high, are poorly
-preserved not just across but also within species, indicating a high
-detection uncertainty (“wobbliness”).</p>
+all replicates, whereas modules, for which both metrics are high, are
+poorly preserved not just across but also within species, indicating a
+high detection uncertainty (“wobbliness”).</p>
 <p>But more importantly, the residuals of the modules in the regression
 model informs us about their cross-species conservation: the outlier
 modules that do not follow the general trend are the most conserved and
@@ -3898,7 +3779,7 @@ diverged, robust and wobbly modules.
 tree lengths can be visualized using the function
 <tt>plotTreeStats</tt>. In the plot below, both the actual and the
 random modules are included:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotTreeStats.html">plotTreeStats</a></span><span class="op">(</span><span class="va">tree_stats</span>, </span>
 <span>              <span class="va">random_tree_stats</span>, </span>
 <span>              <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"within_species_diversity"</span>, <span class="st">"total_tree_length"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -3931,11 +3812,11 @@ If
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msub><mi>p</mi><mrow><mi>a</mi><mi>c</mi><mi>t</mi><mi>u</mi><mi>a</mi><mi>l</mi></mrow></msub><mo>&gt;</mo><mn>10</mn><mo>⋅</mo><msub><mi>p</mi><mrow><mi>r</mi><mi>a</mi><mi>n</mi><mi>d</mi><mi>o</mi><mi>m</mi></mrow></msub></mrow><annotation encoding="application/x-tex">1 - p_{actual} &gt; 10⋅p_{random}</annotation></semantics></math>
 is fulfilled for both tree statistics, the module is kept, otherwise it
 is removed.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tree_stats_filt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filterModuleTrees.html">filterModuleTrees</a></span><span class="op">(</span><span class="va">tree_stats</span>, <span class="va">random_tree_stats</span><span class="op">)</span></span></code></pre></div>
 <p>In case of the example dataset, this filtering removes 4 modules
 (marked in red):</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotTreeStats.html">plotTreeStats</a></span><span class="op">(</span><span class="va">tree_stats</span>, </span>
 <span>              <span class="va">random_tree_stats</span>, </span>
 <span>              <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"within_species_diversity"</span>, <span class="st">"total_tree_length"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -3975,7 +3856,7 @@ inversely proportional to the total tree length variance across all of
 its jackknifed module versions.</p>
 <p>In case of the example dataset, we used a weighted linear
 regression:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lm_overall</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTreeStatsLm.html">fitTreeStatsLm</a></span><span class="op">(</span><span class="va">tree_stats_filt</span>, </span>
 <span>                             focus <span class="op">=</span> <span class="st">"overall"</span>,</span>
 <span>                             weighted_lm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -4204,22 +4085,22 @@ conservation
 0.461
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.656
+0.654
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.573
+0.571
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.739
+0.737
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.056
+-0.055
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 0.003
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--1.331
+-1.296
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -4236,16 +4117,16 @@ not_significant
 0.815
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.947
+0.946
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.155
+0.156
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 0.004
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-4.610
+4.650
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 diverged
@@ -4256,22 +4137,22 @@ diverged
 1.204
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-1.263
+1.264
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-1.090
+1.092
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-1.436
+1.437
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.133
+-0.134
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 0.001
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--1.506
+-1.533
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -4282,22 +4163,22 @@ not_significant
 1.262
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-1.315
+1.317
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-1.176
+1.178
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-1.454
+1.456
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.107
+-0.109
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 0.001
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--1.510
+-1.545
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -4308,13 +4189,13 @@ not_significant
 0.647
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.809
+0.808
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 0.733
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.885
+0.884
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 -0.011
@@ -4323,7 +4204,7 @@ not_significant
 0.003
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.296
+-0.274
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -4334,22 +4215,22 @@ not_significant
 0.442
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.637
+0.635
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.525
+0.523
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.748
+0.746
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.077
+-0.075
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 0.001
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--1.349
+-1.324
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -4359,7 +4240,7 @@ not_significant
 </table>
 <p>Using this approach, we identified 21 conserved and 23 diverged
 modules:</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">module_conservation_overall</span><span class="op">$</span><span class="va">conservation</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;       conserved        diverged not_significant </span></span>
@@ -4371,7 +4252,7 @@ also labels the top N most conserved and most diverged modules based on
 either the residuals or the t-scores. In the plot below, the top 5 most
 conserved and most diverged modules based on residuals are
 highlighted:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedModules.html">plotConservedDivergedModules</a></span><span class="op">(</span><span class="va">module_conservation_overall</span>,</span>
 <span>                             N <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>                             rank_by <span class="op">=</span> <span class="st">"residual"</span><span class="op">)</span></span></code></pre></div>
@@ -4384,7 +4265,7 @@ diverged modules marked.
 </div>
 <p>To illustrate what makes these modules conserved or diverged, their
 distance matrices and module trees can also be plotted:</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">top5_cons_div_modules</span> <span class="op">&lt;-</span> <span class="fu">bind_rows</span><span class="op">(</span><span class="va">module_conservation_overall</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>                                    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">conservation</span> <span class="op">==</span> <span class="st">"conserved"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>                                    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_min</a></span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">residual</span>, n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span>
@@ -4392,7 +4273,7 @@ distance matrices and module trees can also be plotted:</p>
 <span>                                    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">conservation</span> <span class="op">==</span> <span class="st">"diverged"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>                                    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_max</a></span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">residual</span>, n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">regulator</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dist</span> <span class="op">&lt;-</span> <span class="va">dist_jk</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">top5_cons_div_modules</span>, <span class="st">"_orig"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dist</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">top5_cons_div_modules</span></span>
 <span><span class="fu"><a href="../reference/plotDistMats.html">plotDistMats</a></span><span class="op">(</span><span class="va">dist</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
@@ -4402,7 +4283,7 @@ The distance matrices of the 5 most conserved (top row) and 5 most
 diverged (bottom row) modules.
 </p>
 </div>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">trees_jk</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">top5_cons_div_modules</span>, <span class="st">"_orig"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">trees</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">top5_cons_div_modules</span></span>
 <span><span class="fu"><a href="../reference/plotTrees.html">plotTrees</a></span><span class="op">(</span><span class="va">trees</span>, species_colors <span class="op">=</span> <span class="va">spec_colors</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
@@ -4417,8 +4298,8 @@ their distance matrices and module trees is clearly visible. The
 conserved modules tend to have balanced distance matrices with similarly
 low distance measures for all within-species and cross-species
 comparisons, and correspondingly, tree reconstructions without any
-species separation, with clones from the same species being as close to
-each other as clones from different species.</p>
+species separation, with replicates from the same species being as close
+to each other as replicates from different species.</p>
 <p>In contrast, diverged modules tend to have much higher distance
 measures across species than within species for 1 or more species pairs
 (in case of the example modules it is always the human-cynomolgus and
@@ -4434,22 +4315,22 @@ from each other.</p>
 whole, but also for each edge within a module, which can pinpoint
 individual edges or regions of neighboring edges that are particularly
 conserved or diverged. This score is calculated based on the different
-edge weights of a given edge in the networks of the different clones.
-The edge weights are compared across species using an ANOVA, and the
-log<sub>10</sub> of the F-statistic (i.e. between-species variability /
-within-species variability) is regarded as the measure of edge
-divergence.</p>
+edge weights of a given edge in the networks of the different
+replicates. The edge weights are compared across species using an ANOVA,
+and the log<sub>10</sub> of the F-statistic (i.e. between-species
+variability / within-species variability) is regarded as the measure of
+edge divergence.</p>
 <p>These scores can be returned as a data frame using
 <tt>calculateEdgeDivergence</tt> or directly plotted using
 <tt>plotNetworks</tt> with <tt>color_by</tt> set to “edge_divergence”.
 Below we plot the 300 strongest edges within each of the 5 most
 conserved and most diverged modules colored by edge divergence:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotNetworks.html">plotNetworks</a></span><span class="op">(</span><span class="va">top5_cons_div_modules</span>, </span>
 <span>             <span class="va">pruned_modules</span>, </span>
 <span>             <span class="va">consensus_network</span>, </span>
 <span>             <span class="va">network_list</span>, </span>
-<span>             <span class="va">clone2species</span>, </span>
+<span>             <span class="va">replicate2species</span>, </span>
 <span>             color_by <span class="op">=</span> <span class="st">"edge_divergence"</span>,</span>
 <span>             ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
@@ -4506,11 +4387,11 @@ the diverged modules and the most conserved targets of the conserved
 modules, not the other way around.</p>
 <p>In case of the example dataset, we took a closer look at the target
 genes of POU5F1:</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">POU5F1_target_conservation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/findConservedDivergedTargets.html">findConservedDivergedTargets</a></span><span class="op">(</span><span class="st">"POU5F1"</span>,</span>
 <span>                                                           <span class="va">tree_stats_jk</span>,</span>
 <span>                                                           <span class="va">lm_overall</span><span class="op">)</span></span></code></pre></div>
-<table class="table table" style="font-size: 12.4px; margin-left: auto; margin-right: auto;">
+<table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">Cross-species conservation measures for a
 few example target genes of POU5F1</span>
@@ -4534,8 +4415,94 @@ gene_ removed
 <th style="text-align:center;">
 within_species_ diversity
 </th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:center;width: 2cm; ">
+overall
+</td>
+<td style="text-align:center;width: 2.1cm; ">
+POU5F1
+</td>
+<td style="text-align:center;width: 1.7cm; ">
+orig
+</td>
+<td style="text-align:center;width: 3.1cm; ">
+POU5F1_orig
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+NA
+</td>
+<td style="text-align:center;width: 2.6cm; ">
+0.728
+</td>
+</tr>
+<tr>
+<td style="text-align:center;width: 2cm; ">
+overall
+</td>
+<td style="text-align:center;width: 2.1cm; ">
+POU5F1
+</td>
+<td style="text-align:center;width: 1.7cm; ">
+jk
+</td>
+<td style="text-align:center;width: 3.1cm; ">
+POU5F1_jk_AP1S2
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+AP1S2
+</td>
+<td style="text-align:center;width: 2.6cm; ">
+0.724
+</td>
+</tr>
+<tr>
+<td style="text-align:center;width: 2cm; ">
+overall
+</td>
+<td style="text-align:center;width: 2.1cm; ">
+POU5F1
+</td>
+<td style="text-align:center;width: 1.7cm; ">
+jk
+</td>
+<td style="text-align:center;width: 3.1cm; ">
+POU5F1_jk_APOE
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+APOE
+</td>
+<td style="text-align:center;width: 2.6cm; ">
+0.734
+</td>
+</tr>
+<tr>
+<td style="text-align:center;width: 2cm; ">
+overall
+</td>
+<td style="text-align:center;width: 2.1cm; ">
+POU5F1
+</td>
+<td style="text-align:center;width: 1.7cm; ">
+jk
+</td>
+<td style="text-align:center;width: 3.1cm; ">
+POU5F1_jk_CD24
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+CD24
+</td>
+<td style="text-align:center;width: 2.6cm; ">
+0.733
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
+<thead><tr>
 <th style="text-align:center;">
-total_tree_ length
+total_ tree_length
 </th>
 <th style="text-align:center;">
 fit
@@ -4549,146 +4516,89 @@ upr_fit
 <th style="text-align:center;">
 residual
 </th>
+<th style="text-align:center;">
+contribution
+</th>
 </tr></thead>
 <tbody>
 <tr>
-<td style="text-align:center;">
-overall
+<td style="text-align:center;width: 2.3cm; ">
+1.038
 </td>
-<td style="text-align:center;">
-POU5F1
+<td style="text-align:center;width: 2.3cm; ">
+0.879
 </td>
-<td style="text-align:center;">
-orig
+<td style="text-align:center;width: 2.3cm; ">
+0.813
 </td>
-<td style="text-align:center;">
-POU5F1_orig
+<td style="text-align:center;width: 2.3cm; ">
+0.945
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
+0.159
+</td>
+<td style="text-align:center;width: 2.3cm; ">
 NA
 </td>
-<td style="text-align:center;">
-0.728
-</td>
-<td style="text-align:center;">
-1.038
-</td>
-<td style="text-align:center;">
-0.880
-</td>
-<td style="text-align:center;">
-0.814
-</td>
-<td style="text-align:center;">
-0.946
-</td>
-<td style="text-align:center;">
-0.158
-</td>
 </tr>
 <tr>
-<td style="text-align:center;">
-overall
-</td>
-<td style="text-align:center;">
-POU5F1
-</td>
-<td style="text-align:center;">
-jk
-</td>
-<td style="text-align:center;">
-POU5F1_jk_AP1S2
-</td>
-<td style="text-align:center;">
-AP1S2
-</td>
-<td style="text-align:center;">
-0.724
-</td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 1.042
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 0.876
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 0.810
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 0.942
 </td>
-<td style="text-align:center;">
-0.165
+<td style="text-align:center;width: 2.3cm; ">
+0.166
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+-0.045
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
-overall
-</td>
-<td style="text-align:center;">
-POU5F1
-</td>
-<td style="text-align:center;">
-jk
-</td>
-<td style="text-align:center;">
-POU5F1_jk_APOE
-</td>
-<td style="text-align:center;">
-APOE
-</td>
-<td style="text-align:center;">
-0.734
-</td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 1.036
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 0.884
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 0.818
 </td>
-<td style="text-align:center;">
-0.950
+<td style="text-align:center;width: 2.3cm; ">
+0.949
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 0.152
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+0.041
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
-overall
-</td>
-<td style="text-align:center;">
-POU5F1
-</td>
-<td style="text-align:center;">
-jk
-</td>
-<td style="text-align:center;">
-POU5F1_jk_CD24
-</td>
-<td style="text-align:center;">
-CD24
-</td>
-<td style="text-align:center;">
-0.733
-</td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 1.038
 </td>
-<td style="text-align:center;">
-0.884
+<td style="text-align:center;width: 2.3cm; ">
+0.883
 </td>
-<td style="text-align:center;">
-0.818
+<td style="text-align:center;width: 2.3cm; ">
+0.817
 </td>
-<td style="text-align:center;">
-0.950
+<td style="text-align:center;width: 2.3cm; ">
+0.949
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
 0.155
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+0.023
 </td>
 </tr>
 </tbody>
@@ -4699,7 +4609,7 @@ the regression line with the help of the function
 regression line is shown as a grey area and assumed to have a constant
 width for a given module. This is how jackknifing affects the position
 compared to the regression line in case of the POU5F1 module:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedTargets.html">plotConservedDivergedTargets</a></span><span class="op">(</span><span class="va">POU5F1_target_conservation</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <img src="POU5F1_target_conservation.png" alt="The top 5 most diverged target genes of POU5F1 identified using tree-based statistics in combination with jackknifing." width="75%"><p class="caption">
@@ -4719,11 +4629,11 @@ using <tt>plotExprAlongPseudotime</tt> (for pseudotime trajectories) or
 <tt>plotExprPerCellType</tt> (for distinct cell types). Below, we plot
 the expression of POU5F1 and its 5 most diverged target genes across the
 pseudotime range of the neural differentiation process:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">top5_diverged_POU5F1_targets</span> <span class="op">&lt;-</span> <span class="va">POU5F1_target_conservation</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">slice_min</span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">residual</span>, n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">pull</span><span class="op">(</span><span class="va">gene_removed</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ct_colors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Pluripotent_Cells <span class="op">=</span> <span class="st">"#86C1E6"</span>, Early_Ectoderm <span class="op">=</span> <span class="st">"#F4AB62"</span>, Neurons <span class="op">=</span> <span class="st">"#CA6102"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotExprAlongPseudotime.html">plotExprAlongPseudotime</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"POU5F1"</span>, <span class="va">top5_diverged_POU5F1_targets</span><span class="op">)</span>, </span>
 <span>                        <span class="va">sce</span>, </span>
@@ -4740,10 +4650,10 @@ topology (SCGB3A2, SPP1 and FTL) also show different expression patterns
 across species. Such differences cannot be observed for POU5F1, the
 regulator itself - a hint towards cis-regulatory changes. Indeed, after
 a more thorough investigation we found that both SCGB3A2 and SPP1 are
-known to be located close to LTR7 elements in the human genome <span class="citation">[24, 25]</span>, an evolutionary young family of
+known to be located close to LTR7 elements in the human genome <span class="citation">[25, 26]</span>, an evolutionary young family of
 transposable elements that often acquire regulatory functions. The LTR7
 elements near these 2 genes appeared along the ape lineage and are bound
-by POU5F1 <span class="citation">[26]</span>, so they could have
+by POU5F1 <span class="citation">[27]</span>, so they could have
 potentially contributed to the rewiring of the POU5F1 module.</p>
 </div>
 </div>
@@ -4763,32 +4673,30 @@ lineage, for example on the human lineage, a different approach needs to
 be applied. In contrast to the overall test of conservation where there
 are no constraints in terms of tree structure, here it makes sense to
 restrict the testing only to module trees that are monophyletic for the
-human clones. This step pre-selects modules that fulfill a minimal
+human replicates. This step pre-selects modules that fulfill a minimal
 citeria of lineage-specific divergence and makes it possible to compare
-a more specific tree characteristic, namely the human-to-other branch
-length. To again correct for the unwanted sources of variation, this
-branch length is contrasted against variation within the lineage,
-i.e. the human diversity. An analogous approach can be applied to find
-diverged modules between any species and the rest of the tree as
-well.</p>
+a more specific tree characteristic, namely the human branch length. To
+again correct for the unwanted sources of variation, this branch length
+is contrasted against variation within the lineage, i.e. the human
+diversity. An analogous approach can be applied to find diverged modules
+between any species and the rest of the tree as well.</p>
 <div class="section level4">
 <h4 id="finding-conserved-and-diverged-modules-1">Finding conserved and diverged modules<a class="anchor" aria-label="anchor" href="#finding-conserved-and-diverged-modules-1"></a>
 </h4>
 <p>The modules that are diverged on the human lineage can be defined
-using a (weighted) linear regression between the human-to-other branch
-length and the human diversity, implemented in <tt>fitTreeStatsLm</tt>
-with <tt>focus</tt> set to “human” and
-<tt>findConservedDivergedModules</tt>. Similarly to the overall
-conservation and divergence, the 95% prediction interval of the
-regression line is calculated and the modules that have a higher
-human-to-other branch length than the upper bound of the 95% prediction
+using a (weighted) linear regression between the human branch length and
+the human diversity, implemented in <tt>fitTreeStatsLm</tt> with
+<tt>focus</tt> set to “human” and <tt>findConservedDivergedModules</tt>.
+Similarly to the overall conservation and divergence, the 95% prediction
+interval of the regression line is calculated and the modules that have
+a higher human branch length than the upper bound of the 95% prediction
 interval are considered diverged. It is important to note that the
 modules that fall below the lower bound of the 95% prediction interval
 cannot be interpreted as conserved in this case, because 1) the
 human-monophyletic module trees have already been pre-selected, and 2)
 conservation is per definition not a lineage-specific feature.</p>
 <p>Below, this approach is applied to the example dataset:</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lm_human</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTreeStatsLm.html">fitTreeStatsLm</a></span><span class="op">(</span><span class="va">tree_stats_filt</span>, </span>
 <span>                           focus <span class="op">=</span> <span class="st">"human"</span>,</span>
 <span>                           weighted_lm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -4810,13 +4718,13 @@ regulator
 module_ size
 </th>
 <th style="text-align:center;">
-human_to_other_ branch_length
+human_ subtree_length
 </th>
 <th style="text-align:center;">
-lwr_human_to_other_ branch_length
+lwr_human_subtree_ length
 </th>
 <th style="text-align:center;">
-upr_human_to_other_ branch_length
+upr_human_subtree_ length
 </th>
 <th style="text-align:center;">
 human_ diversity
@@ -4834,13 +4742,13 @@ AR
 39
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.030
+0.362
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.028
+0.359
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.031
+0.367
 </td>
 <td style="text-align:center;width: 2.5cm; ">
 0.335
@@ -4857,13 +4765,13 @@ ARID1B
 43
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.091
+0.426
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.086
+0.423
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.094
+0.434
 </td>
 <td style="text-align:center;width: 2.5cm; ">
 0.338
@@ -4880,13 +4788,13 @@ ARID2
 48
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.027
+0.330
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.024
+0.324
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.030
+0.335
 </td>
 <td style="text-align:center;width: 2.5cm; ">
 0.304
@@ -4903,13 +4811,13 @@ BNC2
 49
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.035
+0.319
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.033
+0.316
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.036
+0.324
 </td>
 <td style="text-align:center;width: 2.5cm; ">
 0.286
@@ -4926,13 +4834,13 @@ CREB3
 49
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.040
+0.352
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.038
+0.349
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.041
+0.354
 </td>
 <td style="text-align:center;width: 2.5cm; ">
 0.313
@@ -4949,13 +4857,13 @@ E2F3
 46
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.035
+0.390
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.031
+0.385
 </td>
 <td style="text-align:center;width: 2.5cm; ">
-0.038
+0.395
 </td>
 <td style="text-align:center;width: 2.5cm; ">
 0.355
@@ -5002,22 +4910,22 @@ conservation
 0.339
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.040
+0.377
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.017
+0.338
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.063
+0.416
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.010
+-0.015
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.027
+0.010
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.852
+-0.786
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -5031,22 +4939,22 @@ not_significant
 0.342
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.040
+0.380
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.006
+0.338
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.087
+0.422
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.051
+0.046
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.006
+0.009
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-2.193
+2.194
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 diverged
@@ -5060,22 +4968,22 @@ diverged
 0.308
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.038
+0.343
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.008
+0.311
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.069
+0.376
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.011
+-0.013
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.015
+0.014
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.763
+-0.800
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -5089,22 +4997,22 @@ not_significant
 0.291
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.037
+0.324
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.012
+0.295
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.063
+0.354
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.003
+-0.005
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.022
+0.018
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.228
+-0.346
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -5118,22 +5026,22 @@ not_significant
 0.317
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.039
+0.354
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.003
+0.324
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.075
+0.383
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.001
+-0.002
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.011
+0.018
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.059
+-0.148
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -5147,22 +5055,22 @@ not_significant
 0.360
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.041
+0.398
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.007
+0.366
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.075
+0.429
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.006
+-0.008
 </td>
 <td style="text-align:center;width: 2.3cm; ">
-0.012
+0.016
 </td>
 <td style="text-align:center;width: 2.3cm; ">
--0.359
+-0.517
 </td>
 <td style="text-align:center;width: 2.3cm; ">
 not_significant
@@ -5171,13 +5079,13 @@ not_significant
 </tbody>
 </table>
 <p>In total, there are 57 modules that fulfill the minimum criteria of
-being monophyletic for the human clones:</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+being monophyletic for the human replicates:</p>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">module_conservation_human</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 57</span></span></code></pre></div>
 <p>Among these, we identified 2 modules that are diverged on the human
 lineage:</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">module_conservation_human</span><span class="op">$</span><span class="va">conservation</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;        diverged not_significant </span></span>
@@ -5186,23 +5094,23 @@ lineage:</p>
 <tt>plotConservedDivergedModules</tt>, the same function that has
 already been used in case of the overall conservation and
 divergence:</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedModules.html">plotConservedDivergedModules</a></span><span class="op">(</span><span class="va">module_conservation_human</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="module_conservation_human.png" alt="Weighted linear regression between the human-to-other branch length and human diversity, with the diverged modules marked." width="75%"><p class="caption">
-Weighted linear regression between the human-to-other branch length and
-human diversity, with the diverged modules marked.
+<img src="module_conservation_human.png" alt="Weighted linear regression between the human branch length and human diversity, with the diverged modules marked." width="75%"><p class="caption">
+Weighted linear regression between the human branch length and human
+diversity, with the diverged modules marked.
 </p>
 </div>
 <p>The distance matrices and tree reconstructions of the ARID1B and MXI1
 modules can showcase in more detail what makes them diverged on the
 human lineage:</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">human_div_modules</span> <span class="op">&lt;-</span> <span class="va">module_conservation_human</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">conservation</span> <span class="op">==</span> <span class="st">"diverged"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">regulator</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dist</span> <span class="op">&lt;-</span> <span class="va">dist_jk</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">human_div_modules</span>, <span class="st">"_orig"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dist</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">human_div_modules</span></span>
 <span><span class="fu"><a href="../reference/plotDistMats.html">plotDistMats</a></span><span class="op">(</span><span class="va">dist</span><span class="op">)</span></span></code></pre></div>
@@ -5212,7 +5120,7 @@ The distance matrices of the 2 modules that were found to be diverged on
 the human lineage.
 </p>
 </div>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">trees</span> <span class="op">&lt;-</span> <span class="va">trees_jk</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">human_div_modules</span>, <span class="st">"_orig"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">trees</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">human_div_modules</span></span>
 <span><span class="fu"><a href="../reference/plotTrees.html">plotTrees</a></span><span class="op">(</span><span class="va">trees</span>, species_colors <span class="op">=</span> <span class="va">spec_colors</span><span class="op">)</span></span></code></pre></div>
@@ -5226,8 +5134,8 @@ on the human lineage.
 modules diverged between cynomolgus and great apes, but it is still
 apparent that the human-gorilla and human-cynomolgus distance measures
 are the higher than the rest. This also translates into a way longer
-human-to-other branch length than expected based on the phylogeny and
-observed in most module trees.</p>
+human branch length than expected based on the phylogeny and observed in
+most module trees.</p>
 </div>
 <div class="section level4">
 <h4 id="finding-conserved-and-diverged-target-genes-1">Finding conserved and diverged target genes<a class="anchor" aria-label="anchor" href="#finding-conserved-and-diverged-target-genes-1"></a>
@@ -5236,16 +5144,16 @@ observed in most module trees.</p>
 divergence, jackknifing can inform us about target genes that contribute
 the most to human-specific divergence. In this case, the residuals of
 the jackknifed modules versions are calculated with regard to the
-regression model between the human-to-other branch length and the human
+regression model between the human branch length and the human
 diversity. The target genes that result in the lowest residuals (lowest
 signal is of divergence) when removed are considered the most diverged
 in the original module.</p>
 <p>We performed this analysis for the ARID1B module:</p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ARID1B_target_conservation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/findConservedDivergedTargets.html">findConservedDivergedTargets</a></span><span class="op">(</span><span class="st">"ARID1B"</span>, </span>
 <span>                                                           <span class="va">tree_stats_jk</span>, </span>
 <span>                                                           <span class="va">lm_human</span><span class="op">)</span></span></code></pre></div>
-<table class="table table" style="font-size: 12.4px; margin-left: auto; margin-right: auto;">
+<table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">Cross-species conservation measures for a
 few example target genes of ARID1B</span>
@@ -5269,8 +5177,94 @@ gene_ removed
 <th style="text-align:center;">
 human_ diversity
 </th>
+</tr></thead>
+<tbody>
+<tr>
+<td style="text-align:center;width: 2.1cm; ">
+human
+</td>
+<td style="text-align:center;width: 2.1cm; ">
+ARID1B
+</td>
+<td style="text-align:center;width: 1.9cm; ">
+orig
+</td>
+<td style="text-align:center;width: 3.1cm; ">
+ARID1B_orig
+</td>
+<td style="text-align:center;width: 2.4cm; ">
+NA
+</td>
+<td style="text-align:center;width: 2.2cm; ">
+0.336
+</td>
+</tr>
+<tr>
+<td style="text-align:center;width: 2.1cm; ">
+human
+</td>
+<td style="text-align:center;width: 2.1cm; ">
+ARID1B
+</td>
+<td style="text-align:center;width: 1.9cm; ">
+jk
+</td>
+<td style="text-align:center;width: 3.1cm; ">
+ARID1B_jk_ACAT2
+</td>
+<td style="text-align:center;width: 2.4cm; ">
+ACAT2
+</td>
+<td style="text-align:center;width: 2.2cm; ">
+0.332
+</td>
+</tr>
+<tr>
+<td style="text-align:center;width: 2.1cm; ">
+human
+</td>
+<td style="text-align:center;width: 2.1cm; ">
+ARID1B
+</td>
+<td style="text-align:center;width: 1.9cm; ">
+jk
+</td>
+<td style="text-align:center;width: 3.1cm; ">
+ARID1B_jk_C12orf45
+</td>
+<td style="text-align:center;width: 2.4cm; ">
+C12orf45
+</td>
+<td style="text-align:center;width: 2.2cm; ">
+0.336
+</td>
+</tr>
+<tr>
+<td style="text-align:center;width: 2.1cm; ">
+human
+</td>
+<td style="text-align:center;width: 2.1cm; ">
+ARID1B
+</td>
+<td style="text-align:center;width: 1.9cm; ">
+jk
+</td>
+<td style="text-align:center;width: 3.1cm; ">
+ARID1B_jk_CHCHD2
+</td>
+<td style="text-align:center;width: 2.4cm; ">
+CHCHD2
+</td>
+<td style="text-align:center;width: 2.2cm; ">
+0.305
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
+<thead><tr>
 <th style="text-align:center;">
-human_to_other_ branch_length
+human_ subtree_length
 </th>
 <th style="text-align:center;">
 fit
@@ -5284,151 +5278,94 @@ upr_fit
 <th style="text-align:center;">
 residual
 </th>
+<th style="text-align:center;">
+contribution
+</th>
 </tr></thead>
 <tbody>
 <tr>
-<td style="text-align:center;">
-human
+<td style="text-align:center;width: 2.3cm; ">
+0.428
 </td>
-<td style="text-align:center;">
-ARID1B
+<td style="text-align:center;width: 2.3cm; ">
+0.378
 </td>
-<td style="text-align:center;">
-orig
+<td style="text-align:center;width: 2.3cm; ">
+0.335
 </td>
-<td style="text-align:center;">
-ARID1B_orig
+<td style="text-align:center;width: 2.3cm; ">
+0.420
 </td>
-<td style="text-align:center;">
+<td style="text-align:center;width: 2.3cm; ">
+0.050
+</td>
+<td style="text-align:center;width: 2.3cm; ">
 NA
 </td>
-<td style="text-align:center;">
+</tr>
+<tr>
+<td style="text-align:center;width: 2.3cm; ">
+0.423
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+0.373
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+0.331
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+0.415
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+0.050
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:center;width: 2.3cm; ">
+0.422
+</td>
+<td style="text-align:center;width: 2.3cm; ">
+0.378
+</td>
+<td style="text-align:center;width: 2.3cm; ">
 0.336
 </td>
-<td style="text-align:center;">
-0.092
+<td style="text-align:center;width: 2.3cm; ">
+0.421
 </td>
-<td style="text-align:center;">
-0.04
+<td style="text-align:center;width: 2.3cm; ">
+0.043
 </td>
-<td style="text-align:center;">
--0.006
-</td>
-<td style="text-align:center;">
-0.087
-</td>
-<td style="text-align:center;">
-0.052
+<td style="text-align:center;width: 2.3cm; ">
+0.130
 </td>
 </tr>
 <tr>
-<td style="text-align:center;">
-human
+<td style="text-align:center;width: 2.3cm; ">
+0.410
 </td>
-<td style="text-align:center;">
-ARID1B
+<td style="text-align:center;width: 2.3cm; ">
+0.344
 </td>
-<td style="text-align:center;">
-jk
+<td style="text-align:center;width: 2.3cm; ">
+0.302
 </td>
-<td style="text-align:center;">
-ARID1B_jk_ACAT2
+<td style="text-align:center;width: 2.3cm; ">
+0.387
 </td>
-<td style="text-align:center;">
-ACAT2
+<td style="text-align:center;width: 2.3cm; ">
+0.066
 </td>
-<td style="text-align:center;">
-0.332
-</td>
-<td style="text-align:center;">
-0.092
-</td>
-<td style="text-align:center;">
-0.04
-</td>
-<td style="text-align:center;">
--0.006
-</td>
-<td style="text-align:center;">
-0.086
-</td>
-<td style="text-align:center;">
-0.052
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-human
-</td>
-<td style="text-align:center;">
-ARID1B
-</td>
-<td style="text-align:center;">
-jk
-</td>
-<td style="text-align:center;">
-ARID1B_jk_ATP5MPL
-</td>
-<td style="text-align:center;">
-ATP5MPL
-</td>
-<td style="text-align:center;">
-0.337
-</td>
-<td style="text-align:center;">
-0.085
-</td>
-<td style="text-align:center;">
-0.04
-</td>
-<td style="text-align:center;">
--0.006
-</td>
-<td style="text-align:center;">
-0.087
-</td>
-<td style="text-align:center;">
-0.045
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-human
-</td>
-<td style="text-align:center;">
-ARID1B
-</td>
-<td style="text-align:center;">
-jk
-</td>
-<td style="text-align:center;">
-ARID1B_jk_C12orf45
-</td>
-<td style="text-align:center;">
-C12orf45
-</td>
-<td style="text-align:center;">
-0.336
-</td>
-<td style="text-align:center;">
-0.085
-</td>
-<td style="text-align:center;">
-0.04
-</td>
-<td style="text-align:center;">
--0.006
-</td>
-<td style="text-align:center;">
-0.087
-</td>
-<td style="text-align:center;">
-0.045
+<td style="text-align:center;width: 2.3cm; ">
+-0.312
 </td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedTargets.html">plotConservedDivergedTargets</a></span><span class="op">(</span><span class="va">ARID1B_target_conservation</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <img src="ARID1B_target_conservation.png" alt="The top 5 most diverged target genes of ARID1B identified using tree-based statistics in combination with jackknifing." width="75%"><p class="caption">
@@ -5436,11 +5373,11 @@ The top 5 most diverged target genes of ARID1B identified using
 tree-based statistics in combination with jackknifing.
 </p>
 </div>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">top5_diverged_ARID1B_targets</span> <span class="op">&lt;-</span> <span class="va">ARID1B_target_conservation</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">slice_min</span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">residual</span>, n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">pull</span><span class="op">(</span><span class="va">gene_removed</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotExprAlongPseudotime.html">plotExprAlongPseudotime</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ARID1B"</span>, <span class="va">top5_diverged_ARID1B_targets</span><span class="op">)</span>, </span>
 <span>                        <span class="va">sce</span>, </span>
 <span>                        species_colors <span class="op">=</span> <span class="va">spec_colors</span>, </span>
@@ -5486,134 +5423,139 @@ experiments.</p>
 1. Shumate A, Salzberg SL. <span class="nocase">Liftoff: accurate
 mapping of gene annotations</span>. Bioinformatics. 2021;37:1639–43. <a href="https://doi.org/10.1093/bioinformatics/btaa1016" class="external-link">https://doi.org/10.1093/bioinformatics/btaa1016</a>.
 </div>
+<div id="ref-Rosen2024-li" class="csl-entry">
+2. Rosen Y, Brbić M, Roohani Y, Swanson K, Li Z, Leskovec J. <span class="nocase">Toward universal cell embeddings: integrating single-cell
+RNA-seq datasets across species with <span>SATURN</span></span>. Nat
+Methods. 2024. <a href="https://doi.org/10.1038/s41592-024-02191-z" class="external-link">https://doi.org/10.1038/s41592-024-02191-z</a>.
+</div>
 <div id="ref-Lun2016-lx" class="csl-entry">
-2. Lun ATL, McCarthy DJ, Marioni JC. <span class="nocase">A step-by-step
+3. Lun ATL, McCarthy DJ, Marioni JC. <span class="nocase">A step-by-step
 workflow for low-level analysis of single-cell RNA-seq data with
 Bioconductor</span>. F1000Res. 2016;5:2122. <a href="https://doi.org/10.12688/f1000research.9501.2" class="external-link">https://doi.org/10.12688/f1000research.9501.2</a>.
 </div>
 <div id="ref-Cannoodt2016-hn" class="csl-entry">
-3. Cannoodt R, Saelens W, Sichien D, Tavernier S, Janssens S, Guilliams
+4. Cannoodt R, Saelens W, Sichien D, Tavernier S, Janssens S, Guilliams
 M, et al. <span class="nocase">SCORPIUS improves trajectory inference
 and identifies novel modules in dendritic cell development</span>.
 bioRxiv. 2016;079509. <a href="https://doi.org/10.1101/079509" class="external-link">https://doi.org/10.1101/079509</a>.
 </div>
 <div id="ref-Aran2019-jl" class="csl-entry">
-4. Aran D, Looney AP, Liu L, Wu E, Fong V, Hsu A, et al. <span class="nocase">Reference-based analysis of lung single-cell sequencing
+5. Aran D, Looney AP, Liu L, Wu E, Fong V, Hsu A, et al. <span class="nocase">Reference-based analysis of lung single-cell sequencing
 reveals a transitional profibrotic macrophage</span>. Nat Immunol.
 2019;20:163–72. <a href="https://doi.org/10.1038/s41590-018-0276-y" class="external-link">https://doi.org/10.1038/s41590-018-0276-y</a>.
 </div>
 <div id="ref-Rhodes2022-os" class="csl-entry">
-5. Rhodes K, Barr KA, Popp JM, Strober BJ, Battle A, Gilad Y. <span class="nocase">Human embryoid bodies as a novel system for genomic
+6. Rhodes K, Barr KA, Popp JM, Strober BJ, Battle A, Gilad Y. <span class="nocase">Human embryoid bodies as a novel system for genomic
 studies of functionally diverse cell types</span>. Elife. 2022;11. <a href="https://doi.org/10.7554/eLife.71361" class="external-link">https://doi.org/10.7554/eLife.71361</a>.
 </div>
 <div id="ref-Moerman2019-xh" class="csl-entry">
-6. Moerman T, Santos SA, González-Blas CB, Simm J, Moreau Y, Aerts J, et
+7. Moerman T, Santos SA, González-Blas CB, Simm J, Moreau Y, Aerts J, et
 al. <span class="nocase">GRNBoost2 and Arboreto: efficient and scalable
 inference of gene regulatory networks</span>. Bioinformatics.
 2019;35:2159–61. <a href="https://doi.org/10.1093/BIOINFORMATICS/BTY916" class="external-link">https://doi.org/10.1093/BIOINFORMATICS/BTY916</a>.
 </div>
 <div id="ref-Csardi2006-sy" class="csl-entry">
-7. Csardi G, Nepusz T. <a href="https://igraph.org" class="external-link">The igraph software
+8. Csardi G, Nepusz T. <a href="https://igraph.org" class="external-link">The igraph software
 package for complex network research</a>. InterJournal. 2006;Complex
 Systems:1695.
 </div>
 <div id="ref-Agrawal2002-tb" class="csl-entry">
-8. Agrawal H. <span class="nocase">Extreme Self-Organization in Networks
+9. Agrawal H. <span class="nocase">Extreme Self-Organization in Networks
 Constructed from Gene Expression Data</span>. Phys Rev Lett.
 2002;89:268702. <a href="https://doi.org/10.1103/PHYSREVLETT.89.268702/FIGURES/3/MEDIUM" class="external-link">https://doi.org/10.1103/PHYSREVLETT.89.268702/FIGURES/3/MEDIUM</a>.
 </div>
 <div id="ref-Bergmann2003-sp" class="csl-entry">
-9. Bergmann S, Ihmels J, Barkai N. <span class="nocase">Similarities and
-Differences in Genome-Wide Expression Data of Six Organisms</span>. PLoS
-Biol. 2003;2:e9. <a href="https://doi.org/10.1371/JOURNAL.PBIO.0020009" class="external-link">https://doi.org/10.1371/JOURNAL.PBIO.0020009</a>.
+10. Bergmann S, Ihmels J, Barkai N. <span class="nocase">Similarities
+and Differences in Genome-Wide Expression Data of Six Organisms</span>.
+PLoS Biol. 2003;2:e9. <a href="https://doi.org/10.1371/JOURNAL.PBIO.0020009" class="external-link">https://doi.org/10.1371/JOURNAL.PBIO.0020009</a>.
 </div>
 <div id="ref-Barabasi2004-gi" class="csl-entry">
-10. Barabási AL, Oltvai ZN. <span class="nocase">Network biology:
+11. Barabási AL, Oltvai ZN. <span class="nocase">Network biology:
 understanding the cell’s functional organization</span>. Nature Reviews
 Genetics 2004 5:2. 2004;5:101–13. <a href="https://doi.org/10.1038/nrg1272" class="external-link">https://doi.org/10.1038/nrg1272</a>.
 </div>
 <div id="ref-Broido2019-tf" class="csl-entry">
-11. Broido AD, Clauset A. <span class="nocase">Scale-free networks are
+12. Broido AD, Clauset A. <span class="nocase">Scale-free networks are
 rare</span>. Nature Communications 2019 10:1. 2019;10:1–10. <a href="https://doi.org/10.1038/s41467-019-08746-5" class="external-link">https://doi.org/10.1038/s41467-019-08746-5</a>.
 </div>
 <div id="ref-Bininda-Emonds2007-of" class="csl-entry">
-12. Bininda-Emonds ORP, Cardillo M, Jones KE, MacPhee RDE, Beck RMD,
+13. Bininda-Emonds ORP, Cardillo M, Jones KE, MacPhee RDE, Beck RMD,
 Grenyer R, et al. <span class="nocase">The delayed rise of present-day
 mammals</span>. Nature. 2007;446:507–12. <a href="https://doi.org/10.1038/nature05634" class="external-link">https://doi.org/10.1038/nature05634</a>.
 </div>
 <div id="ref-Rauluseviciute2023-dz" class="csl-entry">
-13. Rauluseviciute I, Riudavets-Puig R, Blanc-Mathieu R,
+14. Rauluseviciute I, Riudavets-Puig R, Blanc-Mathieu R,
 Castro-Mondragon JA, Ferenc K, Kumar V, et al. <span class="nocase">JASPAR 2024: 20th anniversary of the open-access database
 of transcription factor binding profiles</span>. Nucleic Acids Res.
 2023;52:D174–82. <a href="https://doi.org/10.1093/nar/gkad1059" class="external-link">https://doi.org/10.1093/nar/gkad1059</a>.
 </div>
 <div id="ref-Madsen2018-gq" class="csl-entry">
-14. Madsen JGS, Rauch A, Van Hauwaert EL, Schmidt SF, Winnefeld M,
+15. Madsen JGS, Rauch A, Van Hauwaert EL, Schmidt SF, Winnefeld M,
 Mandrup S. <span class="nocase">Integrated analysis of motif activity
 and gene expression changes of transcription factors</span>. Genome Res.
 2018;28:243–55. <a href="https://doi.org/10.1101/gr.227231.117" class="external-link">https://doi.org/10.1101/gr.227231.117</a>.
 </div>
 <div id="ref-Langfelder2008-qe" class="csl-entry">
-15. Langfelder P, Horvath S. <span class="nocase">WGCNA: An R package
+16. Langfelder P, Horvath S. <span class="nocase">WGCNA: An R package
 for weighted correlation network analysis</span>. BMC Bioinformatics.
 2008;9:1–13. <a href="https://doi.org/10.1186/1471-2105-9-559" class="external-link">https://doi.org/10.1186/1471-2105-9-559</a>.
 </div>
 <div id="ref-Ashburner2000-mc" class="csl-entry">
-16. Ashburner M, Ball CA, Blake JA, Botstein D, Butler H, Cherry JM, et
+17. Ashburner M, Ball CA, Blake JA, Botstein D, Butler H, Cherry JM, et
 al. <span class="nocase">Gene ontology: tool for the unification of
 biology. The Gene Ontology Consortium</span>. Nat Genet. 2000;25:25–9.
 <a href="https://doi.org/10.1038/75556" class="external-link">https://doi.org/10.1038/75556</a>.
 </div>
 <div id="ref-Gene-Ontology-Consortium2023-bs" class="csl-entry">
-17. Gene Ontology Consortium, Aleksander SA, Balhoff J, Carbon S, Cherry
+18. Gene Ontology Consortium, Aleksander SA, Balhoff J, Carbon S, Cherry
 JM, Drabkin HJ, et al. <span class="nocase">The Gene Ontology
 knowledgebase in <span>2023</span></span>. Genetics. 2023;224:iyad031.
 <a href="https://doi.org/10.1093/genetics/iyad031" class="external-link">https://doi.org/10.1093/genetics/iyad031</a>.
 </div>
 <div id="ref-Alexa2024-oi" class="csl-entry">
-18. Alexa A, Rahnenfuhrer J. <span class="nocase">topGO: enrichment
+19. Alexa A, Rahnenfuhrer J. <span class="nocase">topGO: enrichment
 analysis for gene ontology</span>. R package version. 2024;2.58.0.
 </div>
 <div id="ref-Milacic2024-rx" class="csl-entry">
-19. Milacic M, Beavers D, Conley P, Gong C, Gillespie M, Griss J, et al.
+20. Milacic M, Beavers D, Conley P, Gong C, Gillespie M, Griss J, et al.
 <span>The Reactome Pathway Knowledgebase <span>2024</span></span>.
 Nucleic Acids Res. 2024;52:D672–8. <a href="https://doi.org/10.1093/nar/gkad1025" class="external-link">https://doi.org/10.1093/nar/gkad1025</a>.
 </div>
 <div id="ref-Yu2016-si" class="csl-entry">
-20. Yu G, He Q-Y. <span class="nocase">ReactomePA: an R/Bioconductor
+21. Yu G, He Q-Y. <span class="nocase">ReactomePA: an R/Bioconductor
 package for reactome pathway analysis and visualization</span>. Mol
 Biosyst. 2016;12:477–9. <a href="https://doi.org/10.1039/c5mb00663e" class="external-link">https://doi.org/10.1039/c5mb00663e</a>.
 </div>
 <div id="ref-Szklarczyk2023-hx" class="csl-entry">
-21. Szklarczyk D, Kirsch R, Koutrouli M, Nastou K, Mehryary F, Hachilif
+22. Szklarczyk D, Kirsch R, Koutrouli M, Nastou K, Mehryary F, Hachilif
 R, et al. <span class="nocase">The STRING database in 2023:
 protein-protein association networks and functional enrichment analyses
 for any sequenced genome of interest</span>. Nucleic Acids Res.
 2023;51:D638–46. <a href="https://doi.org/10.1093/nar/gkac1000" class="external-link">https://doi.org/10.1093/nar/gkac1000</a>.
 </div>
 <div id="ref-Yu2012-bv" class="csl-entry">
-22. Yu G, Wang L-G, Han Y, He Q-Y. <span class="nocase">clusterProfiler:
+23. Yu G, Wang L-G, Han Y, He Q-Y. <span class="nocase">clusterProfiler:
 an R package for comparing biological themes among gene clusters</span>.
 OMICS. 2012;16:284–7. <a href="https://doi.org/10.1089/omi.2011.0118" class="external-link">https://doi.org/10.1089/omi.2011.0118</a>.
 </div>
 <div id="ref-Langfelder2011-wm" class="csl-entry">
-23. Langfelder P, Luo R, Oldham MC, Horvath S. <span class="nocase">Is
+24. Langfelder P, Luo R, Oldham MC, Horvath S. <span class="nocase">Is
 my network module preserved and reproducible?</span> PLoS Comput Biol.
 2011;7:1001057. <a href="https://doi.org/10.1371/journal.pcbi.1001057" class="external-link">https://doi.org/10.1371/journal.pcbi.1001057</a>.
 </div>
 <div id="ref-Wang2014-ew" class="csl-entry">
-24. Wang J, Xie G, Singh M, Ghanbarian AT, Raskó T, Szvetnik A, et al.
+25. Wang J, Xie G, Singh M, Ghanbarian AT, Raskó T, Szvetnik A, et al.
 <span class="nocase">Primate-specific endogenous retrovirus-driven
 transcription defines naive-like stem cells</span>. Nature.
 2014;516:405–9. <a href="https://doi.org/10.1038/nature13804" class="external-link">https://doi.org/10.1038/nature13804</a>.
 </div>
 <div id="ref-Hsieh2022-yl" class="csl-entry">
-25. Hsieh F-K, Ji F, Damle M, Sadreyev RI, Kingston RE. <span class="nocase">HERVH-derived lncRNAs negatively regulate chromatin
+26. Hsieh F-K, Ji F, Damle M, Sadreyev RI, Kingston RE. <span class="nocase">HERVH-derived lncRNAs negatively regulate chromatin
 targeting and remodeling mediated by <span>CHD7</span></span>. Life Sci
 Alliance. 2022;5:e202101127. <a href="https://doi.org/10.26508/lsa.202101127" class="external-link">https://doi.org/10.26508/lsa.202101127</a>.
 </div>
 <div id="ref-Ito2017-da" class="csl-entry">
-26. Ito J, Sugimoto R, Nakaoka H, Yamada S, Kimura T, Hayano T, et al.
+27. Ito J, Sugimoto R, Nakaoka H, Yamada S, Kimura T, Hayano T, et al.
 <span class="nocase">Systematic identification and characterization of
 regulatory elements derived from human endogenous retroviruses</span>.
 PLoS Genet. 2017;13:e1006883. <a href="https://doi.org/10.1371/journal.pgen.1006883" class="external-link">https://doi.org/10.1371/journal.pgen.1006883</a>.

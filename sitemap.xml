@@ -14,7 +14,7 @@
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/calculateEigengenes.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/calculatePresStats.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/calculateTreeStats.html</loc></url>
-<url><loc>https://hellmann-lab.github.io/CroCoNet/reference/clone2species.html</loc></url>
+<url><loc>https://hellmann-lab.github.io/CroCoNet/reference/comparePresStats.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/consensus_network.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/convertPresToDist.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/convertToDT.html</loc></url>
@@ -82,6 +82,7 @@
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/reconstructTrees.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/regulators.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/removeOverlappingGenePairs.html</loc></url>
+<url><loc>https://hellmann-lab.github.io/CroCoNet/reference/replicate2species.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/scaleFreeFitRSquared.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/sce.html</loc></url>
 <url><loc>https://hellmann-lab.github.io/CroCoNet/reference/selectPower.html</loc></url>
