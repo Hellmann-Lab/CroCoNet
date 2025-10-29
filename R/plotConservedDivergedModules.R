@@ -48,13 +48,13 @@
 #' @param rank_by Character, one of "residual" and "t_score". The name of the variable to rank the by when selecting the top N conserved and diverged modules to label.
 #' @param colors (Named) character vector of length 2, the colors for the diverged and conserved modules.
 #' @param font_size Numeric, font size (default: 14).
-#' @param label_size Numeric, the size of the labels for the most conserved and diverged modules (default: 2.5).
+#' @param label_size Numeric, the size of the labels for the most conserved and diverged modules (default: 3.5).
 #'
 #' @return A \code{\link{ggplot}} object.
 #' @export
 #'
 #' @examples plotConservedDivergedModules(module_conservation_overall)
-plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = "residual", colors = NULL, font_size = 14, label_size = 2.5) {
+plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = "residual", colors = NULL, font_size = 14, label_size = 3.5) {
 
   if (!is.data.frame(module_conservation))
     stop("The argument \"module_conservation\" should be a data frame.")

@@ -674,19 +674,24 @@ readRDS("dist_jk_sample.rds") %>%
   kable_styling(font_size = 13)
 ```
 
-The distance measures of a (jackknifed or original) module can be organized into and plotted as a distance matrix. The function <tt>plotDistMats</tt> can produce such a plot for a single module (required input: data frame) or several modules together (required input: list of data frames), for example it can be used to visualize the distance matrices of the 6 example modules (the original module versions) side by side:
+The distance measures of a module can be organized into and plotted as a distance matrix. For visualization, it is usually the simplest and most informative to focus on the original (not jackknifed) modules only:
+
+```{r get_dist_orig}
+dist <- dist_jk[paste0(regulators, "_orig")]
+names(dist) <- regulators
+```
+
+The function <tt>plotDistMats</tt> plots the distance matrix of a single module (required input: data frame) or the distance matrices of several modules together (required input: list of data frames), for example it can be used to visualize the six example modules side by side:
 
 ```{r plot_dist_mats}
-dist_examples <- dist_jk[paste0(example_modules, "_orig")]
-names(dist_examples) <- example_modules
-plotDistMats(dist_examples)
+plotDistMats(dist[example_modules])
 ```
 
 ```{r dist_mat_examples, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The distance matrices of 6 example modules.'}
 knitr::include_graphics("dist_mat_examples.png")
 ```
 
-It is apparent based on these 6 examples that the distance patterns vary quite a bit from module to module. Some modules (e.g. FEZF2) have in general low distance values which points to a high degree of preservation, while other modules (e.g. NEUROD4) tend to have higher distance values which points to a worse preservation. While for most modules the within-species distances are overall lower than the cross-species distances (this was a selection criteria for the preservation statistic after all), the magnitude of this difference is not constant: in case of the SALL4 module the within-species and cross-species scores span by and large a similar range, while in case of the POU5F1 module the ape-cynomolgus cross-species scores are drastically higher than the rest of the scores.
+It is apparent based on these six examples that the distance patterns vary quite a bit from module to module. Some modules (e.g. FEZF2) have in general low distance values which points to a high degree of preservation, while other modules (e.g. NEUROD4) tend to have higher distance values which points to a worse preservation. While for most modules the within-species distances are overall lower than the cross-species distances (this was a selection criteria for the preservation statistic after all), the magnitude of this difference is not constant: in case of the SALL4 module the within-species and cross-species scores span by and large a similar range, while in case of the POU5F1 module the ape-cynomolgus cross-species scores are drastically higher than the rest of the scores.
 
 ## Tree reconstruction
 
@@ -700,13 +705,19 @@ random_trees_jk <- reconstructTrees(random_dist_jk)
 ```
 
 The output is a list of <tt>phylo</tt> objects per (jackknifed or original) module. 
-The function <tt>plotTrees</tt> can plot one or more of these module trees analogously to <tt>plotDistMats</tt>. Here we focus on the trees of the 6 example modules again:
+
+For visualizaton, it is again recommended to retrieve the trees of the original modules only:
+
+```{r get_trees_orig}
+trees <- trees_jk[paste0(regulators, "_orig")]
+names(trees) <- regulators
+```
+
+Based on this list, the function <tt>plotTrees</tt> can visualize one or more module trees analogously to <tt>plotDistMats</tt>. Here we focus on the trees representations of the six example modules again:
 
 ```{r plot_trees}
 spec_colors <- c(human = "#4DAF4A", gorilla = "#377EB8", cynomolgus = "#9a1ebd")
-tree_examples <- trees_jk[paste0(example_modules, "_orig")]
-names(tree_examples) <- example_modules
-plotTrees(tree_examples, species_colors = spec_colors)
+plotTrees(trees[example_modules], species_colors = spec_colors)
 ```
 
 ```{r tree_examples, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The tree reconstructions of 6 example modules.'}
@@ -719,7 +730,7 @@ In line with the differences among the distance matrices, the trees also differ 
 
 To quantify these tell-tale characteristics of the module trees, various tree-based statistics can be calculated:
 
-* **Total tree length**: The total length of all branches in the tree; measures module variability both within and across species.
+* **Total tree length**: The sum of all branch lengths in the tree; measures module variability both within and across species.
 
 * **Diversity of a species**: The total length of the branches connecting the replicates of the given species to each other; measures module variability within this particular species.
 
@@ -727,9 +738,9 @@ To quantify these tell-tale characteristics of the module trees, various tree-ba
 
 * **Monophyleticity of a species**: Indicates whether the tree is monophyletic for the replicates of the given species. Only if a module tree is monophyletic for a species of interest can the module be tested for divergence between this species and all others.
 
-* **Branch length of a species**: The length of the internal branch that connects the subtree of the replicates belonging to the given species and the subtree of all other replicates; measures module variability between the species of interest  and all others. Undefined if the tree is not monophyletic for the given species.
+* **Subtree length of a species:** The sum of the branch lengths in the subtree that is defined by the replicates of the species and includes the internal branch connecting these replicates to the rest of the tree. Undefined if the tree is not monophyletic for the species of interest.
 
-```{r tree_stats_explained, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'Tree-based statistics to characterize the cross-species conservation of network modules.'}
+```{r tree_stats_explained, eval = TRUE, include = TRUE, echo = FALSE, out.width = "90%", fig.align = 'center', fig.cap = 'Tree-based statistics to characterize the cross-species conservation of network modules.'}
 knitr::include_graphics("tree_based_stats.png")
 ```
 
@@ -764,22 +775,22 @@ random_tree_stats <- summarizeJackknifeStats(random_tree_stats_jk,
                                                "human_diversity"))
 ```
 
-To confirm whether the tree-based statistics are well-suited for further analysis, the contrast between the actual and random modules can be used again for sanity checking. Most tree-based statistics (especially the ones measuring diversity) are expected to be lower for the actual modules than for the random modules. For the statistics of interest, the distributions can be plotted using the function <tt>plotTreeStatDistributions</tt>:
+<!-- To confirm whether the tree-based statistics are well-suited for further analysis, the contrast between the actual and random modules can be used again for sanity checking. Most tree-based statistics (especially the ones measuring diversity) are expected to be lower for the actual modules than for the random modules. For the statistics of interest, the distributions can be plotted using the function <tt>plotTreeStatDistributions</tt>: -->
 
-```{r plot_tree_stat_distr}
-plotTreeStatDistributions(tree_stats, 
-                          random_tree_stats, 
-                          c("within_species_diversity", 
-                            "total_tree_length", 
-                            "human_diversity", 
-                            "human_branch_length"))
-```
+<!-- ```{r plot_tree_stat_distr} -->
+<!-- plotTreeStatDistributions(tree_stats,  -->
+<!--                           random_tree_stats,  -->
+<!--                           c("within_species_diversity",  -->
+<!--                             "total_tree_length",  -->
+<!--                             "human_diversity",  -->
+<!--                             "human_branch_length")) -->
+<!-- ``` -->
 
-```{r tree_stat_distr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'Distribution of the tree-based statistics for the actual and random modules.'}
-knitr::include_graphics("tree_stat_distributions.png")
-```
+<!-- ```{r tree_stat_distr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'Distribution of the tree-based statistics for the actual and random modules.'} -->
+<!-- knitr::include_graphics("tree_stat_distributions.png") -->
+<!-- ``` -->
 
-For the first 3 statistics (within-species diversity, total tree length and human diversity), the distributions of the actual and random modules differ as expected. The 4th statistic (human branch length) is only defined for modules that are monophyletic for the human replicates, that is why it could be calculated only for 57 actual modules and 1 random module. Thus the distributions cannot be compared, but finding fewer monophyletic random modules goes again in the same direction: higher diversity (lower preservation) among the human replicates in case of the random modules than in case of the actual modules.
+<!-- For the first 3 statistics (within-species diversity, total tree length and human diversity), the distributions of the actual and random modules differ as expected. The 4th statistic (human branch length) is only defined for modules that are monophyletic for the human replicates, that is why it could be calculated only for 57 actual modules and 1 random module. Thus the distributions cannot be compared, but finding fewer monophyletic random modules goes again in the same direction: higher diversity (lower preservation) among the human replicates in case of the random modules than in case of the actual modules. -->
 
 <br>
 <br>
@@ -840,7 +851,7 @@ knitr::include_graphics("within_species_diversity_total_tree_length_filt.png")
 
 ### Finding conserved and diverged modules
 
-After removing these "wobbly" modules, cross-species conservation can be quantified using a linear regression between the total tree length and within-species branch lengths. 
+After removing these "wobbly" modules, cross-species conservation can be quantified using a linear regression between the total tree length and within-species diversity. 
 
 The function <tt>fitTreeStatsLm</tt> fits a regression model between the 2 statistics and the function <tt>findConservedDivergedModules</tt> identifies conserved and diverged modules by comparing each module to the 95% prediction interval of the fit. A module is considered diverged if it has a higher total tree length than the upper boundary of the prediction interval, while a module is considered conserved if it has a lower total tree length than the lower boundary of the prediction interval.
 
@@ -904,9 +915,7 @@ top5_cons_div_modules <- bind_rows(module_conservation_overall %>%
 ```
 
 ```{r plot_dist_mats_cons_div}
-dist <- dist_jk[paste0(top5_cons_div_modules, "_orig")]
-names(dist) <- top5_cons_div_modules
-plotDistMats(dist, ncol = 5)
+plotDistMats(dist[top5_cons_div_modules], ncol = 5)
 ```
 
 ```{r dist_mats_cons_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The distance matrices of the 5 most conserved (top row) and 5 most diverged (bottom row) modules.'}
@@ -914,9 +923,7 @@ knitr::include_graphics("dist_mat_cons_div.png")
 ```
 
 ```{r plot_trees_cons_div}
-trees <- trees_jk[paste0(top5_cons_div_modules, "_orig")]
-names(trees) <- top5_cons_div_modules
-plotTrees(trees, species_colors = spec_colors, ncol = 5)
+plotTrees(trees[top5_cons_div_modules], species_colors = spec_colors, ncol = 5)
 ```
 
 ```{r trees_cons_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'The tree reconstructions of the 5 most conserved (top row) and 5 most diverged (bottom row) modules.'}
@@ -953,7 +960,7 @@ Based on the network visualizations, the diverged modules (especially HMGA1 and 
 
 Genes that contribute the most to the conservation/divergence of a module can be identified not just using the edge divergence scores, but also using the tree-based statistics in combination with jackknifing.
  
-During jackknifing, each member gene of a module is removed and all statistics are recalculated, including the tree-based statistics (total tree length and within-species branch length) that inform us about cross-species conservation. Our working hypothesis is that if removing a target gene from a diverged module makes the module more conserved, then that target was responsible for divergence in the original module, and vice versa, if removing a target gene from a conserved module makes the module more diverged, then that target was responsible for conservation in the original module.
+During jackknifing, each member gene of a module is removed and all statistics are recalculated, including the tree-based statistics (total tree length and within-species diversity) that inform us about cross-species conservation. Our working hypothesis is that if removing a target gene from a diverged module makes the module more conserved, then that target was responsible for divergence in the original module, and vice versa, if removing a target gene from a conserved module makes the module more diverged, then that target was responsible for conservation in the original module.
 
 To quantify these effects, the function <tt>findConservedDivergedTargets</tt> takes use of the linear model that was fitted across all modules between the total tree length and within-species diversity and that was used to identify the conserved and diverged modules in the first place. However, in this case it is not the aggregate statistic for a module as a whole that is compared to the regression line, but the statistic of each jackknife module version separately. The corresponding residuals quantify the extent of target gene conservation: the jackknife version that has the highest residual is the most diverged, therefore the corresponding target gene is the most conserved, while the jackknife version that has the lowest residual is the most conserved, therefore the corresponding target gene is the most diverged.
 
@@ -989,8 +996,12 @@ The original and jackknifed versions of a module can be plotted along the regres
 plotConservedDivergedTargets(POU5F1_target_conservation)
 ```
 
-```{r pou5f1_target_cons, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'The top 5 most diverged target genes of POU5F1 identified using tree-based statistics in combination with jackknifing.'}
+```{r pou5f1_target_cons, eval = TRUE, include = TRUE, echo = FALSE, out.width = "70%", fig.align = 'center', fig.cap = 'The five most diverged target genes of POU5F1 identified using tree-based statistics in combination with jackknifing.'}
 knitr::include_graphics("POU5F1_target_conservation.png")
+```
+
+```{r target_contributions, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'Contribution scores of the target genes in the five most conserved (in green) and five most diverged (red) modules. The two top-contributing targets are labeled for each module.'}
+knitr::include_graphics("target_contributions_overall.png")
 ```
 
 All jackknifed versions are located way outside the prediction interval, meaning that the whole module exhibits a strong signal of divergence that cannot be explained by any of the target genes alone. The most diverged target with the lowest residual is SCGB3A2, in line with the findings based on edge divergence.
@@ -1011,7 +1022,7 @@ plotExprAlongPseudotime(c("POU5F1", top5_diverged_POU5F1_targets),
                         cell_type_colors = ct_colors)
 ```
 
-```{r pou5f1_target_expr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'The expression profiles of POU5F1 and its top 5 most diverged target genes across pseudotime trajectory per species.'}
+```{r pou5f1_target_expr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'The expression profiles of POU5F1 and its five most diverged target genes across pseudotime trajectory per species.'}
 knitr::include_graphics("POU5F1_target_expression.png")
 ```
 
@@ -1021,11 +1032,11 @@ Several target genes of POU5F1 that are diverged in terms of network topology (S
 
 The approach described above characterizes the overall degree of module conservation - all species within a tree are treated the same. This is the most suitable approach for finding conserved modules and for finding the highest signal of divergence irrespective of phylogeny. In case of the example dataset, most of the diverged modules detected this way are diverged between cynomolgus macaques and great apes (rather than within the great apes) simply because longer phylogenetic distances generally give rise to bigger differences.
 
-However, if the focus of interest is divergence on a particular lineage, for example on the human lineage, a different approach needs to be applied. In contrast to the overall test of conservation where there are no constraints in terms of tree structure, here it makes sense to restrict the testing only to module trees that are monophyletic for the human replicates. This step pre-selects modules that fulfill a minimal citeria of lineage-specific divergence and makes it possible to compare a more specific tree characteristic, namely the human branch length. To again correct for the unwanted sources of variation, this branch length is contrasted against variation within the lineage, i.e. the human diversity. An analogous approach can be applied to find diverged modules between any species and the rest of the tree as well.
+However, if the focus of interest is divergence on a particular lineage, for example on the human lineage, a different approach needs to be applied. In contrast to the overall test of conservation where there are no constraints in terms of tree structure, here it makes sense to restrict the testing only to module trees that are monophyletic for the human replicates. This step pre-selects modules that fulfill a minimal citeria of lineage-specific divergence and makes it possible to compare a more specific tree characteristic, namely the human subtree length. To again correct for the unwanted sources of variation, this subtree length is contrasted against variation within the lineage, i.e. the human diversity. An analogous approach can be applied to find diverged modules between any species and the rest of the tree as well.
 
 ### Finding conserved and diverged modules
 
-The modules that are diverged on the human lineage can be defined using a (weighted) linear regression between the human branch length and the human diversity, implemented in <tt>fitTreeStatsLm</tt> with <tt>focus</tt> set to "human" and <tt>findConservedDivergedModules</tt>. Similarly to the overall conservation and divergence, the 95% prediction interval of the regression line is calculated and the modules that have a higher human branch length than the upper bound of the 95% prediction interval are considered diverged. It is important to note that the modules that fall below the lower bound of the 95% prediction interval cannot be interpreted as conserved in this case, because 1) the human-monophyletic module trees have already been pre-selected, and 2) conservation is per definition not a lineage-specific feature.
+The modules that are diverged on the human lineage can be defined using a (weighted) linear regression between the human subtree length and the human diversity, implemented in <tt>fitTreeStatsLm</tt> with <tt>focus</tt> set to "human" and <tt>findConservedDivergedModules</tt>. Similarly to the overall conservation and divergence, the 95% prediction interval of the regression line is calculated and the modules that have a higher human subtree length than the upper bound of the 95% prediction interval are considered diverged. It is important to note that the modules that fall below the lower bound of the 95% prediction interval cannot be interpreted as conserved in this case, because 1) the human-monophyletic module trees have already been pre-selected, and 2) conservation is per definition not a lineage-specific feature.
 
 Below, this approach is applied to the example dataset:
 
@@ -1039,7 +1050,7 @@ module_conservation_human <- findConservedDivergedModules(tree_stats_filt,
 
 ```{r glimpse_at_mod_cons_human, eval = TRUE, echo = FALSE}
 readRDS("module_conservation_human_sample.rds")[, 1:7] %>% 
-  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Measures of divergence on the human lineage for 6 example modules</span>", digits = 3, align = rep("c", 7)) %>% 
+  kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Measures of divergence on the human lineage for six example modules</span>", digits = 3, align = rep("c", 7)) %>% 
   kable_styling(font_size = 13) %>% 
   column_spec(1:7, "2.5cm")
 readRDS("module_conservation_human_sample.rds")[, 8:16] %>% 
@@ -1070,7 +1081,7 @@ The results can also be plotted using <tt>plotConservedDivergedModules</tt>, the
 plotConservedDivergedModules(module_conservation_human)
 ```
 
-```{r div_mod_human, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'Weighted linear regression between the human branch length and human diversity, with the diverged modules marked.'}
+```{r div_mod_human, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'Weighted linear regression between the human subtree length and human diversity, with the diverged modules marked.'}
 knitr::include_graphics("module_conservation_human.png")
 ```
 
@@ -1084,30 +1095,26 @@ human_div_modules <- module_conservation_human %>%
 ```
 
 ```{r plot_dist_mats_human_div}
-dist <- dist_jk[paste0(human_div_modules, "_orig")]
-names(dist) <- human_div_modules
-plotDistMats(dist)
+plotDistMats(dist[human_div_modules])
 ```
 
-```{r dist_mats_human_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "70%", fig.align = 'center', fig.cap = 'The distance matrices of the 2 modules that were found to be diverged on the human lineage.'}
+```{r dist_mats_human_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "80%", fig.align = 'center', fig.cap = 'The distance matrices of the three modules that were found to be diverged on the human lineage.'}
 knitr::include_graphics("dist_mat_human_div.png")
 ```
 
 ```{r plot_trees_human_div}
-trees <- trees_jk[paste0(human_div_modules, "_orig")]
-names(trees) <- human_div_modules
-plotTrees(trees, species_colors = spec_colors)
+plotTrees(trees[human_div_modules], species_colors = spec_colors)
 ```
 
-```{r trees_human_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "70%", fig.align = 'center', fig.cap = 'The tree reconstructions of the 2 modules that were found to be diverged on the human lineage.'}
+```{r trees_human_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "80%", fig.align = 'center', fig.cap = 'The tree reconstructions of the three modules that were found to be diverged on the human lineage.'}
 knitr::include_graphics("trees_human_div.png")
 ```
 
-The signal - unsurprisingly - is not as strong as in case of the modules diverged between cynomolgus and great apes, but it is still apparent that the human-gorilla and human-cynomolgus distance measures are the higher than the rest. This also translates into a way longer human branch length than expected based on the phylogeny and observed in most module trees.
+The signal - unsurprisingly - is not as strong as in case of the modules diverged between cynomolgus and great apes, but it is still apparent that the human-gorilla and human-cynomolgus distance measures are the higher than the rest. This also translates into a way longer human subtree length than expected based on the phylogeny and observed in most module trees.
 
 ### Finding conserved and diverged target genes
 
-Similar to the approach in case of the overall conservation and divergence, jackknifing can inform us about target genes that contribute the most to human-specific divergence. In this case, the residuals of the jackknifed modules versions are calculated with regard to the regression model between the human branch length and the human diversity. The target genes that result in the lowest residuals (lowest signal is of divergence) when removed are considered the most diverged in the original module.
+Similar to the approach in case of the overall conservation and divergence, jackknifing can inform us about target genes that contribute the most to human-specific divergence. In this case, the residuals of the jackknifed modules versions are calculated with regard to the regression model between the human subtree length and the human diversity. The target genes that result in the lowest residuals (lowest signal is of divergence) when removed are considered the most diverged in the original module.
 
 We performed this analysis for the ARID1B module:
 
@@ -1137,7 +1144,7 @@ readRDS("ARID1B_target_conservation_sample.rds")[, 7:12] %>%
 plotConservedDivergedTargets(ARID1B_target_conservation)
 ```
 
-```{r arid1b_target_cons, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'The top 5 most diverged target genes of ARID1B identified using tree-based statistics in combination with jackknifing.'}
+```{r arid1b_target_cons, eval = TRUE, include = TRUE, echo = FALSE, out.width = "70%", fig.align = 'center', fig.cap = 'The top 5 most diverged target genes of ARID1B identified using tree-based statistics in combination with jackknifing.'}
 knitr::include_graphics("ARID1B_target_conservation.png")
 ```
 
@@ -1147,6 +1154,10 @@ top5_diverged_ARID1B_targets <- ARID1B_target_conservation %>%
   pull(gene_removed)
 ```
 
+```{r target_contributions_human_div, eval = TRUE, include = TRUE, echo = FALSE, out.width = "45%", fig.align = 'center', fig.cap = 'Contribution scores of the target genes in the three modules that were found to be diverged on the human lineage. The two top-contributing targets are labeled for each module.'}
+knitr::include_graphics("target_contributions_human.png")
+```
+
 ```{r}
 plotExprAlongPseudotime(c("ARID1B", top5_diverged_ARID1B_targets), 
                         sce, 
@@ -1154,7 +1165,7 @@ plotExprAlongPseudotime(c("ARID1B", top5_diverged_ARID1B_targets),
                         cell_type_colors = ct_colors)
 ```
 
-```{r arid1b_target_expr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'The expression profiles of ARID1B and its top 5 most diverged target genes across pseudotime trajectory per species.'}
+```{r arid1b_target_expr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'The expression profiles of ARID1B and its five most diverged target genes across pseudotime trajectory per species.'}
 knitr::include_graphics("ARID1B_target_expression.png")
 ```
 

@@ -10,7 +10,7 @@ plotConservedDivergedModules(
   rank_by = "residual",
   colors = NULL,
   font_size = 14,
-  label_size = 2.5
+  label_size = 3.5
 )
 }
 \arguments{
@@ -59,7 +59,7 @@ Columns required in case the focus of interest is species-specific divergence:
 
 \item{font_size}{Numeric, font size (default: 14).}
 
-\item{label_size}{Numeric, the size of the labels for the most conserved and diverged modules (default: 2.5).}
+\item{label_size}{Numeric, the size of the labels for the most conserved and diverged modules (default: 3.5).}
 }
 \value{
 A \code{\link{ggplot}} object.
