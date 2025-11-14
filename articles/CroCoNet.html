@@ -281,7 +281,7 @@ et al. <span class="citation">[6]</span> as the reference. We found that
 the pseudotime trajectories are reasonably well-aligned across the 3
 species, confirming comparability.</p>
 <div class="figure" style="text-align: center">
-<img src="trajectory.png" alt="Pseudotime trajectory of the early primate neural differentiation dataset coloured by sampling day, pseudotime, species and cell type." width="90%"><p class="caption">
+<img src="trajectory.png" class="r-plt" alt="Pseudotime trajectory of the early primate neural differentiation dataset coloured by sampling day, pseudotime, species and cell type." width="90%"><p class="caption">
 Pseudotime trajectory of the early primate neural differentiation
 dataset coloured by sampling day, pseudotime, species and cell type.
 </p>
@@ -829,7 +829,7 @@ biological networks, including gene regulatory networks, have been
 reported to follow scale-free distribution <span class="citation">[9–11]</span> (although the extent of this varies
 across systems and metrics <span class="citation">[12]</span>).</p>
 <div class="figure" style="text-align: center">
-<img src="edge_weight_con_distr.png" alt="The distribution od adjacencies and connectivities for the networks of the 9 replicates." width="80%"><p class="caption">
+<img src="edge_weight_con_distr.png" class="r-plt" alt="The distribution od adjacencies and connectivities for the networks of the 9 replicates." width="80%"><p class="caption">
 The distribution od adjacencies and connectivities for the networks of
 the 9 replicates.
 </p>
@@ -860,7 +860,7 @@ Fascicularis (cynomolgus):</p>
 <span>  <span class="fu">keep.tip</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Homo_sapiens"</span>,<span class="st">"Gorilla_gorilla"</span>, <span class="st">"Macaca_fascicularis"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">tree</span><span class="op">$</span><span class="va">tip.label</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cynomolgus"</span>, <span class="st">"gorilla"</span>, <span class="st">"human"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="tree.png" alt="Phylogenetic tree of the species." width="28%"><p class="caption">
+<img src="tree.png" class="r-plt" alt="Phylogenetic tree of the species." width="28%"><p class="caption">
 Phylogenetic tree of the species.
 </p>
 </div>
@@ -1036,21 +1036,21 @@ C2c1
 <div class="section level3">
 <h3 id="adding-the-direction-of-correlation">Adding the direction of correlation<a class="anchor" aria-label="anchor" href="#adding-the-direction-of-correlation"></a>
 </h3>
-<p>If the networks were inferred using a method that does not
-distinguish between positively and negatively correlated gene pairs,
-this information can be added for analyses where it is meaningful to
-separate the two (e.g. when calculating eigengenes for activated VS
-repressed targets of a transcriptional regulator). If the inference
-method already outputs both positive and negative edge weights
-(e.g. correlation-based methods), this information is already added
-during the step “Normalizing edge weights” and does not have to be
-calculated again.</p>
-<p>If this step is required, the directionality of each edge is
-determined by calculating a modified Spearman’s correlation between the
-expression profiles of the two genes forming the edge and assigning the
-sign of the modified Spearman’s rho as the direction. The calculation
-uses the approximate Spearman’s rho, significance testing, and blocking
-implemented in <tt>correlatePairs</tt> <span class="citation">[3]</span>.</p>
+<p>If the network inference method outputs both positive and negative
+edge weights (e.g. correlation-based methods), the directionality of
+each edge is saved during the step “Normalizing edge weights”. However,
+if the networks are inferred using a method that does not distinguish
+between positively and negatively correlated gene pairs, the
+directionality can be added in this extra step. The information on
+directionality is useful because for certain analyses results are more
+meaning if positively and negatively correlated genes are separated
+(e.g. eigengene calculation).</p>
+<p>The directionality of each edge is determined by calculating a
+modified Spearman’s correlation between the expression profiles of the
+two genes forming the edge and assigning the sign of the modified
+Spearman’s rho as the direction. The calculation uses the approximate
+Spearman’s rho, significance testing, and blocking implemented in
+<tt>correlatePairs</tt> <span class="citation">[3]</span>.</p>
 <p>In case of the example dataset, the networks were inferred using
 GRNBoost2 which does not provide information about the direction of
 regulation, therefore it is necessary to perform this step. To get the
@@ -1320,11 +1320,11 @@ regulator.</p>
 <div class="section level3">
 <h3 id="selecting-key-transcriptional-regulators">Selecting key transcriptional regulators<a class="anchor" aria-label="anchor" href="#selecting-key-transcriptional-regulators"></a>
 </h3>
-<p>First, the transcriptional regulators that form the cores of the
-co-expression modules have to be selected. To identify regulators that
-are relevant for the biological process under study, it is a useful
-approach to combine prior biological knowledge with information derived
-from the dataset. This step is implemented by the function
+<p>First, the transcriptional regulators have to be selected that form
+the cores of the co-expression modules. To identify regulators that are
+relevant for the biological process under study, it is a useful approach
+to combine prior biological knowledge with information derived from the
+dataset. This step is implemented by the function
 <tt>getRegulators</tt>.</p>
 <p>As for the prior biological knowledge, we recommend to select only
 transcriptional regulators with known binding motifs based on motif
@@ -1633,7 +1633,7 @@ modules that consist of co-regulated genes with shared cellular
 functions.</p>
 <p>Which targets are the best can be defined based on 2 metrics:</p>
 <div class="figure" style="text-align: center">
-<img src="adj_regulator_kIM.png" alt="Network concepts used for module pruning: regulator-target adjacency and intramodular connectivity." width="60%"><p class="caption">
+<img src="adj_regulator_kIM.png" class="r-plt" alt="Network concepts used for module pruning: regulator-target adjacency and intramodular connectivity." width="60%"><p class="caption">
 Network concepts used for module pruning: regulator-target adjacency and
 intramodular connectivity.
 </p>
@@ -1652,8 +1652,8 @@ regulator’s expression profile.</p></li>
 <li><p><em>Con</em>: Modules created based on the regulator-target
 adjacencies alone might not fulfill the expectation of being densely
 connected blocks of genes, apart from the link to the regulator, the
-target genes often only have sparse/weak connections within the
-module.</p></li>
+target genes often only have sparse/weak connections within the module
+(danger of false positives).</p></li>
 </ul>
 </li>
 <li>
@@ -1745,7 +1745,7 @@ connectivities alternately.</p></li>
 <p>The following figure shows the steps of the pruning process for the
 POU5F1 module:</p>
 <div class="figure" style="text-align: center">
-<img src="POU5F1_detailed_UIK_adj_kIM.png" alt="Stepwise dynamic pruning approach exemplified by the POU5F1 module. In each step, we calculated the cumulative sum curve of the regulator-target adjacency or intramodular connectivitiy of the target genes alternately, then kept the targets that fell below the knee point of the curve. We continued this process for 3 iterations - until the module sizes became as small as possible without falling below 20 genes." width="55%"><p class="caption">
+<img src="POU5F1_detailed_UIK_adj_kIM.png" class="r-plt" alt="Stepwise dynamic pruning approach exemplified by the POU5F1 module. In each step, we calculated the cumulative sum curve of the regulator-target adjacency or intramodular connectivitiy of the target genes alternately, then kept the targets that fell below the knee point of the curve. We continued this process for 3 iterations - until the module sizes became as small as possible without falling below 20 genes." width="55%"><p class="caption">
 Stepwise dynamic pruning approach exemplified by the POU5F1 module. In
 each step, we calculated the cumulative sum curve of the
 regulator-target adjacency or intramodular connectivitiy of the target
@@ -2056,7 +2056,7 @@ of 45:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotModuleSizeDistribution.html">plotModuleSizeDistribution</a></span><span class="op">(</span><span class="va">pruned_modules</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="module_size_distribution.png" alt="Distribution of module sizes after pruning. Median size: 45." width="48%"><p class="caption">
+<img src="module_size_distribution.png" class="r-plt" alt="Distribution of module sizes after pruning. Median size: 45." width="48%"><p class="caption">
 Distribution of module sizes after pruning. Median size: 45.
 </p>
 </div>
@@ -2077,7 +2077,7 @@ direction of correlation:</p>
 <span>             <span class="va">consensus_network</span>, </span>
 <span>             color_by <span class="op">=</span> <span class="st">"direction"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="network_examples.png" alt="The 300 strongest connections of 6 example modules. The thickness of the edges represents the consensus edge weights and the color of the edges represents the direction of interaction (positively/negatively correlated)." width="100%"><p class="caption">
+<img src="network_examples.png" class="r-plt" alt="The 300 strongest connections of 6 example modules. The thickness of the edges represents the consensus edge weights and the color of the edges represents the direction of interaction (positively/negatively correlated)." width="100%"><p class="caption">
 The 300 strongest connections of 6 example modules. The thickness of the
 edges represents the consensus edge weights and the color of the edges
 represents the direction of interaction (positively/negatively
@@ -2388,15 +2388,15 @@ POU5F1(+)
 </table>
 <p>The eigengene profiles can then be plotted as a heatmap using
 <tt>plotEigengeneHeatmap</tt>. Here we focus on the 6 example modules
-again, that contain 3 pluripotency regulators (NANOG, POU5F1 and CREBL3)
-and 3 neural regulators (PAX6, NEUROD4 and FEZF2):</p>
+again, that contain 3 pluripotency regulators (NANOG, POU5F1 and SALL4)
+and 3 neural regulators (NEUROD4, PAX6 and FEZF2):</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">eigengenes_examples</span> <span class="op">&lt;-</span> <span class="va">eigengenes</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">module</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">example_modules</span>, <span class="st">"(+)"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>module <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">module</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">example_modules</span>, <span class="st">"(+)"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEigengeneHeatmap.html">plotEigengeneHeatmap</a></span><span class="op">(</span><span class="va">eigengenes_examples</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="eigengenes_examples.png" alt="The eigengenes of the example modules." width="70%"><p class="caption">
+<img src="eigengenes_examples.png" class="r-plt" alt="The eigengenes of the example modules." width="70%"><p class="caption">
 The eigengenes of the example modules.
 </p>
 </div>
@@ -2447,7 +2447,7 @@ network genes.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">clusterProfiler</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/enrichplot/man/dotplot.html" class="external-link">dotplot</a></span><span class="op">(</span><span class="va">enrich_res</span>, showCategory <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="Reactome_dotplot.png" alt="Reactome enrichment analysis on 6 example modules." width="95%"><p class="caption">
+<img src="Reactome_dotplot.png" class="r-plt" alt="Reactome enrichment analysis on 6 example modules." width="95%"><p class="caption">
 Reactome enrichment analysis on 6 example modules.
 </p>
 </div>
@@ -3074,16 +3074,13 @@ upr_cor_kIM
 </tr>
 </tbody>
 </table>
-<p>There are 3 easy-to-check expectations that a statistic has to
-fulfill if it is a good measure of module preservation:</p>
+<p>There are two expectations that a statistic is expected to fulfill if
+it is a good measure of module preservation:</p>
 <ul>
 <li><p>The scores are expected to be higher for the actual modules than
 for the random modules.</p></li>
-<li><p>The scores are expected to be higher within species than across
-species.</p></li>
-<li><p>The difference between the within-species and cross-species
-scores is expected to increase with increasing phylogenetic distance
-between the two species compared.</p></li>
+<li><p>The scores are expected to decrease with increasing phylogenetic
+distance between the replicates compared.</p></li>
 </ul>
 <p>As a visual check, the function <tt>plotPresStatDistributions</tt>
 plots the distributions of the preservation scores for the actual and
@@ -3095,7 +3092,7 @@ scores against the within-species scores per species pair:</p>
 <span>                          <span class="va">random_pres_stats</span>, </span>
 <span>                          <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="pres_stat_distributions.png" alt="Distribution of preservation statistics within and across species, for the actual and random modules." width="67%"><p class="caption">
+<img src="pres_stat_distributions.png" class="r-plt" alt="Distribution of preservation statistics within and across species, for the actual and random modules." width="67%"><p class="caption">
 Distribution of preservation statistics within and across species, for
 the actual and random modules.
 </p>
@@ -3105,29 +3102,33 @@ the actual and random modules.
 <span>              <span class="va">random_pres_stats</span>, </span>
 <span>              <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cor_adj"</span>, <span class="st">"cor_kIM"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="pres_stat_across_vs_within.png" alt="Cross-species VS within-species preservation scores per species pair for the actual and random modules." width="100%"><p class="caption">
+<img src="pres_stat_across_vs_within.png" class="r-plt" alt="Cross-species VS within-species preservation scores per species pair for the actual and random modules." width="100%"><p class="caption">
 Cross-species VS within-species preservation scores per species pair for
 the actual and random modules.
 </p>
 </div>
+<p>The plots show that when applied to the example dataset, both
+<em>cor.kIM</em> and <em>cor.adj</em> fulfill the expectations. To
+quantitatively compare which of the two statistics performs better, the
+function <tt>comparePresStats</tt> plots 1) the difference in
+preservation between each actual and the corresponding random module,
+and 2) the inverse Pearson’s correlation (<em>-r</em>) between the
+preservation scores and phylogenetic distance:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/comparePresStats.html">comparePresStats</a></span><span class="op">(</span><span class="va">pres_stats</span>, </span>
 <span>                 <span class="va">random_pres_stats</span>, </span>
 <span>                 <span class="va">tree</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="pres_stat_comparison.png" alt="Difference of the &lt;em&gt;cor.kIM&lt;/em&gt; / &lt;em&gt;cor.adj&lt;/em&gt; scores between each actual and the corresponding random module (left) and inverted Pearson's correlation (-&lt;em&gt;r&lt;/em&gt; ) between &lt;em&gt;cor.kIM&lt;/em&gt; / &lt;em&gt;cor.adj&lt;/em&gt; and phylogenetic distance (right)." width="75%"><p class="caption">
+<img src="pres_stat_comparison.png" class="r-plt" alt="Difference of the &lt;em&gt;cor.kIM&lt;/em&gt; / &lt;em&gt;cor.adj&lt;/em&gt; scores between each actual and the corresponding random module (left) and inverted Pearson's correlation (-&lt;em&gt;r&lt;/em&gt; ) between &lt;em&gt;cor.kIM&lt;/em&gt; / &lt;em&gt;cor.adj&lt;/em&gt; and phylogenetic distance (right)." width="75%"><p class="caption">
 Difference of the <em>cor.kIM</em> / <em>cor.adj</em> scores between
 each actual and the corresponding random module (left) and inverted
 Pearson’s correlation (-<em>r</em> ) between <em>cor.kIM</em> /
 <em>cor.adj</em> and phylogenetic distance (right).
 </p>
 </div>
-<p>The plots show that when applied to the example dataset, both
-<em>cor.kIM</em> and <em>cor.adj</em> fulfill all 3 expectations, but
-since the differences between the actual and random modules as well as
-between the within-species and cross-species comparisons tend to be
-higher for <em>cor.kIM</em>, we use this statistic for the rest of the
-analysis.</p>
+<p>Since the difference between the actual and random modules as well as
+the strength of the phylogenetic signal are higher for <em>cor.kIM</em>,
+we use this statistic for the rest of the analysis.</p>
 </div>
 <div class="section level3">
 <h3 id="converting-preservation-scores-to-distance-measures">Converting preservation scores to distance measures<a class="anchor" aria-label="anchor" href="#converting-preservation-scores-to-distance-measures"></a>
@@ -3318,7 +3319,7 @@ side:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotDistMats.html">plotDistMats</a></span><span class="op">(</span><span class="va">dist</span><span class="op">[</span><span class="va">example_modules</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="dist_mat_examples.png" alt="The distance matrices of 6 example modules." width="100%"><p class="caption">
+<img src="dist_mat_examples.png" class="r-plt" alt="The distance matrices of 6 example modules." width="100%"><p class="caption">
 The distance matrices of 6 example modules.
 </p>
 </div>
@@ -3365,7 +3366,7 @@ on the trees representations of the six example modules again:</p>
 <code class="sourceCode R"><span><span class="va">spec_colors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>human <span class="op">=</span> <span class="st">"#4DAF4A"</span>, gorilla <span class="op">=</span> <span class="st">"#377EB8"</span>, cynomolgus <span class="op">=</span> <span class="st">"#9a1ebd"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotTrees.html">plotTrees</a></span><span class="op">(</span><span class="va">trees</span><span class="op">[</span><span class="va">example_modules</span><span class="op">]</span>, species_colors <span class="op">=</span> <span class="va">spec_colors</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="tree_examples.png" alt="The tree reconstructions of 6 example modules." width="100%"><p class="caption">
+<img src="tree_examples.png" class="r-plt" alt="The tree reconstructions of 6 example modules." width="100%"><p class="caption">
 The tree reconstructions of 6 example modules.
 </p>
 </div>
@@ -3405,11 +3406,11 @@ others.</p></li>
 <li><p><strong>Subtree length of a species:</strong> The sum of the
 branch lengths in the subtree that is defined by the replicates of the
 species and includes the internal branch connecting these replicates to
-the rest of the tree. Undefined if the tree is not monophyletic for the
-species of interest.</p></li>
+the rest of the tree (i.e. the lineage of interest). Undefined if the
+tree is not monophyletic for the species of interest.</p></li>
 </ul>
 <div class="figure" style="text-align: center">
-<img src="tree_based_stats.png" alt="Tree-based statistics to characterize the cross-species conservation of network modules." width="90%"><p class="caption">
+<img src="tree_based_stats.png" class="r-plt" alt="Tree-based statistics to characterize the cross-species conservation of network modules." width="90%"><p class="caption">
 Tree-based statistics to characterize the cross-species conservation of
 network modules.
 </p>
@@ -3716,28 +3717,31 @@ species, we are ready to quantify the evolutionary conservation of
 modules. But why do we need the within-species differences in the first
 place? Why is the extent of cross-species differences not directly the
 answer to evolutionary conservation?</p>
-<p>There are several sources of module topology differences when we
-compare 2 species: there is of course true evolutionary divergence
+<p>There are several sources of module topological differences when we
+compare two species: there is of course true evolutionary divergence
 between the species which is what we are primarily interested in, but
-this is convoluted with diversity across individuals of the same
-species, technical noise and low statistical power. In the end, if we
-find that the topology of a module is different between 2 species, it is
-difficult to say to what extent it is actually due to divergence. This
-is why the within-species differences also become valuable sources of
-information: they provide an estimate of the variability originating
-from the other, confounding sources and thus can be used to discern the
-signal of real divergence.</p>
+this is convoluted with genetic diversity across individuals of the same
+species, environmental factors and technical noise. In the end, if we
+find that the topology of a module is different between two species, it
+is difficult to say to what extent it is actually due to divergence.
+This is why the within-species differences also become valuable sources
+of information: they provide an estimate of the variability originating
+from confounding sources and thus can be used to discern the signal of
+real divergence.</p>
 <div class="section level3">
 <h3 id="overall-conservation-and-divergence">Overall conservation and divergence<a class="anchor" aria-label="anchor" href="#overall-conservation-and-divergence"></a>
 </h3>
 <p>To apply this concept for the quantification of overall conservation
-across all species, we used 2 tree-based statistics: within-species
+across all species, we used two tree-based statistics: within-species
 diversity and total tree length. The two metrics are based on the same
 trees and calculated using in part the same branches, so they are
 clearly not independent. Their general relationship can be captures by
 linear regression, that in biological terms describes which part of the
-total module variability is due to sources other than cross-species
-divergence (e.g. due to diversity, noise and power).</p>
+total module variability is due to the confounding factors (genetic
+inter-individual differences, environmental and technical noise).</p>
+<div class="section level4">
+<h4 id="filtering-the-module-trees">Filtering the module trees<a class="anchor" aria-label="anchor" href="#filtering-the-module-trees"></a>
+</h4>
 <p>Where a module is located along the regression line informs us about
 detection robustness. Modules that have both low within-species
 diversity and low total tree length are well-preserved both within and
@@ -3745,26 +3749,6 @@ across species, meaning that these modules could be robustly detected in
 all replicates, whereas modules, for which both metrics are high, are
 poorly preserved not just across but also within species, indicating a
 high detection uncertainty (“wobbliness”).</p>
-<p>But more importantly, the residuals of the modules in the regression
-model informs us about their cross-species conservation: the outlier
-modules that do not follow the general trend are the most conserved and
-diverged ones. The modules that are located above the trend line have a
-higher total tree length than expected based on their within-species
-diversity, meaning that they tend to have long internal branches
-connecting the species, which indicates divergence. In contrast, the
-modules that fall below the trend line have a lower total tree length
-than expected based on their within-species diversity, meaning that the
-species are not well-separated within the tree but rather mixed amog
-each other which hints towards conservation.</p>
-<div class="figure" style="text-align: center">
-<img src="within_total_concept.png" alt="The concept of using tree-based statistics to puzzle apart conserved, diverged, robust and wobbly modules." width="38%"><p class="caption">
-The concept of using tree-based statistics to puzzle apart conserved,
-diverged, robust and wobbly modules.
-</p>
-</div>
-<div class="section level4">
-<h4 id="filtering-the-module-trees">Filtering the module trees<a class="anchor" aria-label="anchor" href="#filtering-the-module-trees"></a>
-</h4>
 <p>The general trend between the within-species diversities and total
 tree lengths can be visualized using the function
 <tt>plotTreeStats</tt>. In the plot below, both the actual and the
@@ -3774,7 +3758,7 @@ random modules are included:</p>
 <span>              <span class="va">random_tree_stats</span>, </span>
 <span>              <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"within_species_diversity"</span>, <span class="st">"total_tree_length"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="within_species_diversity_total_tree_length.png" alt="The relationship of the total tree lengths and within-species diversities across all actual and random modules." width="75%"><p class="caption">
+<img src="within_species_diversity_total_tree_length.png" class="r-plt" alt="The relationship of the total tree lengths and within-species diversities across all actual and random modules." width="75%"><p class="caption">
 The relationship of the total tree lengths and within-species
 diversities across all actual and random modules.
 </p>
@@ -3785,26 +3769,24 @@ modules - thus the random modules cluster separately on the plot at the
 “wobbly” end of the spectrum. However, there are still individual actual
 modules that have particularly high total tree lengths and
 within-species diversities, comparable with those of the random modules.
-Since these modules seem to behave like random sets of genes in terms of
-their tree properties, it is recommended to remove them for further
-analysis.</p>
+Since the tree properties of these modules are likely dominated by
+technical and environmental noise, it is recommended to remove them for
+further analysis.</p>
 <p>The function <tt>filterModuleTrees</tt> calculates how probable it is
-that the statistic of an actual comes from the distribution of all
-actual modules compared
+that the statistics of an actual comes from the distribution of all
+actual modules
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>a</mi><mi>c</mi><mi>t</mi><mi>u</mi><mi>a</mi><mi>l</mi></mrow></msub><annotation encoding="application/x-tex">p_{actual}</annotation></semantics></math>)
-and how probable it is that the statistic comes from the distribution of
-all random modules
+and how probable it is that the statistics comes from the distribution
+of all random modules
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mrow><mi>r</mi><mi>a</mi><mi>n</mi><mi>d</mi><mi>o</mi><mi>m</mi></mrow></msub><annotation encoding="application/x-tex">p_{random}</annotation></semantics></math>)
-using one-sample one-sided z-tests (expected mean and standard
-deviation: the mean and standard deviation of all actual/random module
-statistics after outlier removal using the interquartile range method).
-If
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msub><mi>p</mi><mrow><mi>a</mi><mi>c</mi><mi>t</mi><mi>u</mi><mi>a</mi><mi>l</mi></mrow></msub><mo>&gt;</mo><mn>10</mn><mo>⋅</mo><msub><mi>p</mi><mrow><mi>r</mi><mi>a</mi><mi>n</mi><mi>d</mi><mi>o</mi><mi>m</mi></mrow></msub></mrow><annotation encoding="application/x-tex">1 - p_{actual} &gt; 10⋅p_{random}</annotation></semantics></math>
-is fulfilled for both tree statistics, the module is kept, otherwise it
-is removed.</p>
+using the probability density functions of the two bivariate normal
+distributions. If</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><msub><mi>p</mi><mrow><mi>a</mi><mi>c</mi><mi>t</mi><mi>u</mi><mi>a</mi><mi>l</mi></mrow></msub><mrow><msub><mi>p</mi><mrow><mi>a</mi><mi>c</mi><mi>t</mi><mi>u</mi><mi>a</mi><mi>l</mi></mrow></msub><mo>+</mo><msub><mi>p</mi><mrow><mi>r</mi><mi>a</mi><mi>n</mi><mi>d</mi><mi>o</mi><mi>m</mi></mrow></msub></mrow></mfrac><mo>&gt;</mo><mn>0.95</mn></mrow><annotation encoding="application/x-tex">\frac{p_{actual}}{p_{actual} + p_{random}} &gt; 0.95</annotation></semantics></math></p>
+<p>is fulfilled for both tree statistics, the module is kept, otherwise
+it is removed.</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tree_stats_filt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/filterModuleTrees.html">filterModuleTrees</a></span><span class="op">(</span><span class="va">tree_stats</span>, <span class="va">random_tree_stats</span><span class="op">)</span></span></code></pre></div>
-<p>In case of the example dataset, this filtering removes 4 modules
+<p>In case of the example dataset, this filtering removes 10 modules
 (marked in red):</p>
 <div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotTreeStats.html">plotTreeStats</a></span><span class="op">(</span><span class="va">tree_stats</span>, </span>
@@ -3812,7 +3794,7 @@ is removed.</p>
 <span>              <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"within_species_diversity"</span>, <span class="st">"total_tree_length"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">geom_point</span><span class="op">(</span>data <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter-joins.html" class="external-link">anti_join</a></span><span class="op">(</span><span class="va">tree_stats</span>, <span class="va">tree_stats_filt</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"red3"</span>, size <span class="op">=</span> <span class="fl">1.2</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="within_species_diversity_total_tree_length_filt.png" alt="The relationship of the total tree lengths and within-species diversities across all actual and random modules, with the removed actual modules marked." width="75%"><p class="caption">
+<img src="within_species_diversity_total_tree_length_filt.png" class="r-plt" alt="The relationship of the total tree lengths and within-species diversities across all actual and random modules, with the removed actual modules marked." width="75%"><p class="caption">
 The relationship of the total tree lengths and within-species
 diversities across all actual and random modules, with the removed
 actual modules marked.
@@ -3823,22 +3805,28 @@ actual modules marked.
 <h4 id="finding-conserved-and-diverged-modules">Finding conserved and diverged modules<a class="anchor" aria-label="anchor" href="#finding-conserved-and-diverged-modules"></a>
 </h4>
 <p>After removing these “wobbly” modules, cross-species conservation can
-be quantified using a linear regression between the total tree length
-and within-species diversity.</p>
+be quantified using the residuals of the linear regression model. These
+residuals from the regression line reflect the variance of the total
+tree length that cannot be explained by within-species diversity,
+i.e. the contribution of true evolutionary divergence to the total
+module variability. Positive residuals correspond to a
+greater-than-expected contribution and negative residuals to a
+lower-than-expected contributions, respectively. In order to identify
+modules with significant deviations from the overall trend, we calculate
+the 95% prediction interval of the linear fit and considered modules
+above the upper bound of the prediction interval diverged and the
+modules below the lower bound of the prediction interval conserved.</p>
+<div class="figure" style="text-align: center">
+<img src="within_total_concept.png" class="r-plt" alt="The concept of using tree-based statistics to puzzle apart conserved, diverged, robust and wobbly modules." width="38%"><p class="caption">
+The concept of using tree-based statistics to puzzle apart conserved,
+diverged, robust and wobbly modules.
+</p>
+</div>
 <p>The function <tt>fitTreeStatsLm</tt> fits a regression model between
-the 2 statistics and the function <tt>findConservedDivergedModules</tt>
-identifies conserved and diverged modules by comparing each module to
-the 95% prediction interval of the fit. A module is considered diverged
-if it has a higher total tree length than the upper boundary of the
-prediction interval, while a module is considered conserved if it has a
-lower total tree length than the lower boundary of the prediction
-interval.</p>
-<p>The degree of conservation/divergence can be quantitatively compared
-between the modules categorized as conserved/diverged. We implemented 2
-measures: 1) the residual, which is the absolute difference between the
-observed and expected total tree lengths, and 2) the t-score, which is
-the residual normalized by the standard error of the total tree length
-prediction at a given within-species diversity value.</p>
+the two statistics and the function
+<tt>findConservedDivergedModules</tt> identifies conserved and diverged
+modules by comparing each module’s residual to the 95% prediction
+interval of the fit.</p>
 <p>The linear regression can be weighted by the error of the data points
 derived from jackknifing. If this option is chosen (<tt>weighted_lm</tt>
 is set to TRUE), the weight of a module in the regression is defined as
@@ -4228,7 +4216,7 @@ not_significant
 </tr>
 </tbody>
 </table>
-<p>Using this approach, we identified 21 conserved and 23 diverged
+<p>Using this approach, we identified 20 conserved and 24 diverged
 modules:</p>
 <div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">module_conservation_overall</span><span class="op">$</span><span class="va">conservation</span><span class="op">)</span></span>
@@ -4238,16 +4226,14 @@ modules:</p>
 <p>The function <tt>plotConservedDivergedModules</tt> helps to visualize
 the regression line, its 95% prediction interval (grey area), and the
 conserved and diverged modules (colored green and red, respectively). It
-also labels the top N most conserved and most diverged modules based on
-either the residuals or the t-scores. In the plot below, the top 5 most
-conserved and most diverged modules based on residuals are
-highlighted:</p>
+also labels the top N most conserved and most diverged modules. In the
+plot below, the top 5 most conserved and most diverged modules based on
+residuals are highlighted:</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedModules.html">plotConservedDivergedModules</a></span><span class="op">(</span><span class="va">module_conservation_overall</span>,</span>
-<span>                             N <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>                             rank_by <span class="op">=</span> <span class="st">"residual"</span><span class="op">)</span></span></code></pre></div>
+<span>                             N <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="module_conservation_overall.png" alt="Weighted linear regression between the total tree length and within-species diversity, with the top 5 most conserved and most diverged modules marked." width="75%"><p class="caption">
+<img src="module_conservation_overall.png" class="r-plt" alt="Weighted linear regression between the total tree length and within-species diversity, with the top 5 most conserved and most diverged modules marked." width="75%"><p class="caption">
 Weighted linear regression between the total tree length and
 within-species diversity, with the top 5 most conserved and most
 diverged modules marked.
@@ -4266,7 +4252,7 @@ distance matrices and module trees can also be plotted:</p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotDistMats.html">plotDistMats</a></span><span class="op">(</span><span class="va">dist</span><span class="op">[</span><span class="va">top5_cons_div_modules</span><span class="op">]</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="dist_mat_cons_div.png" alt="The distance matrices of the 5 most conserved (top row) and 5 most diverged (bottom row) modules." width="100%"><p class="caption">
+<img src="dist_mat_cons_div.png" class="r-plt" alt="The distance matrices of the 5 most conserved (top row) and 5 most diverged (bottom row) modules." width="100%"><p class="caption">
 The distance matrices of the 5 most conserved (top row) and 5 most
 diverged (bottom row) modules.
 </p>
@@ -4274,7 +4260,7 @@ diverged (bottom row) modules.
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotTrees.html">plotTrees</a></span><span class="op">(</span><span class="va">trees</span><span class="op">[</span><span class="va">top5_cons_div_modules</span><span class="op">]</span>, species_colors <span class="op">=</span> <span class="va">spec_colors</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="trees_cons_div.png" alt="The tree reconstructions of the 5 most conserved (top row) and 5 most diverged (bottom row) modules." width="100%"><p class="caption">
+<img src="trees_cons_div.png" class="r-plt" alt="The tree reconstructions of the 5 most conserved (top row) and 5 most diverged (bottom row) modules." width="100%"><p class="caption">
 The tree reconstructions of the 5 most conserved (top row) and 5 most
 diverged (bottom row) modules.
 </p>
@@ -4301,11 +4287,11 @@ from each other.</p>
 whole, but also for each edge within a module, which can pinpoint
 individual edges or regions of neighboring edges that are particularly
 conserved or diverged. This score is calculated based on the different
-edge weights of a given edge in the networks of the different
-replicates. The edge weights are compared across species using an ANOVA,
-and the log<sub>10</sub> of the F-statistic (i.e. between-species
-variability / within-species variability) is regarded as the measure of
-edge divergence.</p>
+weights of a given edge in the networks of the different replicates. The
+edge weights are compared across species using an ANOVA, and the
+log<sub>10</sub> of the F-statistic (i.e. between-species variability /
+within-species variability) is regarded as the measure of edge
+divergence.</p>
 <p>These scores can be returned as a data frame using
 <tt>calculateEdgeDivergence</tt> or directly plotted using
 <tt>plotNetworks</tt> with <tt>color_by</tt> set to “edge_divergence”.
@@ -4320,7 +4306,7 @@ conserved and most diverged modules colored by edge divergence:</p>
 <span>             color_by <span class="op">=</span> <span class="st">"edge_divergence"</span>,</span>
 <span>             ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="networks_cons_div.png" alt="The 300 strongest connections of the 5 most conserved (top row) and 5 most diverged (bottom row) modules. The thickness of the edges represents the consensus edge weights and the color of the edges represents how different the mean edge weights are across the 3 species." width="100%"><p class="caption">
+<img src="networks_cons_div.png" class="r-plt" alt="The 300 strongest connections of the 5 most conserved (top row) and 5 most diverged (bottom row) modules. The thickness of the edges represents the consensus edge weights and the color of the edges represents how different the mean edge weights are across the 3 species." width="100%"><p class="caption">
 The 300 strongest connections of the 5 most conserved (top row) and 5
 most diverged (bottom row) modules. The thickness of the edges
 represents the consensus edge weights and the color of the edges
@@ -4332,15 +4318,14 @@ HMGA1 and POU5F1) tend to have more diverged edges than the conserved
 modules, which confirms the previous findings from a different aspect.
 The genes that form the most diverged edges within a module can also be
 pinned down, for example in case of the POU5F1 module, SCGB3A2 is the
-main hub for the diverged edges.</p>
+main hub for these diverged edges.</p>
 </div>
 <div class="section level4">
 <h4 id="finding-conserved-and-diverged-target-genes">Finding conserved and diverged target genes<a class="anchor" aria-label="anchor" href="#finding-conserved-and-diverged-target-genes"></a>
 </h4>
 <p>Genes that contribute the most to the conservation/divergence of a
 module can be identified not just using the edge divergence scores, but
-also using the tree-based statistics in combination with
-jackknifing.</p>
+also based on jackknifing.</p>
 <p>During jackknifing, each member gene of a module is removed and all
 statistics are recalculated, including the tree-based statistics (total
 tree length and within-species diversity) that inform us about
@@ -4351,32 +4336,37 @@ vice versa, if removing a target gene from a conserved module makes the
 module more diverged, then that target was responsible for conservation
 in the original module.</p>
 <p>To quantify these effects, the function
-<tt>findConservedDivergedTargets</tt> takes use of the linear model that
+<tt>findConservedDivergedTargets</tt> makes use of the linear model that
 was fitted across all modules between the total tree length and
 within-species diversity and that was used to identify the conserved and
-diverged modules in the first place. However, in this case it is not the
-aggregate statistic for a module as a whole that is compared to the
-regression line, but the statistic of each jackknife module version
-separately. The corresponding residuals quantify the extent of target
-gene conservation: the jackknife version that has the highest residual
-is the most diverged, therefore the corresponding target gene is the
-most conserved, while the jackknife version that has the lowest residual
-is the most conserved, therefore the corresponding target gene is the
-most diverged.</p>
-<p>It is important to note, that in most cases the
-divergence/conservation of a module cannot be contributed to a single
-target gene, but it is rather the combined signal of all targets
-together. The “most conserved” target gene of a diverged module is still
-most likely diverged, just to a lesser extent than the others. That is
-why it mainly makes sense to investigate the most diverged targets of
-the diverged modules and the most conserved targets of the conserved
-modules, not the other way around.</p>
-<p>In case of the example dataset, we took a closer look at the target
-genes of POU5F1:</p>
+diverged modules in the first place. However, in this case we calculated
+a residual for each jackknifed module version separately
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>ε</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub><annotation encoding="application/x-tex">\hat{\varepsilon}_i</annotation></semantics></math>)
+and compared these residuals to the residual of the original, complete
+module
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>ε</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">orig</mtext></msub><annotation encoding="application/x-tex">\hat{\varepsilon}_\text{orig}</annotation></semantics></math>)
+in order to derive a target gene contribution score
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>c</mi><mi>i</mi></msub><annotation encoding="application/x-tex">c_i</annotation></semantics></math>):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>c</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><msub><mover><mi>ε</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">orig</mtext></msub><mo>−</mo><msub><mover><mi>ε</mi><mo accent="true">̂</mo></mover><mi>i</mi></msub></mrow><msub><mover><mi>ε</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">orig</mtext></msub></mfrac></mrow><annotation encoding="application/x-tex">c_i = \frac{\hat{\varepsilon}_\text{orig} - \hat{\varepsilon}_i}{\hat{\varepsilon}_\text{orig}}</annotation></semantics></math></p>
+<p>A positive score indicates that removing the target gene weakens the
+signal of conservation or divergence, while a negative score means that
+after jackknifing the signal becomes stronger. Thus, the most diverged
+targets in a diverged module and the most conserved targets in a
+conserved module both get high positive scores. In extreme cases, the
+score could reach or exceed 1, which means that the removal of a single
+target gene would abolish or even reverse the signal. However, in most
+cases the detected signal is expected to originate from the joint
+contribution of many genes (this was the case for all modules except one
+in our example dataset).</p>
+<p>We calculated the target contribution scores for the five most
+conserved and five most diverged modules:</p>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">POU5F1_target_conservation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/findConservedDivergedTargets.html">findConservedDivergedTargets</a></span><span class="op">(</span><span class="st">"POU5F1"</span>,</span>
-<span>                                                           <span class="va">tree_stats_jk</span>,</span>
-<span>                                                           <span class="va">lm_overall</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">target_contributions_overall</span> <span class="op">&lt;-</span> <span class="fu">foreach</span><span class="op">(</span>module <span class="op">=</span> <span class="va">top5_cons_div_modules</span>,</span>
+<span>                                        .combine <span class="op">=</span> <span class="va">bind_rows</span><span class="op">)</span> <span class="op">%do%</span> <span class="op">{</span></span>
+<span>                                  </span>
+<span>                                          <span class="fu"><a href="../reference/findConservedDivergedTargets.html">findConservedDivergedTargets</a></span><span class="op">(</span><span class="va">module</span>, <span class="va">tree_stats_jk</span>, <span class="va">lm_overall</span><span class="op">)</span></span>
+<span>                                          </span>
+<span>                                        <span class="op">}</span></span></code></pre></div>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
 <caption style="font-size: initial !important;">
 <span style="font-size:13px">Cross-species conservation measures for a
@@ -4589,32 +4579,53 @@ NA
 </tr>
 </tbody>
 </table>
-<p>The original and jackknifed versions of a module can be plotted along
-the regression line with the help of the function
-<tt>plotConservedDivergedTargets</tt>. The prediction interval of the
-regression line is shown as a grey area and assumed to have a constant
-width for a given module. This is how jackknifing affects the position
-compared to the regression line in case of the POU5F1 module:</p>
+<p>We plotted the scores to identify the most impactful target genes in
+each module:</p>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedTargets.html">plotConservedDivergedTargets</a></span><span class="op">(</span><span class="va">POU5F1_target_conservation</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">target_contributions_overall</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">type</span> <span class="op">==</span> <span class="st">"jk"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu">inner_join</span><span class="op">(</span><span class="va">module_conservation_overall</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">regulator</span>, <span class="va">conservation</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>regulator <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">regulator</span>, <span class="va">top5_cons_div_modules</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">regulator</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>to_label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">contribution</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">contribution</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">conservation</span><span class="op">)</span>, <span class="st">"no_label"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">regulator</span>, y <span class="op">=</span> <span class="va">contribution</span>, color <span class="op">=</span> <span class="va">to_label</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_quasirandom</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>size <span class="op">=</span> <span class="va">to_label</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme_bw</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">scale_size_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"diverged"</span> <span class="op">=</span> <span class="fl">0.8</span>, <span class="st">"conserved"</span> <span class="op">=</span> <span class="fl">0.8</span>, <span class="st">"no_label"</span> <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>, guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"conserved"</span> <span class="op">=</span> <span class="st">"#2B823A"</span>, <span class="st">"diverged"</span> <span class="op">=</span> <span class="st">"#AA4139"</span>, <span class="st">"no_label"</span> <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span>, guide <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_label_repel</span><span class="op">(</span>data <span class="op">=</span> <span class="va">.</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>                     <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">to_label</span> <span class="op">!=</span> <span class="st">"no_label"</span><span class="op">)</span>,</span>
+<span>                   <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="va">gene_removed</span><span class="op">)</span>,</span>
+<span>                   fill <span class="op">=</span> <span class="st">"white"</span>, size <span class="op">=</span> <span class="fl">2.5</span>, label.size <span class="op">=</span> <span class="fl">0.08</span>, segment.size <span class="op">=</span> <span class="fl">0.08</span>, box.padding <span class="op">=</span> <span class="fl">0.05</span>, label.padding <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ylab</span><span class="op">(</span><span class="st">"target gene contribution"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme</span><span class="op">(</span>axis.title.x <span class="op">=</span> <span class="fu">element_blank</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        axis.text.x <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10.5</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="POU5F1_target_conservation.png" alt="The five most diverged target genes of POU5F1 identified using tree-based statistics in combination with jackknifing." width="70%"><p class="caption">
-The five most diverged target genes of POU5F1 identified using
-tree-based statistics in combination with jackknifing.
-</p>
-</div>
-<div class="figure" style="text-align: center">
-<img src="target_contributions_overall.png" alt="Contribution scores of the target genes in the five most conserved (in green) and five most diverged (red) modules. The two top-contributing targets are labeled for each module." width="100%"><p class="caption">
+<img src="target_contributions_overall.png" class="r-plt" alt="Contribution scores of the target genes in the five most conserved (in green) and five most diverged (red) modules. The two top-contributing targets are labeled for each module." width="100%"><p class="caption">
 Contribution scores of the target genes in the five most conserved (in
 green) and five most diverged (red) modules. The two top-contributing
 targets are labeled for each module.
 </p>
 </div>
+<p>We took a closer look at the POU5F1 module and plotted the original
+and jackknifed versions along the regression line with the help of the
+function <tt>plotConservedDivergedTargets</tt>:</p>
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">target_contribution_POU5F1</span> <span class="op">&lt;-</span> <span class="va">target_contributions_overall</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">regulator</span> <span class="op">==</span> <span class="st">"POU5F1"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedTargets.html">plotConservedDivergedTargets</a></span><span class="op">(</span><span class="va">target_contribution_POU5F1</span><span class="op">)</span></span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="target_contributions_POU5F1.png" class="r-plt" alt="The five most diverged target genes of POU5F1 identified using tree-based statistics in combination with jackknifing." width="70%"><p class="caption">
+The five most diverged target genes of POU5F1 identified using
+tree-based statistics in combination with jackknifing.
+</p>
+</div>
 <p>All jackknifed versions are located way outside the prediction
 interval, meaning that the whole module exhibits a strong signal of
 divergence that cannot be explained by any of the target genes alone.
-The most diverged target with the lowest residual is SCGB3A2, in line
-with the findings based on edge divergence.</p>
+The most diverged target with the highest contribution score is SCGB3A2,
+in line with the findings based on edge divergence.</p>
 <p>To investigate whether the network divergence/conservation also
 translates into expression divergence/conservation, the expression
 profiles of the regulator and its targets can be plotted per species
@@ -4622,32 +4633,33 @@ using <tt>plotExprAlongPseudotime</tt> (for pseudotime trajectories) or
 <tt>plotExprPerCellType</tt> (for distinct cell types). Below, we plot
 the expression of POU5F1 and its 5 most diverged target genes across the
 pseudotime range of the neural differentiation process:</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">top5_diverged_POU5F1_targets</span> <span class="op">&lt;-</span> <span class="va">POU5F1_target_conservation</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">top5_diverged_POU5F1_targets</span> <span class="op">&lt;-</span> <span class="va">target_contributions_POU5F1</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">slice_min</span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">residual</span>, n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">pull</span><span class="op">(</span><span class="va">gene_removed</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ct_colors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Pluripotent_Cells <span class="op">=</span> <span class="st">"#86C1E6"</span>, Early_Ectoderm <span class="op">=</span> <span class="st">"#F4AB62"</span>, Neurons <span class="op">=</span> <span class="st">"#CA6102"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotExprAlongPseudotime.html">plotExprAlongPseudotime</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"POU5F1"</span>, <span class="va">top5_diverged_POU5F1_targets</span><span class="op">)</span>, </span>
 <span>                        <span class="va">sce</span>, </span>
 <span>                        species_colors <span class="op">=</span> <span class="va">spec_colors</span>, </span>
 <span>                        cell_type_colors <span class="op">=</span> <span class="va">ct_colors</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="POU5F1_target_expression.png" alt="The expression profiles of POU5F1 and its five most diverged target genes across pseudotime trajectory per species." width="60%"><p class="caption">
+<img src="target_expression_POU5F1.png" class="r-plt" alt="The expression profiles of POU5F1 and its five most diverged target genes across the pseudotime trajectory per species." width="60%"><p class="caption">
 The expression profiles of POU5F1 and its five most diverged target
-genes across pseudotime trajectory per species.
+genes across the pseudotime trajectory per species.
 </p>
 </div>
 <p>Several target genes of POU5F1 that are diverged in terms of network
 topology (SCGB3A2, SPP1 and FTL) also show different expression patterns
 across species. Such differences cannot be observed for POU5F1, the
-regulator itself - a hint towards cis-regulatory changes. Indeed, after
-a more thorough investigation we found that both SCGB3A2 and SPP1 are
+regulator itself — a hint toward cis-regulatory changes. Indeed, after a
+more thorough investigation we found that both SCGB3A2 and SPP1 are
 known to be located close to LTR7 elements in the human genome <span class="citation">[25, 26]</span>, an evolutionary young family of
-transposable elements that often acquire regulatory functions. The LTR7
-elements near these 2 genes appeared along the ape lineage and are bound
-by POU5F1 <span class="citation">[27]</span>, so they could have
-potentially contributed to the rewiring of the POU5F1 module.</p>
+transposable elements that often harbor binding sites for pluripotency
+factors. The LTR7 elements near these two genes appeared along the ape
+lineage and are bound by POU5F1 <span class="citation">[27]</span>, so
+they could have potentially contributed to the rewiring of the POU5F1
+module.</p>
 </div>
 </div>
 <div class="section level3">
@@ -4661,18 +4673,19 @@ case of the example dataset, most of the diverged modules detected this
 way are diverged between cynomolgus macaques and great apes (rather than
 within the great apes) simply because longer phylogenetic distances
 generally give rise to bigger differences.</p>
-<p>However, if the focus of interest is divergence on a particular
-lineage, for example on the human lineage, a different approach needs to
-be applied. In contrast to the overall test of conservation where there
-are no constraints in terms of tree structure, here it makes sense to
-restrict the testing only to module trees that are monophyletic for the
-human replicates. This step pre-selects modules that fulfill a minimal
-citeria of lineage-specific divergence and makes it possible to compare
-a more specific tree characteristic, namely the human subtree length. To
+<p>In many cases, however, the primary interest lies in divergence on a
+particular lineage, e.g. the human lineage. To address this, we define
+the human lineage as the branch leading from the most recent common
+ancestor (MRCA) of humans and gorillas to the human MRCA, using the
+macaque as an outgroup. A minimal requirement for this analysis is that
+the human replicates form a monophyletic group; trees that don’t fulfill
+this requirement are excluded. The human subtree is then defined as the
+subtree that includes all human replicates and the human lineage. To
 again correct for the unwanted sources of variation, this subtree length
 is contrasted against variation within the lineage, i.e. the human
-diversity. An analogous approach can be applied to find diverged modules
-between any species and the rest of the tree as well.</p>
+diversity. This allows us to assess module divergence specifically on
+the human lineage. An analogous approach can be applied to find diverged
+modules on any lineage of interest where an outgroup can be defined.</p>
 <div class="section level4">
 <h4 id="finding-conserved-and-diverged-modules-1">Finding conserved and diverged modules<a class="anchor" aria-label="anchor" href="#finding-conserved-and-diverged-modules-1"></a>
 </h4>
@@ -4687,9 +4700,9 @@ interval are considered diverged. It is important to note that the
 modules that fall below the lower bound of the 95% prediction interval
 cannot be interpreted as conserved in this case, because 1) the
 human-monophyletic module trees have already been pre-selected, and 2)
-conservation is per definition not a lineage-specific feature.</p>
+conservation is by definition not a lineage-specific feature.</p>
 <p>Below, this approach is applied to the example dataset:</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lm_human</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitTreeStatsLm.html">fitTreeStatsLm</a></span><span class="op">(</span><span class="va">tree_stats_filt</span>, </span>
 <span>                           focus <span class="op">=</span> <span class="st">"human"</span>,</span>
 <span>                           weighted_lm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -5073,12 +5086,12 @@ not_significant
 </table>
 <p>In total, there are 57 modules that fulfill the minimum criteria of
 being monophyletic for the human replicates:</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">module_conservation_human</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 57</span></span></code></pre></div>
-<p>Among these, we identified 2 modules that are diverged on the human
-lineage:</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<p>Among these, we identified three modules that are diverged on the
+human lineage:</p>
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">module_conservation_human</span><span class="op">$</span><span class="va">conservation</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;        diverged not_significant </span></span>
@@ -5087,44 +5100,44 @@ lineage:</p>
 <tt>plotConservedDivergedModules</tt>, the same function that has
 already been used in case of the overall conservation and
 divergence:</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedModules.html">plotConservedDivergedModules</a></span><span class="op">(</span><span class="va">module_conservation_human</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="module_conservation_human.png" alt="Weighted linear regression between the human subtree length and human diversity, with the diverged modules marked." width="75%"><p class="caption">
+<img src="module_conservation_human.png" class="r-plt" alt="Weighted linear regression between the human subtree length and human diversity, with the diverged modules marked." width="75%"><p class="caption">
 Weighted linear regression between the human subtree length and human
 diversity, with the diverged modules marked.
 </p>
 </div>
-<p>The distance matrices and tree reconstructions of the ARID1B and MXI1
-modules can showcase in more detail what makes them diverged on the
-human lineage:</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<p>The distance matrices and tree reconstructions of the ZNF552, ARID1B
+and MXI1 modules can showcase in more detail what makes them diverged on
+the human lineage:</p>
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">human_div_modules</span> <span class="op">&lt;-</span> <span class="va">module_conservation_human</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">conservation</span> <span class="op">==</span> <span class="st">"diverged"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">regulator</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotDistMats.html">plotDistMats</a></span><span class="op">(</span><span class="va">dist</span><span class="op">[</span><span class="va">human_div_modules</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="dist_mat_human_div.png" alt="The distance matrices of the three modules that were found to be diverged on the human lineage." width="80%"><p class="caption">
+<img src="dist_mat_human_div.png" class="r-plt" alt="The distance matrices of the three modules that were found to be diverged on the human lineage." width="80%"><p class="caption">
 The distance matrices of the three modules that were found to be
 diverged on the human lineage.
 </p>
 </div>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotTrees.html">plotTrees</a></span><span class="op">(</span><span class="va">trees</span><span class="op">[</span><span class="va">human_div_modules</span><span class="op">]</span>, species_colors <span class="op">=</span> <span class="va">spec_colors</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="trees_human_div.png" alt="The tree reconstructions of the three modules that were found to be diverged on the human lineage." width="80%"><p class="caption">
+<img src="trees_human_div.png" class="r-plt" alt="The tree reconstructions of the three modules that were found to be diverged on the human lineage." width="80%"><p class="caption">
 The tree reconstructions of the three modules that were found to be
 diverged on the human lineage.
 </p>
 </div>
-<p>The signal - unsurprisingly - is not as strong as in case of the
+<p>The signal — unsurprisingly — is not as strong as in case of the
 modules diverged between cynomolgus and great apes, but it is still
 apparent that the human-gorilla and human-cynomolgus distance measures
-are the higher than the rest. This also translates into a way longer
-human subtree length than expected based on the phylogeny and observed
-in most module trees.</p>
+are higher than the rest. This also translates into a way longer human
+subtree length than expected based on the phylogeny and observed in most
+module trees.</p>
 </div>
 <div class="section level4">
 <h4 id="finding-conserved-and-diverged-target-genes-1">Finding conserved and diverged target genes<a class="anchor" aria-label="anchor" href="#finding-conserved-and-diverged-target-genes-1"></a>
@@ -5132,14 +5145,14 @@ in most module trees.</p>
 <p>Similar to the approach in case of the overall conservation and
 divergence, jackknifing can inform us about target genes that contribute
 the most to human-specific divergence. In this case, the residuals of
-the jackknifed modules versions are calculated with regard to the
+the jackknifed module versions are calculated with regard to the
 regression model between the human subtree length and the human
-diversity. The target genes that result in the lowest residuals (lowest
-signal is of divergence) when removed are considered the most diverged
-in the original module.</p>
+diversity. The target genes that result in the lowest residuals (i.e.,
+the weakest signal of divergence) when removed are considered the most
+diverged in the original module.</p>
 <p>We performed this analysis for the ARID1B module:</p>
-<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ARID1B_target_conservation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/findConservedDivergedTargets.html">findConservedDivergedTargets</a></span><span class="op">(</span><span class="st">"ARID1B"</span>, </span>
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">target_contributions_ARID1B</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/findConservedDivergedTargets.html">findConservedDivergedTargets</a></span><span class="op">(</span><span class="st">"ARID1B"</span>, </span>
 <span>                                                           <span class="va">tree_stats_jk</span>, </span>
 <span>                                                           <span class="va">lm_human</span><span class="op">)</span></span></code></pre></div>
 <table class="table table" style="font-size: 13px; margin-left: auto; margin-right: auto;">
@@ -5354,34 +5367,34 @@ NA
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedTargets.html">plotConservedDivergedTargets</a></span><span class="op">(</span><span class="va">ARID1B_target_conservation</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotConservedDivergedTargets.html">plotConservedDivergedTargets</a></span><span class="op">(</span><span class="va">target_contributions_ARID1B</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="ARID1B_target_conservation.png" alt="The top 5 most diverged target genes of ARID1B identified using tree-based statistics in combination with jackknifing." width="70%"><p class="caption">
+<img src="target_contributions_ARID1B.png" class="r-plt" alt="The top 5 most diverged target genes of ARID1B identified using tree-based statistics in combination with jackknifing." width="70%"><p class="caption">
 The top 5 most diverged target genes of ARID1B identified using
 tree-based statistics in combination with jackknifing.
 </p>
 </div>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">top5_diverged_ARID1B_targets</span> <span class="op">&lt;-</span> <span class="va">ARID1B_target_conservation</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">top5_diverged_ARID1B_targets</span> <span class="op">&lt;-</span> <span class="va">target_contributions_ARID1B</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">slice_min</span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">residual</span>, n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">pull</span><span class="op">(</span><span class="va">gene_removed</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="target_contributions_human.png" alt="Contribution scores of the target genes in the three modules that were found to be diverged on the human lineage. The two top-contributing targets are labeled for each module." width="45%"><p class="caption">
+<img src="target_contributions_human.png" class="r-plt" alt="Contribution scores of the target genes in the three modules that were found to be diverged on the human lineage. The two top-contributing targets are labeled for each module." width="45%"><p class="caption">
 Contribution scores of the target genes in the three modules that were
 found to be diverged on the human lineage. The two top-contributing
 targets are labeled for each module.
 </p>
 </div>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotExprAlongPseudotime.html">plotExprAlongPseudotime</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ARID1B"</span>, <span class="va">top5_diverged_ARID1B_targets</span><span class="op">)</span>, </span>
 <span>                        <span class="va">sce</span>, </span>
 <span>                        species_colors <span class="op">=</span> <span class="va">spec_colors</span>, </span>
 <span>                        cell_type_colors <span class="op">=</span> <span class="va">ct_colors</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<img src="ARID1B_target_expression.png" alt="The expression profiles of ARID1B and its five most diverged target genes across pseudotime trajectory per species." width="60%"><p class="caption">
+<img src="target_expression_ARID1B.png" class="r-plt" alt="The expression profiles of ARID1B and its five most diverged target genes across the pseudotime trajectory per species." width="60%"><p class="caption">
 The expression profiles of ARID1B and its five most diverged target
-genes across pseudotime trajectory per species.
+genes across the pseudotime trajectory per species.
 </p>
 </div>
 <p>Based on the effects of jackknifing, DLK1 proves to be by far the
@@ -5390,8 +5403,9 @@ expression profile: it is upregulated much more in humans during the
 intermediate stage of the neural differentiation than in gorilla or
 cynomolgus.</p>
 <p>Some other target genes of ARID1B also show slight human-specific
-differences in their expression patterns, e.g. TMSB15A and DTX4 are both
-upregulated the most in humans towards the late pseudotime stage.</p>
+differences in their expression patterns, e.g., TMSB15A and DTX4 are
+both upregulated the most in humans towards the late pseudotime
+stage.</p>
 <p><br><br></p>
 </div>
 </div>
@@ -5399,15 +5413,17 @@ upregulated the most in humans towards the late pseudotime stage.</p>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
-<p>The CroCoNet approach defines joint co-expression modules across all
-species based on a phylogeny-aware consensus network and quantifies the
-conservation of these modules by contrasting cross-species and
-within-species topological differences. In addition, it can pinpoint
-individual target genes that contribute the most to
+<p>CroCoNet provides a robust framework to quantitatively compare gene
+regulatory networks across species, while accounting for unwanted
+biological variation and technical noise. It defines joint co-expression
+modules across all species based on a phylogeny-aware consensus network
+and quantifies the conservation of these modules by contrasting
+cross-species and within-species topological differences. In addition,
+it can pinpoint individual target genes that contribute the most to
 conservation/divergence with the help of jackknifing. The modules and
 target genes detected as conserved or diverged are good candidates to
 explain cross-species differences and similarities in gene regulation
-and can be deeper investigated by follow-up analyses and
+and can be investigated in greater depth by follow-up analyses and
 experiments.</p>
 <p><br><br></p>
 </div>
@@ -5569,7 +5585,7 @@ PLoS Genet. 2017;13:e1006883. <a href="https://doi.org/10.1371/journal.pgen.1006
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

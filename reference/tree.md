@@ -1,0 +1,23 @@
+# Phylogenetic tree
+
+Rooted phylogenetic tree of 3 primate species: human (Homo sapiens),
+gorilla (Gorilla gorilla) and cynomolgus macaque (Macaca Fascicularis).
+The tree was created by subsetting the mammalian tree with the best
+estimates of branch lengths from Bininda-Edmons et al. 2007.
+
+## Usage
+
+``` r
+tree
+```
+
+## Format
+
+A \[phylo\] object with 4 edges and 3 nodes.
+
+## Source
+
+Olaf R. P. Bininda-Emonds, Marcel Cardillo, Kate E. Jones, Ross D. E.
+MacPhee, Robin M. D. Beck, Richard Grenyer, Samantha A. Price, Rutger A.
+Vos, John L. Gittleman & Andy Purvis. "The delayed rise of present-day
+mammals" Nature 446, 507-512(29 March 2007). doi:10.1038/nature05634

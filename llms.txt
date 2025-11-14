@@ -1,0 +1,241 @@
+# `CroCoNet` Cross-species Comparison of Networks
+
+`CroCoNet` is a tool to quantitatively compare gene regulatory networks
+across species and identify conserved and diverged modules. It hinges on
+contrasting module variability within and across species in order to
+distinguish between-species divergence from confounding factors such as
+diversity across individuals, environmental differences and technical
+noise.
+
+![Pipeline](reference/figures/pipeline.png)  
+^(The main steps of the CroCoNet workflow)
+
+## ⬇️ Installation
+
+For the installation, the R package `devtools` is needed.
+
+``` r
+install.packages("devtools")
+library(devtools)
+```
+
+Once `devtools` is available, you can install the development version of
+`CroCoNet` and all its dependencies from [GitHub](https://github.com/)
+with:
+
+``` r
+devtools::install_github("Hellmann-Lab/CroCoNet")
+```
+
+## 📖 User Guide
+
+For a step-by-step guide and detailed explanations, please check out the
+vignette on the analysis of an example scRNA-seq dataset:
+
+``` r
+browseVignettes("CroCoNet")
+```
+
+You can access this vignette and the documentations of all functions
+also at the [CroCoNet
+website](https://hellmann-lab.github.io/CroCoNet/hellmann-lab.github.io/CroCoNet/).
+
+## 📜 Citation
+
+Please use the following entry to cite `CroCoNet`:
+
+``` r
+citation("CroCoNet")
+```
+
+# Package index
+
+## All functions
+
+- [`POU5F1_target_conservation`](https://hellmann-lab.github.io/CroCoNet/reference/POU5F1_target_conservation.md)
+  : Cross-species conservation measures of the target genes in the
+  POU5F1 module
+- [`addDirectionality()`](https://hellmann-lab.github.io/CroCoNet/reference/addDirectionality.md)
+  : Add directionality of interactions
+- [`applyPower()`](https://hellmann-lab.github.io/CroCoNet/reference/applyPower.md)
+  : Apply soft-thresholding
+- [`assignInitialModules()`](https://hellmann-lab.github.io/CroCoNet/reference/assignInitialModules.md)
+  : Assign initial modules
+- [`calculateEdgeDivergence()`](https://hellmann-lab.github.io/CroCoNet/reference/calculateEdgeDivergence.md)
+  : Calculate the divergence of intramodular edges
+- [`calculateEigengenes()`](https://hellmann-lab.github.io/CroCoNet/reference/calculateEigengenes.md)
+  : Calculate module eigengenes
+- [`calculatePresStats()`](https://hellmann-lab.github.io/CroCoNet/reference/calculatePresStats.md)
+  : Calculate preservation statistics
+- [`calculateTreeStats()`](https://hellmann-lab.github.io/CroCoNet/reference/calculateTreeStats.md)
+  : Calculate tree statistics across all modules
+- [`comparePresStats()`](https://hellmann-lab.github.io/CroCoNet/reference/comparePresStats.md)
+  : Compare preservation statistics
+- [`consensus_network`](https://hellmann-lab.github.io/CroCoNet/reference/consensus_network.md)
+  : Consensus network
+- [`convertPresToDist()`](https://hellmann-lab.github.io/CroCoNet/reference/convertPresToDist.md)
+  : Convert preservation statistics to distances across all modules
+- [`convertToDT()`](https://hellmann-lab.github.io/CroCoNet/reference/convertToDT.md)
+  : Convert a list of igraphs to a list of data tables
+- [`convertToGraph()`](https://hellmann-lab.github.io/CroCoNet/reference/convertToGraph.md)
+  : Convert a list of data frames to a list of igraphs
+- [`createConsensus()`](https://hellmann-lab.github.io/CroCoNet/reference/createConsensus.md)
+  : Create consensus network
+- [`createRandomModules()`](https://hellmann-lab.github.io/CroCoNet/reference/createRandomModules.md)
+  : Create random modules
+- [`dist`](https://hellmann-lab.github.io/CroCoNet/reference/dist.md) :
+  Distance measures of the pruned modules
+- [`dist_jk`](https://hellmann-lab.github.io/CroCoNet/reference/dist_jk.md)
+  : Distance measures of the original and jackknifed pruned modules
+- [`eigengenes`](https://hellmann-lab.github.io/CroCoNet/reference/eigengenes.md)
+  : Eigengenes
+- [`eigengenes_per_species`](https://hellmann-lab.github.io/CroCoNet/reference/eigengenes_per_species.md)
+  : Eigengenes per species
+- [`filterModuleTrees()`](https://hellmann-lab.github.io/CroCoNet/reference/filterModuleTrees.md)
+  : Filter modules based on their tree representations
+- [`findConservedDivergedModules()`](https://hellmann-lab.github.io/CroCoNet/reference/findConservedDivergedModules.md)
+  : Find conserved and diverged modules
+- [`findConservedDivergedTargets()`](https://hellmann-lab.github.io/CroCoNet/reference/findConservedDivergedTargets.md)
+  : Find conserved and diverged target genes within a module
+- [`fitTreeStatsLm()`](https://hellmann-lab.github.io/CroCoNet/reference/fitTreeStatsLm.md)
+  : Fit (weighted) linear model between tree-based statistics
+- [`genes`](https://hellmann-lab.github.io/CroCoNet/reference/genes.md)
+  : All genes
+- [`getRegulators()`](https://hellmann-lab.github.io/CroCoNet/reference/getRegulators.md)
+  : Get transcriptional regulators
+- [`getTreeDf()`](https://hellmann-lab.github.io/CroCoNet/reference/getTreeDf.md)
+  : Convert a tree to a data frame
+- [`gtf_list`](https://hellmann-lab.github.io/CroCoNet/reference/gtf_list.md)
+  : List of genomic annotations
+- [`image_TRs`](https://hellmann-lab.github.io/CroCoNet/reference/image_TRs.md)
+  : IMAGE transcriptional regulators
+- [`initial_modules`](https://hellmann-lab.github.io/CroCoNet/reference/initial_modules.md)
+  : Initial modules
+- [`jaspar_core_TRs`](https://hellmann-lab.github.io/CroCoNet/reference/jaspar_core_TRs.md)
+  : JASPAR 2024 vertebrate core transcriptional regulators
+- [`jaspar_unvalidated_TRs`](https://hellmann-lab.github.io/CroCoNet/reference/jaspar_unvalidated_TRs.md)
+  : JASPAR 2024 unvalidated transcriptional regulators
+- [`lm_overall`](https://hellmann-lab.github.io/CroCoNet/reference/lm_overall.md)
+  : Linear model for the characterization of overall module conservation
+- [`loadNetworks()`](https://hellmann-lab.github.io/CroCoNet/reference/loadNetworks.md)
+  : Load networks as a list of igraph objects
+- [`module_conservation_overall`](https://hellmann-lab.github.io/CroCoNet/reference/module_conservation_overall.md)
+  : Cross-species conservation measures per module
+- [`network_list`](https://hellmann-lab.github.io/CroCoNet/reference/network_list.md)
+  : List of networks
+- [`network_list_raw`](https://hellmann-lab.github.io/CroCoNet/reference/network_list_raw.md)
+  : List of raw networks
+- [`normalizeEdgeWeights()`](https://hellmann-lab.github.io/CroCoNet/reference/normalizeEdgeWeights.md)
+  : Normalize edge weights between 0 and 1
+- [`plotConservedDivergedModules()`](https://hellmann-lab.github.io/CroCoNet/reference/plotConservedDivergedModules.md)
+  : Plot module conservation
+- [`plotConservedDivergedTargets()`](https://hellmann-lab.github.io/CroCoNet/reference/plotConservedDivergedTargets.md)
+  : Plot target conservation
+- [`plotDistMats()`](https://hellmann-lab.github.io/CroCoNet/reference/plotDistMats.md)
+  : Plot the distance matrices of replicates based on module
+  connectivity patterns
+- [`plotEigengeneHeatmap()`](https://hellmann-lab.github.io/CroCoNet/reference/plotEigengeneHeatmap.md)
+  : Plot module eigengenes as a heatmap
+- [`plotEigengenesAlongPseudotime()`](https://hellmann-lab.github.io/CroCoNet/reference/plotEigengenesAlongPseudotime.md)
+  : Plot module eigengenes along a pseudotime trajectory
+- [`plotEigengenesViolin()`](https://hellmann-lab.github.io/CroCoNet/reference/plotEigengenesViolin.md)
+  : Plot eigengene distributions per cell type and species
+- [`plotExprAlongPseudotime()`](https://hellmann-lab.github.io/CroCoNet/reference/plotExprAlongPseudotime.md)
+  : Plot expression profiles along a pseudotime trajectory
+- [`plotExprHeatmap()`](https://hellmann-lab.github.io/CroCoNet/reference/plotExprHeatmap.md)
+  : Plot expression profiles as a heatmap
+- [`plotExprViolin()`](https://hellmann-lab.github.io/CroCoNet/reference/plotExprViolin.md)
+  : Plot expression distributions per cell type and species
+- [`plotModuleSizeDistribution()`](https://hellmann-lab.github.io/CroCoNet/reference/plotModuleSizeDistribution.md)
+  : Plot the distribution of module sizes
+- [`plotNetworks()`](https://hellmann-lab.github.io/CroCoNet/reference/plotNetworks.md)
+  : Plot the networks of modules
+- [`plotPresStatDistributions()`](https://hellmann-lab.github.io/CroCoNet/reference/plotPresStatDistributions.md)
+  : Plot the distributions of preservation statistics
+- [`plotPresStats()`](https://hellmann-lab.github.io/CroCoNet/reference/plotPresStats.md)
+  : Plot cross-species VS within-species preservation statistics per
+  species pair
+- [`plotSumEigengeneHeatmap()`](https://hellmann-lab.github.io/CroCoNet/reference/plotSumEigengeneHeatmap.md)
+  : Plot summarized eigengenes as a heatmap
+- [`plotSumEigengenesLine()`](https://hellmann-lab.github.io/CroCoNet/reference/plotSumEigengenesLine.md)
+  : Plot summarized eigengenes as a line plot
+- [`plotSumExprHeatmap()`](https://hellmann-lab.github.io/CroCoNet/reference/plotSumExprHeatmap.md)
+  : Plot summarized expression profiles as a heatmap
+- [`plotSumExprLine()`](https://hellmann-lab.github.io/CroCoNet/reference/plotSumExprLine.md)
+  : Plot summarized expression profiles as a line plot
+- [`plotTreeStatDistributions()`](https://hellmann-lab.github.io/CroCoNet/reference/plotTreeStatDistributions.md)
+  : Plot the distributions of tree-based statistics
+- [`plotTreeStats()`](https://hellmann-lab.github.io/CroCoNet/reference/plotTreeStats.md)
+  : Plot tree-based statistics against each other
+- [`plotTrees()`](https://hellmann-lab.github.io/CroCoNet/reference/plotTrees.md)
+  : Plot the tree representations of modules
+- [`pres_stats`](https://hellmann-lab.github.io/CroCoNet/reference/pres_stats.md)
+  : Preservation statistics of the pruned modules
+- [`pres_stats_jk`](https://hellmann-lab.github.io/CroCoNet/reference/pres_stats_jk.md)
+  : Preservation statistics of the original and jackknifed pruned
+  modules
+- [`pruneModules()`](https://hellmann-lab.github.io/CroCoNet/reference/pruneModules.md)
+  : Prune modules
+- [`pruneModules_UIK_adj()`](https://hellmann-lab.github.io/CroCoNet/reference/pruneModules_UIK_adj.md)
+  : Prune modules based on the regulator-target adjacencies using
+  dynamic filtering
+- [`pruneModules_UIK_adj_kIM()`](https://hellmann-lab.github.io/CroCoNet/reference/pruneModules_UIK_adj_kIM.md)
+  : Prune modules based on the regulator-target adjacencies and
+  intramodular connectivities using dynamic filtering
+- [`pruneModules_topN()`](https://hellmann-lab.github.io/CroCoNet/reference/pruneModules_topN.md)
+  : Prune modules based on the regulator-target adjacencies by keeping a
+  fixed number of top targets
+- [`pruned_modules`](https://hellmann-lab.github.io/CroCoNet/reference/pruned_modules.md)
+  : Pruned modules
+- [`random_dist_jk`](https://hellmann-lab.github.io/CroCoNet/reference/random_dist_jk.md)
+  : Distance measures of the the original and jackknifed random modules
+- [`random_modules`](https://hellmann-lab.github.io/CroCoNet/reference/random_modules.md)
+  : Random modules
+- [`random_pres_stats`](https://hellmann-lab.github.io/CroCoNet/reference/random_pres_stats.md)
+  : Preservation statistics of the random modules
+- [`random_pres_stats_jk`](https://hellmann-lab.github.io/CroCoNet/reference/random_pres_stats_jk.md)
+  : Preservation statistics of the the original and jackknifed random
+  modules
+- [`random_tree_stats`](https://hellmann-lab.github.io/CroCoNet/reference/random_tree_stats.md)
+  : Tree-based statistics of the random modules
+- [`random_tree_stats_jk`](https://hellmann-lab.github.io/CroCoNet/reference/random_tree_stats_jk.md)
+  : Tree-based statistics of the original and jackknifed random modules
+- [`random_trees_jk`](https://hellmann-lab.github.io/CroCoNet/reference/random_trees_jk.md)
+  : Trees of the original and jackknifed random modules
+- [`reconstructTrees()`](https://hellmann-lab.github.io/CroCoNet/reference/reconstructTrees.md)
+  : Reconstruct trees across all modules
+- [`regulators`](https://hellmann-lab.github.io/CroCoNet/reference/regulators.md)
+  : Transcriptional regulators
+- [`removeOverlappingGenePairs()`](https://hellmann-lab.github.io/CroCoNet/reference/removeOverlappingGenePairs.md)
+  : Remove gene pairs with overlapping annotations
+- [`replicate2species`](https://hellmann-lab.github.io/CroCoNet/reference/replicate2species.md)
+  : Replicate-species conversion
+- [`scaleFreeFitRSquared()`](https://hellmann-lab.github.io/CroCoNet/reference/scaleFreeFitRSquared.md)
+  : Calculate R2 value of the scale-free model fit for the provided
+  connectivities
+- [`sce`](https://hellmann-lab.github.io/CroCoNet/reference/sce.md) :
+  SCE object of the primate neural differentiation dataset
+- [`selectPower()`](https://hellmann-lab.github.io/CroCoNet/reference/selectPower.md)
+  : Select power for scale-free transfrmation
+- [`summarizeJackknifeStats()`](https://hellmann-lab.github.io/CroCoNet/reference/summarizeJackknifeStats.md)
+  : Summarize jackknife statistics
+- [`summarizeStat()`](https://hellmann-lab.github.io/CroCoNet/reference/summarizeStat.md)
+  : Summarize values of a statistic
+- [`testPowers()`](https://hellmann-lab.github.io/CroCoNet/reference/testPowers.md)
+  : Test soft-thresholding power values
+- [`tree`](https://hellmann-lab.github.io/CroCoNet/reference/tree.md) :
+  Phylogenetic tree
+- [`tree_stats`](https://hellmann-lab.github.io/CroCoNet/reference/tree_stats.md)
+  : Tree-based statistics of the pruned modules
+- [`tree_stats_jk`](https://hellmann-lab.github.io/CroCoNet/reference/tree_stats_jk.md)
+  : Tree-based statistics of the original and jackknifed pruned modules
+- [`trees`](https://hellmann-lab.github.io/CroCoNet/reference/trees.md)
+  : Trees of the pruned modules
+- [`trees_jk`](https://hellmann-lab.github.io/CroCoNet/reference/trees_jk.md)
+  : Trees of the original and jackknifed pruned modules
+
+# Articles
+
+### All vignettes
+
+- [CroCoNet](https://hellmann-lab.github.io/CroCoNet/articles/CroCoNet.md):

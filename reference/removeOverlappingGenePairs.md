@@ -1,0 +1,102 @@
+# Remove gene pairs with overlapping annotations
+
+Removes the gene pairs (edges) that have overlapping annotations in the
+genomes of at least 1 species from all networks.
+
+## Usage
+
+``` r
+removeOverlappingGenePairs(
+  network_list,
+  gtf_list,
+  replicate2species,
+  gene_col = c("gene_name", "gene_id"),
+  n_cores = 1L
+)
+```
+
+## Arguments
+
+- network_list:
+
+  A named list of `igraph` objects containing the networks of all
+  replicates.
+
+- gtf_list:
+
+  A named list of GRanges objects containing the genome annotations of
+  all species.
+
+- replicate2species:
+
+  A data frame specifying which species each replicate belongs to,
+  required columns:
+
+  replicate
+
+  :   Character, name of the replicate.
+
+  species
+
+  :   Character, name of the species.
+
+- gene_col:
+
+  Character specifying the type of identifier the network nodes have,
+  one of "gene_name", "gene_id". The function looks for the names of the
+  network nodes in the corresponding column of the GTF files.
+
+- n_cores:
+
+  Integer, the number of cores (default: 1).
+
+## Value
+
+A named list of `igraph` objects containing the networks of all
+replicates, after the removal of gene pairs with overlapping
+annotations. A new edge attribute is added to all `igraph` objects:
+
+- genomic_dist:
+
+  Numeric, the genomic distance of the 2 genes that form the edge (`Inf`
+  if the 2 genes are annotated on different chromosomes/contigs).
+
+## Details
+
+Mapping and counting is problematic for overlapping genomic features: it
+is difficult to tell apart which read belongs to which gene. Often parts
+of the reads from one gene are assigned to the other gene, leading to
+correlated expression profiles simply due to genomic position. This only
+has a marginal effect on the results of a DE analysis, but can cause
+false positive edges with very high edge weights in case of a network
+analysis.
+
+This functions circumvents such potential artefacts by removing all
+edges between overlapping genes. As the first step, the positions of the
+network genes are determined in the genome of each species. Depending on
+the value of `gene_col`, the names of the network nodes are matched to
+the entries in either the "gene_name" or the "gene_id" column of the
+provided GTF files. As the second step, gene pairs with overlapping
+annotations are identified in each genome. Finally, these gene pairs are
+removed from all networks (not just from the networks of the species
+where they were found to overlap!).
+
+For all remaining edges of the networks, the function adds the genomic
+distance between the 2 genes that form the edge as the edge attribute
+"genomic_dist". If the genes are annotated on different chromosomes, the
+distance is set to `Inf`. This information can be used for further
+sanity checking, e.g. to check the relationship between edge weight and
+genomic proximity.
+
+## Examples
+
+``` r
+network_list_filt <- removeOverlappingGenePairs(network_list_raw,
+                                                gtf_list,
+                                                replicate2species,
+                                                "gene_name")
+#> Loading required namespace: GenomeInfoDb
+#> Loading required namespace: GenomeInfoDb
+#> Loading required namespace: GenomeInfoDb
+#> Error in {    gtf_filt <- gtf_list[[species_name]] %>% plyranges::select(gene = .data[[gene_col]],         .data[["type"]]) %>% plyranges::filter(gene %in% network_genes &         type == "gene")    gtf_filt_dt <- data.table::as.data.table(gtf_filt)[, .(seqnames,         start, end, gene)]    ovlp <- data.table::as.data.table(plyranges::join_overlap_intersect(gtf_filt,         gtf_filt))[!(gene.x == gene.y)][, .(gene.x, gene.y)]    dist <- data.table::rbindlist(dt_list[replicate2species[replicate2species$species ==         species_name, "replicate"]], idcol = "replicate")    dist <- data.table::setnames(gtf_filt_dt, c("seqnames.from",         "start.from", "end.from", "from"))[dist, on = "from"]    dist <- data.table::setnames(gtf_filt_dt, c("seqnames.to",         "start.to", "end.to", "to"))[dist, on = "to"]    dist <- dist[, `:=`(genomic_dist, as.double(pmin(abs(start.from -         end.to), abs(start.to - end.from))))][ovlp, `:=`(genomic_dist,         0), on = .(from = gene.x, to = gene.y)][seqnames.from !=         seqnames.to, `:=`(genomic_dist, Inf)][, c("replicate",         column_names, "genomic_dist"), with = FALSE]    if (gene_col == "gene_name") {        dist <- dist[, .(genomic_dist = min(genomic_dist)), by = c("replicate",             column_names)]    }    dist}: task 1 failed - "unable to load required package ‘GenomeInfoDb’"
+```
