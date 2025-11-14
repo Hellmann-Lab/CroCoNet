@@ -282,9 +282,9 @@ readRDS("consensus_network_sample.rds") %>%
 
 ## Adding the direction of correlation
 
-If the networks were inferred using a method that does not distinguish between positively and negatively correlated gene pairs, this information can be added for analyses where it is meaningful to separate the two (e.g. when calculating eigengenes for activated VS repressed targets of a transcriptional regulator). If the inference method already outputs both positive and negative edge weights (e.g. correlation-based methods), this information is already added during the step "Normalizing edge weights" and does not have to be calculated again.
+If the network inference method outputs both positive and negative edge weights (e.g. correlation-based methods), the directionality of each edge is saved during the step "Normalizing edge weights". However, if the networks are inferred using a method that does not distinguish between positively and negatively correlated gene pairs, the directionality can be added in this extra step. The information on directionality is useful because for certain analyses results are more meaning if positively and negatively correlated genes are separated (e.g. eigengene calculation). 
 
-If this step is required, the directionality of each edge is determined by calculating a modified Spearman’s correlation between the expression profiles of the two genes forming the edge and assigning the sign of the modified Spearman’s rho as the direction. The calculation uses the approximate Spearman’s rho, significance testing, and blocking implemented in <tt>correlatePairs</tt> @Lun2016-lx.
+The directionality of each edge is determined by calculating a modified Spearman’s correlation between the expression profiles of the two genes forming the edge and assigning the sign of the modified Spearman’s rho as the direction. The calculation uses the approximate Spearman’s rho, significance testing, and blocking implemented in <tt>correlatePairs</tt> @Lun2016-lx.
 
 In case of the example dataset, the networks were inferred using GRNBoost2 which does not provide information about the direction of regulation, therefore it is necessary to perform this step. To get the expression profiles of the network genes, the SCE object needs to be loaded:
 
@@ -313,7 +313,7 @@ Once the consensus network is calculated, it can be used to assign co-expression
 
 ## Selecting key transcriptional regulators
 
-First, the transcriptional regulators that form the cores of the co-expression modules have to be selected. To identify regulators that are relevant for the biological process under study, it is a useful approach to combine prior biological knowledge with information derived from the dataset. This step is implemented by the function <tt>getRegulators</tt>.
+First, the transcriptional regulators have to be selected that form the cores of the co-expression modules. To identify regulators that are relevant for the biological process under study, it is a useful approach to combine prior biological knowledge with information derived from the dataset. This step is implemented by the function <tt>getRegulators</tt>.
 
 As for the prior biological knowledge, we recommend to select only transcriptional regulators with known binding motifs based on motif databases. To get this information, the user can choose the following databases: JASPAR 2024 vertebrate core @Rauluseviciute2023-dz, JASPAR 2024 unvalidated @Rauluseviciute2023-dz, the IMAGE database @Madsen2018-gq, or any combination of the above. Alternatively, the user can provide a custom list of regulators selected by their preferred method.
 
@@ -377,7 +377,7 @@ knitr::include_graphics("adj_regulator_kIM.png")
 
   * *Pro*: Pruning based on the regulator-target adjacencies selects the genes whose expression profiles co-vary the most with the regulator's expression profile.
 
-  * *Con*: Modules created based on the regulator-target adjacencies alone might not fulfill the expectation of being densely connected blocks of genes, apart from the link to the regulator, the target genes often only have sparse/weak connections within the module.
+  * *Con*: Modules created based on the regulator-target adjacencies alone might not fulfill the expectation of being densely connected blocks of genes, apart from the link to the regulator, the target genes often only have sparse/weak connections within the module (danger of false positives).
 
 * **Intramodular connectivity** (*kIM*): The sum of adjacencies between a specific gene and all other members of the module. If the module size is *n*, it ranges between 0 and *n* - 1 with a higher value representing a gene that is more strongly connected to the rest of the module.
 $$kIM_i^{(q)} = \sum_{\substack{j \in q\\j \neq i}} a_{ij}$$
@@ -499,7 +499,7 @@ readRDS("eigengenes_sample.rds") %>%
   kable_styling(font_size = 12.9)
 ```
 
-The eigengene profiles can then be plotted as a heatmap using <tt>plotEigengeneHeatmap</tt>. Here we focus on the 6 example modules again, that contain 3 pluripotency regulators (NANOG, POU5F1 and CREBL3) and 3 neural regulators (PAX6, NEUROD4 and FEZF2):
+The eigengene profiles can then be plotted as a heatmap using <tt>plotEigengeneHeatmap</tt>. Here we focus on the 6 example modules again, that contain 3 pluripotency regulators (NANOG, POU5F1 and SALL4) and 3 neural regulators (NEUROD4, PAX6 and FEZF2):
 
 ```{r plot_eigengenes}
 eigengenes_examples <- eigengenes %>%
@@ -613,13 +613,11 @@ readRDS("pres_stats_sample.rds")[, 8:13] %>%
   kable_styling(font_size = 13)
 ```
 
-There are 3 easy-to-check expectations that a statistic has to fulfill if it is a good measure of module preservation:
+There are two expectations that a statistic is expected to fulfill if it is a good measure of module preservation:
 
 * The scores are expected to be higher for the actual modules than for the random modules.
 
-* The scores are expected to be higher within species than across species.
-
-* The difference between the within-species and cross-species scores is expected to increase with increasing phylogenetic distance between the two species compared. 
+* The scores are expected to decrease with increasing phylogenetic distance between the replicates compared.
 
 As a visual check, the function <tt>plotPresStatDistributions</tt> plots the distributions of the preservation scores for the actual and random modules and for within-species and cross-species replicate pairs, whereas the function <tt>plotPresStats</tt> plots the cross-species scores against the within-species scores per species pair:
 
@@ -643,6 +641,8 @@ plotPresStats(pres_stats,
 knitr::include_graphics("pres_stat_across_vs_within.png")
 ```
 
+The plots show that when applied to the example dataset, both *cor.kIM* and *cor.adj* fulfill the expectations. To quantitatively compare which of the two statistics performs better, the function <tt>comparePresStats</tt> plots 1) the difference in preservation between each actual and the corresponding random module, and 2) the inverse Pearson's correlation (*-r*) between the preservation scores and phylogenetic distance:
+
 ```{r plot_pres_stat_comparison}
 comparePresStats(pres_stats, 
                  random_pres_stats, 
@@ -653,7 +653,7 @@ comparePresStats(pres_stats,
 knitr::include_graphics("pres_stat_comparison.png")
 ```
 
-The plots show that when applied to the example dataset, both *cor.kIM* and *cor.adj* fulfill all 3 expectations, but since the differences between the actual and random modules as well as between the within-species and cross-species comparisons tend to be higher for *cor.kIM*, we use this statistic for the rest of the analysis.
+Since the difference between the actual and random modules as well as the strength of the phylogenetic signal are higher for *cor.kIM*, we use this statistic for the rest of the analysis.
 
 ## Converting preservation scores to distance measures
 
@@ -738,7 +738,7 @@ To quantify these tell-tale characteristics of the module trees, various tree-ba
 
 * **Monophyleticity of a species**: Indicates whether the tree is monophyletic for the replicates of the given species. Only if a module tree is monophyletic for a species of interest can the module be tested for divergence between this species and all others.
 
-* **Subtree length of a species:** The sum of the branch lengths in the subtree that is defined by the replicates of the species and includes the internal branch connecting these replicates to the rest of the tree. Undefined if the tree is not monophyletic for the species of interest.
+* **Subtree length of a species:** The sum of the branch lengths in the subtree that is defined by the replicates of the species and includes the internal branch connecting these replicates to the rest of the tree (i.e. the lineage of interest). Undefined if the tree is not monophyletic for the species of interest.
 
 ```{r tree_stats_explained, eval = TRUE, include = TRUE, echo = FALSE, out.width = "90%", fig.align = 'center', fig.cap = 'Tree-based statistics to characterize the cross-species conservation of network modules.'}
 knitr::include_graphics("tree_based_stats.png")
@@ -799,22 +799,15 @@ random_tree_stats <- summarizeJackknifeStats(random_tree_stats_jk,
 
 After having calculated first pairwise preservation scores between replicates and then higher-level tree-based statistics to characterize how different the topologies of the modules are within and across species, we are ready to quantify the evolutionary conservation of modules. But why do we need the within-species differences in the first place? Why is the extent of cross-species differences not directly the answer to evolutionary conservation? 
 
-There are several sources of module topology differences when we compare 2 species: there is of course true evolutionary divergence between the species which is what we are primarily interested in, but this is convoluted with diversity across individuals of the same species, technical noise and low statistical power. In the end, if we find that the topology of a module is different between 2 species, it is difficult to say to what extent it is actually due to divergence. This is why the within-species differences also become valuable sources of information: they provide an estimate of the variability originating from the other, confounding sources and thus can be used to discern the signal of real divergence.
+There are several sources of module topological differences when we compare two species: there is of course true evolutionary divergence between the species which is what we are primarily interested in, but this is convoluted with genetic diversity across individuals of the same species, environmental factors and technical noise. In the end, if we find that the topology of a module is different between two species, it is difficult to say to what extent it is actually due to divergence. This is why the within-species differences also become valuable sources of information: they provide an estimate of the variability originating from confounding sources and thus can be used to discern the signal of real divergence.
 
 ## Overall conservation and divergence
 
-To apply this concept for the quantification of overall conservation across all species, we used 2 tree-based statistics: within-species diversity and total tree length. The two metrics are based on the same trees and calculated using in part the same branches, so they are clearly not independent. Their general relationship can be captures by linear regression, that in biological terms describes which part of the total module variability is due to sources other than cross-species divergence (e.g. due to diversity, noise and power).
-
-Where a module is located along the regression line informs us about detection robustness. Modules that have both low within-species diversity and low total tree length are well-preserved both within and across species, meaning that these modules could be robustly detected in all replicates, whereas modules, for which both metrics are high, are poorly preserved not just across but also within species, indicating a high detection uncertainty ("wobbliness"). 
-
-But more importantly, the residuals of the modules in the regression model informs us about their cross-species conservation: the outlier modules that do not follow the general trend are the most conserved and diverged ones. The modules that are located above the trend line have a higher total tree length than expected based on their within-species diversity, meaning that they tend to have long internal branches connecting the species, which indicates divergence. In contrast, the modules that fall below the trend line have a lower total tree length than expected based on their within-species diversity, meaning that the species are not well-separated within the tree but rather mixed amog each other which hints towards conservation.
-
-```{r total_vs_within_concept, eval = TRUE, include = TRUE, echo = FALSE, out.width = "38%", fig.align = 'center', fig.cap = 'The concept of using tree-based statistics to puzzle apart conserved, diverged, robust and wobbly modules.'}
-knitr::include_graphics("within_total_concept.png")
-```
-
+To apply this concept for the quantification of overall conservation across all species, we used two tree-based statistics: within-species diversity and total tree length. The two metrics are based on the same trees and calculated using in part the same branches, so they are clearly not independent. Their general relationship can be captures by linear regression, that in biological terms describes which part of the total module variability is due to the confounding factors (genetic inter-individual differences, environmental and technical noise).
 
 ### Filtering the module trees
+
+Where a module is located along the regression line informs us about detection robustness. Modules that have both low within-species diversity and low total tree length are well-preserved both within and across species, meaning that these modules could be robustly detected in all replicates, whereas modules, for which both metrics are high, are poorly preserved not just across but also within species, indicating a high detection uncertainty ("wobbliness").
 
 The general trend between the within-species diversities and total tree lengths can be visualized using the function <tt>plotTreeStats</tt>. In the plot below, both the actual and the random modules are included:
 
@@ -828,15 +821,19 @@ plotTreeStats(tree_stats,
 knitr::include_graphics("within_species_diversity_total_tree_length.png")
 ```
 
-As we have seen before, the within-species diversities and total tree lengths are in general higher for the random modules than for the actual modules - thus the random modules cluster separately on the plot at the "wobbly" end of the spectrum. However, there are still individual actual modules that have particularly high total tree lengths and within-species diversities, comparable with those of the random modules. Since these modules seem to behave like random sets of genes in terms of their tree properties, it is recommended to remove them for further analysis.
+As we have seen before, the within-species diversities and total tree lengths are in general higher for the random modules than for the actual modules - thus the random modules cluster separately on the plot at the "wobbly" end of the spectrum. However, there are still individual actual modules that have particularly high total tree lengths and within-species diversities, comparable with those of the random modules. Since the tree properties of these modules are likely dominated by technical and environmental noise, it is recommended to remove them for further analysis.
 
-The function <tt>filterModuleTrees</tt> calculates how probable it is that the statistic of an actual comes from the distribution of all actual modules compared ($p_{actual}$) and how probable it is that the statistic comes from the distribution of all random modules ($p_{random}$) using one-sample one-sided z-tests (expected mean and standard deviation: the mean and standard deviation of all actual/random module statistics after outlier removal using the interquartile range method).  If $$1 - p_{actual} > 10⋅p_{random}$$ is fulfilled for both tree statistics, the module is kept, otherwise it is removed.
+The function <tt>filterModuleTrees</tt> calculates how probable it is that the statistics of an actual comes from the distribution of all actual modules ($p_{actual}$) and how probable it is that the statistics comes from the distribution of all random modules ($p_{random}$) using the probability density functions of the two bivariate normal distributions. If 
+
+$$\frac{p_{actual}}{p_{actual} + p_{random}} > 0.95$$ 
+
+is fulfilled for both tree statistics, the module is kept, otherwise it is removed.
 
 ```{r filter_module_trees}
 tree_stats_filt <- filterModuleTrees(tree_stats, random_tree_stats)
 ```
 
-In case of the example dataset, this filtering removes 4 modules (marked in red):
+In case of the example dataset, this filtering removes 10 modules (marked in red):
 
 ```{r plot_total_vs_within_filt}
 plotTreeStats(tree_stats, 
@@ -851,11 +848,13 @@ knitr::include_graphics("within_species_diversity_total_tree_length_filt.png")
 
 ### Finding conserved and diverged modules
 
-After removing these "wobbly" modules, cross-species conservation can be quantified using a linear regression between the total tree length and within-species diversity. 
+After removing these "wobbly" modules, cross-species conservation can be quantified using the residuals of the linear regression model. These residuals from the regression line reflect the variance of the total tree length that cannot be explained by within-species diversity, i.e. the contribution of true evolutionary divergence to the total module variability. Positive residuals correspond to a greater-than-expected contribution and negative residuals to a lower-than-expected contributions, respectively. In order to identify modules with significant deviations from the overall trend, we calculate the 95% prediction interval of the linear fit and considered modules above the upper bound of the prediction interval diverged and the modules below the lower bound of the prediction interval conserved.
 
-The function <tt>fitTreeStatsLm</tt> fits a regression model between the 2 statistics and the function <tt>findConservedDivergedModules</tt> identifies conserved and diverged modules by comparing each module to the 95% prediction interval of the fit. A module is considered diverged if it has a higher total tree length than the upper boundary of the prediction interval, while a module is considered conserved if it has a lower total tree length than the lower boundary of the prediction interval.
+```{r total_vs_within_concept, eval = TRUE, include = TRUE, echo = FALSE, out.width = "38%", fig.align = 'center', fig.cap = 'The concept of using tree-based statistics to puzzle apart conserved, diverged, robust and wobbly modules.'}
+knitr::include_graphics("within_total_concept.png")
+```
 
-The degree of conservation/divergence can be quantitatively compared between the modules categorized as conserved/diverged. We implemented 2 measures: 1) the residual, which is the absolute difference between the observed and expected total tree lengths, and 2) the t-score, which is the residual normalized by the standard error of the total tree length prediction at a given within-species diversity value.
+The function <tt>fitTreeStatsLm</tt> fits a regression model between the two statistics and the function <tt>findConservedDivergedModules</tt> identifies conserved and diverged modules by comparing each module's residual to the 95% prediction interval of the fit.
 
 The linear regression can be weighted by the error of the data points derived from jackknifing. If this option is chosen (<tt>weighted_lm</tt> is set to TRUE), the weight of a module in the regression is defined as inversely proportional to the total tree length variance across all of its jackknifed module versions.
 
@@ -880,7 +879,7 @@ readRDS("module_conservation_overall_sample.rds")[, 9:16] %>%
   column_spec(1:8, "2.3cm")
 ```
 
-Using this approach, we identified 21 conserved and 23 diverged modules:
+Using this approach, we identified 20 conserved and 24 diverged modules:
 
 ```{r echo = FALSE, eval = TRUE}
 module_conservation_overall <- readRDS("module_conservation_overall.rds")
@@ -890,12 +889,11 @@ module_conservation_overall <- readRDS("module_conservation_overall.rds")
 table(module_conservation_overall$conservation)
 ```
 
-The function <tt>plotConservedDivergedModules</tt> helps to visualize the regression line, its 95% prediction interval (grey area), and the conserved and diverged modules (colored green and red, respectively). It also labels the top N most conserved and most diverged modules based on either the residuals or the t-scores. In the plot below, the top 5 most conserved and most diverged modules based on residuals are highlighted:
+The function <tt>plotConservedDivergedModules</tt> helps to visualize the regression line, its 95% prediction interval (grey area), and the conserved and diverged modules (colored green and red, respectively). It also labels the top N most conserved and most diverged modules. In the plot below, the top 5 most conserved and most diverged modules based on residuals are highlighted:
 
 ```{r plot_cons_div_mod}
 plotConservedDivergedModules(module_conservation_overall,
-                             N = 5,
-                             rank_by = "residual")
+                             N = 5)
 ```
 
 ```{r cons_div_mod, eval = TRUE, include = TRUE, echo = FALSE, out.width = "75%", fig.align = 'center', fig.cap = 'Weighted linear regression between the total tree length and within-species diversity, with the top 5 most conserved and most diverged modules marked.'}
@@ -936,7 +934,7 @@ In contrast, diverged modules tend to have much higher distance measures across 
 
 ### Finding conserved and diverged edges
 
-A divergence score can be calculated not just for a module as a whole, but also for each edge within a module, which can pinpoint individual edges or regions of neighboring edges that are particularly conserved or diverged. This score is calculated based on the different edge weights of a given edge in the networks of the different replicates. The edge weights are compared across species using an ANOVA, and the log~10~ of the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence. 
+A divergence score can be calculated not just for a module as a whole, but also for each edge within a module, which can pinpoint individual edges or regions of neighboring edges that are particularly conserved or diverged. This score is calculated based on the different weights of a given edge in the networks of the different replicates. The edge weights are compared across species using an ANOVA, and the log~10~ of the F-statistic (i.e. between-species variability / within-species variability) is regarded as the measure of edge divergence. 
 
 These scores can be returned as a data frame using <tt>calculateEdgeDivergence</tt> or directly plotted using <tt>plotNetworks</tt> with <tt>color_by</tt> set to "edge_divergence". Below we plot the 300 strongest edges within each of the 5 most conserved and most diverged modules colored by edge divergence:
 
@@ -954,28 +952,33 @@ plotNetworks(top5_cons_div_modules,
 knitr::include_graphics("networks_cons_div.png")
 ```
 
-Based on the network visualizations, the diverged modules (especially HMGA1 and POU5F1) tend to have more diverged edges than the conserved modules, which confirms the previous findings from a different aspect. The genes that form the most diverged edges within a module can also be pinned down, for example in case of the POU5F1 module, SCGB3A2 is the main hub for the diverged edges.
+Based on the network visualizations, the diverged modules (especially HMGA1 and POU5F1) tend to have more diverged edges than the conserved modules, which confirms the previous findings from a different aspect. The genes that form the most diverged edges within a module can also be pinned down, for example in case of the POU5F1 module, SCGB3A2 is the main hub for these diverged edges.
 
 ### Finding conserved and diverged target genes
 
-Genes that contribute the most to the conservation/divergence of a module can be identified not just using the edge divergence scores, but also using the tree-based statistics in combination with jackknifing.
+Genes that contribute the most to the conservation/divergence of a module can be identified not just using the edge divergence scores, but also based on jackknifing.
  
 During jackknifing, each member gene of a module is removed and all statistics are recalculated, including the tree-based statistics (total tree length and within-species diversity) that inform us about cross-species conservation. Our working hypothesis is that if removing a target gene from a diverged module makes the module more conserved, then that target was responsible for divergence in the original module, and vice versa, if removing a target gene from a conserved module makes the module more diverged, then that target was responsible for conservation in the original module.
 
-To quantify these effects, the function <tt>findConservedDivergedTargets</tt> takes use of the linear model that was fitted across all modules between the total tree length and within-species diversity and that was used to identify the conserved and diverged modules in the first place. However, in this case it is not the aggregate statistic for a module as a whole that is compared to the regression line, but the statistic of each jackknife module version separately. The corresponding residuals quantify the extent of target gene conservation: the jackknife version that has the highest residual is the most diverged, therefore the corresponding target gene is the most conserved, while the jackknife version that has the lowest residual is the most conserved, therefore the corresponding target gene is the most diverged.
+To quantify these effects, the function <tt>findConservedDivergedTargets</tt> makes use of the linear model that was fitted across all modules between the total tree length and within-species diversity and that was used to identify the conserved and diverged modules in the first place. However, in this case we calculated a residual for each jackknifed module version separately ($\hat{\varepsilon}_i$) and compared these residuals to the residual of the original, complete module ($\hat{\varepsilon}_\text{orig}$) in order to derive a target gene contribution score ($c_i$):
 
-It is important to note, that in most cases the divergence/conservation of a module cannot be contributed to a single target gene, but it is rather the combined signal of all targets together. The "most conserved" target gene of a diverged module is still most likely diverged, just to a lesser extent than the others. That is why it mainly makes sense to investigate the most diverged targets of the diverged modules and the most conserved targets of the conserved modules, not the other way around.
+$$c_i = \frac{\hat{\varepsilon}_\text{orig} - \hat{\varepsilon}_i}{\hat{\varepsilon}_\text{orig}}$$
 
-In case of the example dataset, we took a closer look at the target genes of POU5F1:
+A positive score indicates that removing the target gene weakens the signal of conservation or divergence, while a negative score means that after jackknifing the signal becomes stronger. Thus, the most diverged targets in a diverged module and the most conserved targets in a conserved module both get high positive scores. In extreme cases, the score could reach or exceed 1, which means that the removal of a single target gene would abolish or even reverse the signal. However, in most cases the detected signal is expected to originate from the joint contribution of many genes (this was the case for all modules except one in our example dataset).
 
-```{r get_pou5f1_target_cons}
-POU5F1_target_conservation <- findConservedDivergedTargets("POU5F1",
-                                                           tree_stats_jk,
-                                                           lm_overall)
+We calculated the target contribution scores for the five most conserved and five most diverged modules:
+
+```{r get_target_cons}
+target_contributions_overall <- foreach(module = top5_cons_div_modules,
+                                        .combine = bind_rows) %do% {
+                                  
+                                          findConservedDivergedTargets(module, tree_stats_jk, lm_overall)
+                                          
+                                        }
 ```
 
 ```{r glimpse_at_pou5f1_target_cons, eval = TRUE, echo = FALSE}
-readRDS("POU5F1_target_conservation_sample.rds")[, 1:6] %>% 
+readRDS("target_contributions_POU5F1_sample.rds")[, 1:6] %>% 
   kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Cross-species conservation measures for a few example target genes of POU5F1</span>", digits = 3, align = rep("c", 6)) %>% 
   column_spec(5, "2.3cm") %>% 
   column_spec(1, "2cm") %>% 
@@ -984,32 +987,60 @@ readRDS("POU5F1_target_conservation_sample.rds")[, 1:6] %>%
   column_spec(4, "3.1cm") %>%
   column_spec(6, "2.6cm") %>%
   kable_styling(font_size = 13)
-readRDS("POU5F1_target_conservation_sample.rds")[, 7:12] %>% 
+readRDS("target_contributions_POU5F1_sample.rds")[, 7:12] %>% 
   kbl(row.names = FALSE, digits = 3, align = rep("c", 6)) %>% 
   column_spec(1:6, "2.3cm")%>% 
   kable_styling(font_size = 13)
 ```
 
-The original and jackknifed versions of a module can be plotted along the regression line with the help of the function <tt>plotConservedDivergedTargets</tt>. The prediction interval of the regression line is shown as a grey area and assumed to have a constant width for a given module. This is how jackknifing affects the position compared to the regression line in case of the POU5F1 module:
+We plotted the scores to identify the most impactful target genes in each module:
 
-```{r plot_pou5f1_target_cons}
-plotConservedDivergedTargets(POU5F1_target_conservation)
-```
-
-```{r pou5f1_target_cons, eval = TRUE, include = TRUE, echo = FALSE, out.width = "70%", fig.align = 'center', fig.cap = 'The five most diverged target genes of POU5F1 identified using tree-based statistics in combination with jackknifing.'}
-knitr::include_graphics("POU5F1_target_conservation.png")
+```{r plot_target_cons}
+target_contributions_overall %>% 
+  dplyr::filter(type == "jk") %>% 
+  inner_join(module_conservation_overall %>% dplyr::select(regulator, conservation)) %>% 
+  dplyr::mutate(regulator = factor(regulator, top5_cons_div_modules)) %>% 
+  group_by(regulator) %>% 
+  dplyr::mutate(to_label = ifelse(contribution %in% sort(contribution, decreasing = TRUE)[1:2], unique(conservation), "no_label")) %>% 
+  ggplot(aes(x = regulator, y = contribution, color = to_label)) +
+  geom_quasirandom(aes(size = to_label)) +
+  theme_bw() +
+  scale_size_manual(values = c("diverged" = 0.8, "conserved" = 0.8, "no_label" = 0.5), guide = "none") +
+  scale_color_manual(values = c("conserved" = "#2B823A", "diverged" = "#AA4139", "no_label" = "black"), guide = "none") +
+  geom_label_repel(data = . %>%
+                     dplyr::filter(to_label != "no_label"),
+                   ggplot2::aes(label = gene_removed),
+                   fill = "white", size = 2.5, label.size = 0.08, segment.size = 0.08, box.padding = 0.05, label.padding = 0.05) +
+  ylab("target gene contribution") +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10.5, color = "black"))
 ```
 
 ```{r target_contributions, eval = TRUE, include = TRUE, echo = FALSE, out.width = "100%", fig.align = 'center', fig.cap = 'Contribution scores of the target genes in the five most conserved (in green) and five most diverged (red) modules. The two top-contributing targets are labeled for each module.'}
 knitr::include_graphics("target_contributions_overall.png")
 ```
 
-All jackknifed versions are located way outside the prediction interval, meaning that the whole module exhibits a strong signal of divergence that cannot be explained by any of the target genes alone. The most diverged target with the lowest residual is SCGB3A2, in line with the findings based on edge divergence.
+We took a closer look at the POU5F1 module and plotted the original and jackknifed versions along the regression line with the help of the function <tt>plotConservedDivergedTargets</tt>:
+
+```{r get_pou5f1_target_cons}
+target_contribution_POU5F1 <- target_contributions_overall %>% 
+  dplyr::filter(regulator == "POU5F1")
+```
+
+```{r plot_pou5f1_target_cons}
+plotConservedDivergedTargets(target_contribution_POU5F1)
+```
+
+```{r pou5f1_target_cons, eval = TRUE, include = TRUE, echo = FALSE, out.width = "70%", fig.align = 'center', fig.cap = 'The five most diverged target genes of POU5F1 identified using tree-based statistics in combination with jackknifing.'}
+knitr::include_graphics("target_contributions_POU5F1.png")
+```
+
+All jackknifed versions are located way outside the prediction interval, meaning that the whole module exhibits a strong signal of divergence that cannot be explained by any of the target genes alone. The most diverged target with the highest contribution score is SCGB3A2, in line with the findings based on edge divergence.
 
 To investigate whether the network divergence/conservation also translates into expression divergence/conservation, the expression profiles of the regulator and its targets can be plotted per species using <tt>plotExprAlongPseudotime</tt> (for pseudotime trajectories) or <tt>plotExprPerCellType</tt> (for distinct cell types). Below, we plot the expression of POU5F1 and its 5 most diverged target genes across the pseudotime range of the neural differentiation process:
 
 ```{r}
-top5_diverged_POU5F1_targets <- POU5F1_target_conservation %>%
+top5_diverged_POU5F1_targets <- target_contributions_POU5F1 %>%
   slice_min(order_by = residual, n = 5) %>%
   pull(gene_removed)
 ```
@@ -1022,21 +1053,21 @@ plotExprAlongPseudotime(c("POU5F1", top5_diverged_POU5F1_targets),
                         cell_type_colors = ct_colors)
 ```
 
-```{r pou5f1_target_expr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'The expression profiles of POU5F1 and its five most diverged target genes across pseudotime trajectory per species.'}
-knitr::include_graphics("POU5F1_target_expression.png")
+```{r pou5f1_target_expr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'The expression profiles of POU5F1 and its five most diverged target genes across the pseudotime trajectory per species.'}
+knitr::include_graphics("target_expression_POU5F1.png")
 ```
 
-Several target genes of POU5F1 that are diverged in terms of network topology (SCGB3A2, SPP1 and FTL) also show different expression patterns across species. Such differences cannot be observed for POU5F1, the regulator itself - a hint towards cis-regulatory changes. Indeed, after a more thorough investigation we found that both SCGB3A2 and SPP1 are known to be located close to LTR7 elements in the human genome [@Wang2014-ew; @Hsieh2022-yl], an evolutionary young family of transposable elements that often acquire regulatory functions. The LTR7 elements near these 2 genes appeared along the ape lineage and are bound by POU5F1 @Ito2017-da, so they could have potentially contributed to the rewiring of the POU5F1 module.
+Several target genes of POU5F1 that are diverged in terms of network topology (SCGB3A2, SPP1 and FTL) also show different expression patterns across species. Such differences cannot be observed for POU5F1, the regulator itself — a hint toward cis-regulatory changes. Indeed, after a more thorough investigation we found that both SCGB3A2 and SPP1 are known to be located close to LTR7 elements in the human genome [@Wang2014-ew; @Hsieh2022-yl], an evolutionary young family of transposable elements that often harbor binding sites for pluripotency factors. The LTR7 elements near these two genes appeared along the ape lineage and are bound by POU5F1 [@Ito2017-da], so they could have potentially contributed to the rewiring of the POU5F1 module.
 
 ## Lineage-specific divergence
 
 The approach described above characterizes the overall degree of module conservation - all species within a tree are treated the same. This is the most suitable approach for finding conserved modules and for finding the highest signal of divergence irrespective of phylogeny. In case of the example dataset, most of the diverged modules detected this way are diverged between cynomolgus macaques and great apes (rather than within the great apes) simply because longer phylogenetic distances generally give rise to bigger differences.
 
-However, if the focus of interest is divergence on a particular lineage, for example on the human lineage, a different approach needs to be applied. In contrast to the overall test of conservation where there are no constraints in terms of tree structure, here it makes sense to restrict the testing only to module trees that are monophyletic for the human replicates. This step pre-selects modules that fulfill a minimal citeria of lineage-specific divergence and makes it possible to compare a more specific tree characteristic, namely the human subtree length. To again correct for the unwanted sources of variation, this subtree length is contrasted against variation within the lineage, i.e. the human diversity. An analogous approach can be applied to find diverged modules between any species and the rest of the tree as well.
+In many cases, however, the primary interest lies in divergence on a particular lineage, e.g. the human lineage. To address this, we define the human lineage as the branch leading from the most recent common ancestor (MRCA) of humans and gorillas to the human MRCA, using the macaque as an outgroup. A minimal requirement for this analysis is that the human replicates form a monophyletic group; trees that don't fulfill this requirement are excluded. The human subtree is then defined as the subtree that includes all human replicates and the human lineage. To again correct for the unwanted sources of variation, this subtree length is contrasted against variation within the lineage, i.e. the human diversity. This allows us to assess module divergence specifically on the human lineage. An analogous approach can be applied to find diverged modules on any lineage of interest where an outgroup can be defined. 
 
 ### Finding conserved and diverged modules
 
-The modules that are diverged on the human lineage can be defined using a (weighted) linear regression between the human subtree length and the human diversity, implemented in <tt>fitTreeStatsLm</tt> with <tt>focus</tt> set to "human" and <tt>findConservedDivergedModules</tt>. Similarly to the overall conservation and divergence, the 95% prediction interval of the regression line is calculated and the modules that have a higher human subtree length than the upper bound of the 95% prediction interval are considered diverged. It is important to note that the modules that fall below the lower bound of the 95% prediction interval cannot be interpreted as conserved in this case, because 1) the human-monophyletic module trees have already been pre-selected, and 2) conservation is per definition not a lineage-specific feature.
+The modules that are diverged on the human lineage can be defined using a (weighted) linear regression between the human subtree length and the human diversity, implemented in <tt>fitTreeStatsLm</tt> with <tt>focus</tt> set to "human" and <tt>findConservedDivergedModules</tt>. Similarly to the overall conservation and divergence, the 95% prediction interval of the regression line is calculated and the modules that have a higher human subtree length than the upper bound of the 95% prediction interval are considered diverged. It is important to note that the modules that fall below the lower bound of the 95% prediction interval cannot be interpreted as conserved in this case, because 1) the human-monophyletic module trees have already been pre-selected, and 2) conservation is by definition not a lineage-specific feature.
 
 Below, this approach is applied to the example dataset:
 
@@ -1069,7 +1100,7 @@ In total, there are 57 modules that fulfill the minimum criteria of being monoph
 nrow(module_conservation_human)
 ```
 
-Among these, we identified 2 modules that are diverged on the human lineage:
+Among these, we identified three modules that are diverged on the human lineage:
 
 ```{r eval = TRUE, results = 'markup'}
 table(module_conservation_human$conservation)
@@ -1085,7 +1116,7 @@ plotConservedDivergedModules(module_conservation_human)
 knitr::include_graphics("module_conservation_human.png")
 ```
 
-The distance matrices and tree reconstructions of the ARID1B and MXI1 modules can showcase in more detail what makes them diverged on the human lineage:
+The distance matrices and tree reconstructions of the ZNF552, ARID1B and MXI1 modules can showcase in more detail what makes them diverged on the human lineage:
 
 ```{r get_human_div}
 human_div_modules <- module_conservation_human %>% 
@@ -1110,22 +1141,22 @@ plotTrees(trees[human_div_modules], species_colors = spec_colors)
 knitr::include_graphics("trees_human_div.png")
 ```
 
-The signal - unsurprisingly - is not as strong as in case of the modules diverged between cynomolgus and great apes, but it is still apparent that the human-gorilla and human-cynomolgus distance measures are the higher than the rest. This also translates into a way longer human subtree length than expected based on the phylogeny and observed in most module trees.
+The signal — unsurprisingly — is not as strong as in case of the modules diverged between cynomolgus and great apes, but it is still apparent that the human-gorilla and human-cynomolgus distance measures are higher than the rest. This also translates into a way longer human subtree length than expected based on the phylogeny and observed in most module trees.
 
 ### Finding conserved and diverged target genes
 
-Similar to the approach in case of the overall conservation and divergence, jackknifing can inform us about target genes that contribute the most to human-specific divergence. In this case, the residuals of the jackknifed modules versions are calculated with regard to the regression model between the human subtree length and the human diversity. The target genes that result in the lowest residuals (lowest signal is of divergence) when removed are considered the most diverged in the original module.
+Similar to the approach in case of the overall conservation and divergence, jackknifing can inform us about target genes that contribute the most to human-specific divergence. In this case, the residuals of the jackknifed module versions are calculated with regard to the regression model between the human subtree length and the human diversity. The target genes that result in the lowest residuals (i.e., the weakest signal of divergence) when removed are considered the most diverged in the original module.
 
 We performed this analysis for the ARID1B module:
 
 ```{r}
-ARID1B_target_conservation <- findConservedDivergedTargets("ARID1B", 
+target_contributions_ARID1B <- findConservedDivergedTargets("ARID1B", 
                                                            tree_stats_jk, 
                                                            lm_human)
 ```
 
 ```{r glimpse_at_arid1b_target_cons, eval = TRUE, echo = FALSE}
-readRDS("ARID1B_target_conservation_sample.rds")[, 1:6] %>% 
+readRDS("target_contributions_ARID1B_sample.rds")[, 1:6] %>% 
   kbl(row.names = FALSE, caption = "<span style='font-size:13px'>Cross-species conservation measures for a few example target genes of ARID1B</span>", digits = 3, align = rep("c", 6)) %>% 
   column_spec(5, "2.4cm") %>% 
   column_spec(1, "2.1cm") %>% 
@@ -1134,22 +1165,22 @@ readRDS("ARID1B_target_conservation_sample.rds")[, 1:6] %>%
   column_spec(4, "3.1cm") %>%
   column_spec(6, "2.2cm") %>%
   kable_styling(font_size = 13)
-readRDS("ARID1B_target_conservation_sample.rds")[, 7:12] %>% 
+readRDS("target_contributions_ARID1B_sample.rds")[, 7:12] %>% 
   kbl(row.names = FALSE, digits = 3, align = rep("c", 6)) %>% 
   column_spec(1:6, "2.3cm")%>% 
   kable_styling(font_size = 13)
 ```
 
 ```{r}
-plotConservedDivergedTargets(ARID1B_target_conservation)
+plotConservedDivergedTargets(target_contributions_ARID1B)
 ```
 
 ```{r arid1b_target_cons, eval = TRUE, include = TRUE, echo = FALSE, out.width = "70%", fig.align = 'center', fig.cap = 'The top 5 most diverged target genes of ARID1B identified using tree-based statistics in combination with jackknifing.'}
-knitr::include_graphics("ARID1B_target_conservation.png")
+knitr::include_graphics("target_contributions_ARID1B.png")
 ```
 
 ```{r}
-top5_diverged_ARID1B_targets <- ARID1B_target_conservation %>%
+top5_diverged_ARID1B_targets <- target_contributions_ARID1B %>%
   slice_min(order_by = residual, n = 5) %>%
   pull(gene_removed)
 ```
@@ -1165,20 +1196,20 @@ plotExprAlongPseudotime(c("ARID1B", top5_diverged_ARID1B_targets),
                         cell_type_colors = ct_colors)
 ```
 
-```{r arid1b_target_expr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'The expression profiles of ARID1B and its five most diverged target genes across pseudotime trajectory per species.'}
-knitr::include_graphics("ARID1B_target_expression.png")
+```{r arid1b_target_expr, eval = TRUE, include = TRUE, echo = FALSE, out.width = "60%", fig.align = 'center', fig.cap = 'The expression profiles of ARID1B and its five most diverged target genes across the pseudotime trajectory per species.'}
+knitr::include_graphics("target_expression_ARID1B.png")
 ```
 
 Based on the effects of jackknifing, DLK1 proves to be by far the most diverged target gene of ARID1B. This is also reflected in its expression profile: it is upregulated much more in humans during the intermediate stage of the neural differentiation than in gorilla or cynomolgus.
 
-Some other target genes of ARID1B also show slight human-specific differences in their expression patterns, e.g. TMSB15A and DTX4 are both upregulated the most in humans towards the late pseudotime stage.
+Some other target genes of ARID1B also show slight human-specific differences in their expression patterns, e.g., TMSB15A and DTX4 are both upregulated the most in humans towards the late pseudotime stage.
 
 <br>
 <br>
 
 # Summary
 
-The CroCoNet approach defines joint co-expression modules across all species based on a phylogeny-aware consensus network and quantifies the conservation of these modules by contrasting cross-species and within-species topological differences. In addition, it can pinpoint individual target genes that contribute the most to conservation/divergence with the help of jackknifing. The modules and target genes detected as conserved or diverged are good candidates to explain cross-species differences and similarities in gene regulation and can be deeper investigated by follow-up analyses and experiments.
+CroCoNet provides a robust framework to quantitatively compare gene regulatory networks across species, while accounting for unwanted biological variation and technical noise. It defines joint co-expression modules across all species based on a phylogeny-aware consensus network and quantifies the conservation of these modules by contrasting cross-species and within-species topological differences. In addition, it can pinpoint individual target genes that contribute the most to conservation/divergence with the help of jackknifing. The modules and target genes detected as conserved or diverged are good candidates to explain cross-species differences and similarities in gene regulation and can be investigated in greater depth by follow-up analyses and experiments.
 
 <br>
 <br>
