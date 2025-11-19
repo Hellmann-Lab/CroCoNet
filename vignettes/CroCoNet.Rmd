@@ -21,46 +21,18 @@ p.caption {
   margin: auto;
 }
 
-<!-- h1.title { -->
-<!--   font-size: 30px; -->
-<!-- } -->
-<!-- h1 { /* Header 1 */ -->
-<!--   font-size: 24px; -->
-<!-- } -->
-<!-- h2 { /* Header 2 */ -->
-<!--   font-size: 18px; -->
-<!-- } -->
-
-<!-- /* ---- Works in plain html_vignette ---- */ -->
-<!-- h1.title { font-size: 1.9rem; }   /* ≈ 30px (~22pt) */ -->
-<!-- h1        { font-size: 1.5rem; }  /* ≈ 24px (~18pt) */ -->
-<!-- h2        { font-size: 1.15rem; } /* ≈ 18px (~13pt) */ -->
-
-<!-- /* ---- Ensure the same sizes inside pkgdown ---- */ -->
-<!-- .template-article .page-header h1, -->
-<!-- .template-vignette .page-header h1 { -->
-<!--   font-size: 1.9rem !important; -->
-<!-- } -->
-
-<!-- .template-article .contents h2, -->
-<!-- .template-vignette .contents h2 { -->
-<!--   font-size: 1.5rem !important; -->
-<!-- } -->
-
-<!-- .template-article .contents h3, -->
-<!-- .template-vignette .contents h3 { -->
-<!--   font-size: 1.15rem !important; -->
-<!-- } -->
-
-<!-- /* Optional: adjust spacing */ -->
-<!-- .template-article .contents h2, -->
-<!-- .template-article .contents h3 { -->
-<!--   line-height: 1.25; -->
-<!--   margin-top: 1.1em; -->
-<!-- } -->
-
 body {
 text-align: justify
+}
+
+.contents h2 {
+    margin-top: 2.5rem !important;
+    margin-bottom: 2rem !important;
+}
+
+.contents h3 {
+  margin-top: 2rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
 </style>
@@ -86,9 +58,9 @@ library(clusterProfiler)
 ```
 
 <br>
-<tt>CroCoNet</tt> (**Cro**ss-species **Co**mparison of **Net**works) is a computational pipeline and R package to quantitatively compare gene-regulatory networks across species. The approach hinges on contrasting network variability within and across species in order to distinguish divergence from detection uncertainty. By enabling robust network analyses, CroCoNet contributes towards finding meaningful cross-species differences in gene regulation.
+CroCoNet (**Cro**ss-species **Co**mparison of **Net**works) is a computational pipeline and R package for the quantitative comparison of gene-regulatory networks across species. The approach hinges on contrasting network variability within and across species in order to distinguish true evolutionary divergence from technical and biological confounders. By enabling robust network analyses, CroCoNet contributes towards finding meaningful cross-species differences in gene regulation. For a comprehensive description of CroCoNet and its biological applications, please refer to the accompanying [preprint](https://www.biorxiv.org/content/10.1101/2025.11.18.689002v1) on bioRxiv.
 
-In this vignette, we demonstrate the complete CroCoNet workflow using a single-cell RNA-seq dataset of early primate neural differentiation as an example. The data files for this analysis are available in the project's [Zenodo archive](https://zenodo.org/records/17610308), in the compressed folder “neural_differentiation_dataset.zip”. All file paths used in the examples below are relative to this master folder.
+This vignette provides a practical guide to CroCoNet using an example dataset of early primate neural differentiation. The data files for this analysis are available in the project's [Zenodo archive](https://zenodo.org/records/17610308), under “neural_differentiation_dataset.zip”. All file paths used in the examples below are relative to this master folder.
 
 Through this tutorial, users will learn how to:
 

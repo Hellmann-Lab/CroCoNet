@@ -1,0 +1,8 @@
+bibentry(
+  bibtype  = "Article",
+ title = "{CroCoNet: a novel framework for cross-species network analysis reveals POU5F1 (OCT4) rewiring}",
+  author = "Térmeg, Anita and Storozhuk, Vladyslav and Kliesmete, Zane and Edenhofer, Fiona C and Geuder, Johanna and Vieth, Beate and Janssen, Philipp and Hellmann, Ines",
+  journal = "bioRxiv",
+  year     = 2025,
+  doi      = "10.1101/2025.11.18.689002"
+)
