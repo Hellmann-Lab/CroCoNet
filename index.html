@@ -15,8 +15,7 @@
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
-<meta property="og:title" content="Cross-species Comparison of Networks">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Cross-species Comparison of Networks">
 <meta name="description" content="A tool to quantitatively compare gene regulatory networks across species and identify conserved and diverged modules.">
 <meta property="og:description" content="A tool to quantitatively compare gene regulatory networks across species and identify conserved and diverged modules.">
 <meta property="og:image" content="https://hellmann-lab.github.io/CroCoNet/logo.png">
@@ -60,7 +59,7 @@
 <a class="anchor" aria-label="anchor" href="#croconet----cross-species---comparison-of---networks"></a>
 </h1>
 </div>
-<p><code>CroCoNet</code> is a tool to quantitatively compare gene regulatory networks across species and identify conserved and diverged modules. It hinges on contrasting module variability within and across species in order to distinguish between-species divergence from confounding factors such as diversity across individuals, environmental differences and technical noise.</p>
+<p>CroCoNet is a framework to quantitatively compare gene regulatory networks across species and identify conserved and diverged modules. It hinges on contrasting module variability within and across species in order to distinguish truw evolutionary divergence from confounding factors such as diversity across individuals, environmental differences and technical noise.</p>
 <p align="center">
 <img src="reference/figures/pipeline.png" alt="Pipeline" width="100%"><br><sup>The main steps of the CroCoNet workflow</sup></p>
 <div class="section level2">
@@ -71,24 +70,24 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span></code></pre></div>
-<p>Once <code>devtools</code> is available, you can install the development version of <code>CroCoNet</code> and all its dependencies from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
+<p>Once <code>devtools</code> is available, you can install the development version of <code>CroCoNet</code> and all its dependencies from GitHub with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"Hellmann-Lab/CroCoNet"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="book-user-guide">
-<span class="emoji" data-emoji="book">📖</span> User Guide<a class="anchor" aria-label="anchor" href="#book-user-guide"></a>
+<span class="emoji" data-emoji="book">📖</span> User guide<a class="anchor" aria-label="anchor" href="#book-user-guide"></a>
 </h2>
 <p>For a step-by-step guide and detailed explanations, please check out the vignette on the analysis of an example scRNA-seq dataset:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"CroCoNet"</span><span class="op">)</span></span></code></pre></div>
-<p>You can access this vignette and the documentations of all functions also at the <a href="hellmann-lab.github.io/CroCoNet/">CroCoNet website</a>.</p>
+<p>You can access this vignette, along with the documentation of all functions, on the <a href="hellmann-lab.github.io/CroCoNet/">CroCoNet website</a> as well.</p>
 </div>
 <div class="section level2">
 <h2 id="scroll-citation">
 <span class="emoji" data-emoji="scroll">📜</span> Citation<a class="anchor" aria-label="anchor" href="#scroll-citation"></a>
 </h2>
-<p>Please use the following entry to cite <code>CroCoNet</code>:</p>
+<p>The CroCoNet framework and its biological applications are described in detail in our <a href="https://www.biorxiv.org/content/10.1101/2025.11.18.689002v1" class="external-link">preprint</a> on bioRxiv. Please cite this manuscript as follows:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"CroCoNet"</span><span class="op">)</span></span></code></pre></div>
 </div>

@@ -15,8 +15,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<meta property="og:title" content="CroCoNet">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="CroCoNet">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -74,62 +73,35 @@ p.caption {
   margin: auto;
 }
 
-<!-- h1.title { -->
-<!--   font-size: 30px; -->
-<!-- } -->
-<!-- h1 { /* Header 1 */ -->
-<!--   font-size: 24px; -->
-<!-- } -->
-<!-- h2 { /* Header 2 */ -->
-<!--   font-size: 18px; -->
-<!-- } -->
-
-<!-- /* ---- Works in plain html_vignette ---- */ -->
-<!-- h1.title { font-size: 1.9rem; }   /* ≈ 30px (~22pt) */ -->
-<!-- h1        { font-size: 1.5rem; }  /* ≈ 24px (~18pt) */ -->
-<!-- h2        { font-size: 1.15rem; } /* ≈ 18px (~13pt) */ -->
-
-<!-- /* ---- Ensure the same sizes inside pkgdown ---- */ -->
-<!-- .template-article .page-header h1, -->
-<!-- .template-vignette .page-header h1 { -->
-<!--   font-size: 1.9rem !important; -->
-<!-- } -->
-
-<!-- .template-article .contents h2, -->
-<!-- .template-vignette .contents h2 { -->
-<!--   font-size: 1.5rem !important; -->
-<!-- } -->
-
-<!-- .template-article .contents h3, -->
-<!-- .template-vignette .contents h3 { -->
-<!--   font-size: 1.15rem !important; -->
-<!-- } -->
-
-<!-- /* Optional: adjust spacing */ -->
-<!-- .template-article .contents h2, -->
-<!-- .template-article .contents h3 { -->
-<!--   line-height: 1.25; -->
-<!--   margin-top: 1.1em; -->
-<!-- } -->
-
 body {
 text-align: justify
 }
 
+.contents h2 {
+    margin-top: 2.5rem !important;
+    margin-bottom: 2rem !important;
+}
+
+.contents h3 {
+  margin-top: 2rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
 </style>
-<p><br><tt>CroCoNet</tt> (<strong>Cro</strong>ss-species
+<p><br> CroCoNet (<strong>Cro</strong>ss-species
 <strong>Co</strong>mparison of <strong>Net</strong>works) is a
-computational pipeline and R package to quantitatively compare
+computational pipeline and R package for the quantitative comparison of
 gene-regulatory networks across species. The approach hinges on
 contrasting network variability within and across species in order to
-distinguish divergence from detection uncertainty. By enabling robust
-network analyses, CroCoNet contributes towards finding meaningful
-cross-species differences in gene regulation.</p>
-<p>In this vignette, we demonstrate the complete CroCoNet workflow using
-a single-cell RNA-seq dataset of early primate neural differentiation as
-an example. The data files for this analysis are available in the
-project’s <a href="https://zenodo.org/records/17610308" class="external-link">Zenodo
-archive</a>, in the compressed folder
+distinguish true evolutionary divergence from technical and biological
+confounders. By enabling robust network analyses, CroCoNet contributes
+towards finding meaningful cross-species differences in gene regulation.
+For a comprehensive description of CroCoNet and its biological
+applications, please refer to the accompanying <a href="https://www.biorxiv.org/content/10.1101/2025.11.18.689002v1" class="external-link">preprint</a>
+on bioRxiv.</p>
+<p>This vignette provides a practical guide to CroCoNet using an example
+dataset of early primate neural differentiation. The data files for this
+analysis are available in the project’s <a href="https://zenodo.org/records/17610308" class="external-link">Zenodo archive</a>, under
 “neural_differentiation_dataset.zip”. All file paths used in the
 examples below are relative to this master folder.</p>
 <p>Through this tutorial, users will learn how to:</p>

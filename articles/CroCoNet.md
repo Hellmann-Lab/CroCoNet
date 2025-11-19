@@ -1,20 +1,24 @@
 # CroCoNet
 
   
-`CroCoNet` (**Cro**ss-species **Co**mparison of **Net**works) is a
-computational pipeline and R package to quantitatively compare
+CroCoNet (**Cro**ss-species **Co**mparison of **Net**works) is a
+computational pipeline and R package for the quantitative comparison of
 gene-regulatory networks across species. The approach hinges on
 contrasting network variability within and across species in order to
-distinguish divergence from detection uncertainty. By enabling robust
-network analyses, CroCoNet contributes towards finding meaningful
-cross-species differences in gene regulation.
+distinguish true evolutionary divergence from technical and biological
+confounders. By enabling robust network analyses, CroCoNet contributes
+towards finding meaningful cross-species differences in gene regulation.
+For a comprehensive description of CroCoNet and its biological
+applications, please refer to the accompanying
+[preprint](https://www.biorxiv.org/content/10.1101/2025.11.18.689002v1)
+on bioRxiv.
 
-In this vignette, we demonstrate the complete CroCoNet workflow using a
-single-cell RNA-seq dataset of early primate neural differentiation as
-an example. The data files for this analysis are available in the
-project’s [Zenodo archive](https://zenodo.org/records/17610308), in the
-compressed folder “neural_differentiation_dataset.zip”. All file paths
-used in the examples below are relative to this master folder.
+This vignette provides a practical guide to CroCoNet using an example
+dataset of early primate neural differentiation. The data files for this
+analysis are available in the project’s [Zenodo
+archive](https://zenodo.org/records/17610308), under
+“neural_differentiation_dataset.zip”. All file paths used in the
+examples below are relative to this master folder.
 
 Through this tutorial, users will learn how to:
 
