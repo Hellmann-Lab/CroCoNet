@@ -11,10 +11,10 @@ cross-species differences in gene regulation.
 
 In this vignette, we demonstrate the complete CroCoNet workflow using a
 single-cell RNA-seq dataset of early primate neural differentiation as
-an example. The corresponding input data are available in the associated
-Zenodo repository, under the compressed archive
-“neural_differentiation_dataset.zip”. All file paths used in the
-examples below are relative to this master folder.
+an example. The data files for this analysis are available in the
+project’s [Zenodo archive](https://zenodo.org/records/17610308), in the
+compressed folder “neural_differentiation_dataset.zip”. All file paths
+used in the examples below are relative to this master folder.
 
 Through this tutorial, users will learn how to:
 
@@ -107,7 +107,7 @@ type.](trajectory.png)
 Pseudotime trajectory of the early primate neural differentiation
 dataset coloured by sampling day, pseudotime, species and cell type.
 
-### Network inference
+## Network inference
 
 Before applying the pipeline, the user must first infer co-expression
 networks per replicate using a method of their choice, for example
