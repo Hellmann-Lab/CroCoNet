@@ -3,7 +3,7 @@
 CroCoNet is a framework to quantitatively compare gene regulatory
 networks across species and identify conserved and diverged modules. It
 hinges on contrasting module variability within and across species in
-order to distinguish truw evolutionary divergence from confounding
+order to distinguish true evolutionary divergence from confounding
 factors such as diversity across individuals, environmental differences
 and technical noise.
 
