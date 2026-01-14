@@ -41,7 +41,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">comparePresStats</span><span class="op">(</span></span>
 <span>  <span class="va">pres_stats</span>,</span>
 <span>  <span class="va">random_pres_stats</span>,</span>
-<span>  <span class="va">tree</span>,</span>
+<span>  tree <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  colors <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  font_size <span class="op">=</span> <span class="fl">14</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -92,7 +92,7 @@
 
 
 <dt id="arg-tree">tree<a class="anchor" aria-label="anchor" href="#arg-tree"></a></dt>
-<dd><p>Object of class <code>phylo</code>, the phylogenetic tree of the species.</p></dd>
+<dd><p>Optional object of class <code>phylo</code>, the phylogenetic tree of the species (default: NULL).</p></dd>
 
 
 <dt id="arg-colors">colors<a class="anchor" aria-label="anchor" href="#arg-colors"></a></dt>
@@ -110,7 +110,10 @@
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>As part of the CroCoNet approach, pairwise module preservation scores are calculated between replicates, both within and across species (see <code><a href="calculatePresStats.html">calculatePresStats</a></code>) to gain information about the cross-species differences but also about the within-species diversity of the modules. These correlation-based preservation statistics quantify how well the module topology is preserved between the networks of two replicates. While cor_adj compares fine-grained topology at the level of adjacencies per edge, cor_kIM compares higher-level topology based on intramodular connectivities, gene-level summaries of the individual adjacencies. The statistics are calculated not just for the actual, biologically meaningful modules, but also for random modules with matching sizes.</p>
-<p>The function plots two distributions for both cor_adj and cor_kIM: 1) the difference in preservation between each actual and corresponding random module, and 2) the inverse correlation between preservation and phylogenetic distance for each actual module. The higher these values are, the better the preservation statistic perfoms, since the actual modules are expected to be more preserved than the random modules, and all modules, but especially the actual ones, are expected to be more preserved between closely related species than between phylogenetically distant species. By comparing the distributions between cor_adj and cor_kIM, the user can select the better preservation statistic for the downstream steps of the workflow (tree reconstruction and quantification of module conservation).</p>
+<p>The function plots two distributions for both cor_adj and cor_kIM:
+1) the difference in preservation between each actual and corresponding random module, and
+2) the inverse correlation between preservation and phylogenetic distance for each actual module (if <code>tree</code> is provided) or the difference in preservation between the within-species and cross-species groups for each actual module (if <code>tree</code> is not provided).
+The higher these values are, the better the preservation statistic perfoms, since the actual modules are expected to be more preserved than the random modules, and all modules, but especially the actual ones, are expected to be more preserved between closely related species than between phylogenetically distant species. By comparing the distributions between cor_adj and cor_kIM, the user can select the better preservation statistic for the downstream steps of the workflow (tree reconstruction and quantification of module conservation).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

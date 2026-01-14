@@ -12,7 +12,7 @@ with increasing phylogenetic distance.
 comparePresStats(
   pres_stats,
   random_pres_stats,
-  tree,
+  tree = NULL,
   colors = NULL,
   font_size = 14
 )
@@ -77,7 +77,8 @@ comparePresStats(
 
 - tree:
 
-  Object of class `phylo`, the phylogenetic tree of the species.
+  Optional object of class `phylo`, the phylogenetic tree of the species
+  (default: NULL).
 
 - colors:
 
@@ -111,15 +112,17 @@ also for random modules with matching sizes.
 The function plots two distributions for both cor_adj and cor_kIM: 1)
 the difference in preservation between each actual and corresponding
 random module, and 2) the inverse correlation between preservation and
-phylogenetic distance for each actual module. The higher these values
-are, the better the preservation statistic perfoms, since the actual
-modules are expected to be more preserved than the random modules, and
-all modules, but especially the actual ones, are expected to be more
-preserved between closely related species than between phylogenetically
-distant species. By comparing the distributions between cor_adj and
-cor_kIM, the user can select the better preservation statistic for the
-downstream steps of the workflow (tree reconstruction and quantification
-of module conservation).
+phylogenetic distance for each actual module (if `tree` is provided) or
+the difference in preservation between the within-species and
+cross-species groups for each actual module (if `tree` is not provided).
+The higher these values are, the better the preservation statistic
+perfoms, since the actual modules are expected to be more preserved than
+the random modules, and all modules, but especially the actual ones, are
+expected to be more preserved between closely related species than
+between phylogenetically distant species. By comparing the distributions
+between cor_adj and cor_kIM, the user can select the better preservation
+statistic for the downstream steps of the workflow (tree reconstruction
+and quantification of module conservation).
 
 ## See also
 
