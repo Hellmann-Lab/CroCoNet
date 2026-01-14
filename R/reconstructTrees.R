@@ -246,8 +246,8 @@ getNjTree <- function(dist) {
 
   # convert the data frame of distance measures into a distance matrxi
   distMat <- dist %>%
-    dplyr::mutate(replicate1 = paste0(.data[["replicate1"]], "_", .data[["species1"]]),
-                  replicate2 = paste0(.data[["replicate2"]], "_", .data[["species2"]])) %>%
+    dplyr::mutate(replicate1 = paste0(.data[["replicate1"]], "|", .data[["species1"]]),
+                  replicate2 = paste0(.data[["replicate2"]], "|", .data[["species2"]])) %>%
     dplyr::select(.data[["replicate1"]], .data[["replicate2"]], .data[["dist"]]) %>%
     tidyr::pivot_wider(names_from = .data[["replicate2"]], values_from = .data[["dist"]], values_fill = 0) %>%
     tibble::column_to_rownames("replicate1") %>%
@@ -268,8 +268,8 @@ getNjTree <- function(dist) {
   # reconstruct tree using the neighbor-joining algorithm
   tree <- ape::nj(distMat)
 
-  tree$species <- factor(unlist(lapply(tree$tip.label, function(lab) {strsplit(lab, "\\_")[[1]][2]})), levels(dist$species1))
-  tree$tip.label <- unlist(lapply(tree$tip.label, function(lab) {strsplit(lab, "\\_")[[1]][1]}))
+  tree$species <- factor(unlist(lapply(tree$tip.label, function(lab) {strsplit(lab, "\\|")[[1]][2]})), levels(dist$species1))
+  tree$tip.label <- unlist(lapply(tree$tip.label, function(lab) {strsplit(lab, "\\|")[[1]][1]}))
 
   # get rid of negative branch lengths
   if(sum(tree$edge.length < 0) > 0) {
