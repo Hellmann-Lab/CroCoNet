@@ -34,8 +34,8 @@ createRandomModules <- function(pruned_modules, network_genes, seed = 42) {
   if (!inherits(network_genes, "character"))
     stop("The argument \"network_genes\" should be a character vector.")
 
-  if (!inherits(seed, "numeric"))
-    stop("The argument \"seed\" should be a numeric.")
+  if (!inherits(seed, "numeric") & !inherits(seed, "integer"))
+    stop("The argument \"seed\" should be an integer or a numeric.")
 
   # set seed and schedule the restoration of the old seed
   old_seed <- globalenv()$.Random.seed
