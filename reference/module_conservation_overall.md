@@ -79,24 +79,35 @@ A data frame with 12 rows and 16 columns:
   calculated as the difference between the observed and expected
   (fitted) total tree lengths.
 
-- weight:
+- studentized_residual:
 
-  Numeric, the weight of the module in the linear regression, inversely
-  proportional to the variance of total tree lengths.
+  Numeric, the externally studentized residual of the module. This
+  statistic measures how strongly a module deviates from the fitted
+  regression line relative to the expected variability.
 
-- t_score:
+- p_value:
 
-  Numeric, the t-score of the module. It is calculated as the residual
-  normalized by the standard error of the total tree length prediction
-  at the given within-species diversity value.
+  Numeric, two-sided p-value associated with the externally studentized
+  residual.
 
-- conservation:
+- fdr:
 
-  Character, "not_significant" if the module falls inside the prediction
-  interval of the fit, "diverged" if a module has a higher total tree
-  length than the upper boundary of the prediction interval, and
-  "conserved" if a module has a lower total tree length than the lower
-  boundary of the prediction interval.
+  Numeric, false discovery rate obtained by adjusting the p-values
+  across all modules using the Benjamini–Hochberg method.
+
+- category:
+
+  Character, classification of the module based on the prediction
+  interval: "diverged" if a module has a higher total tree length than
+  the upper boundary of the prediction interval, "conserved" if a module
+  has a lower total tree length than the lower boundary of the
+  prediction interval, and "within_expectation" otherwise.
+
+- robust:
+
+  Logical, indicates whether the module passes an additional robustness
+  filter based on the false discovery rate (FDR). Modules with an FDR
+  below `fdr_cutoff` are marked as `TRUE`.
 
 ## Details
 

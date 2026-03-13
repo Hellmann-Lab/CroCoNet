@@ -116,13 +116,20 @@ phylogenetic distance for each actual module (if `tree` is provided) or
 the difference in preservation between the within-species and
 cross-species groups for each actual module (if `tree` is not provided).
 The higher these values are, the better the preservation statistic
-perfoms, since the actual modules are expected to be more preserved than
-the random modules, and all modules, but especially the actual ones, are
-expected to be more preserved between closely related species than
-between phylogenetically distant species. By comparing the distributions
-between cor_adj and cor_kIM, the user can select the better preservation
-statistic for the downstream steps of the workflow (tree reconstruction
-and quantification of module conservation).
+performs, since the actual modules are expected to be more preserved
+than the random modules, and all modules, but especially the actual
+ones, are expected to be more preserved between closely related species
+than between phylogenetically distant species.
+
+Since modules that are too similar to random are excluded in a later
+step of the worklow (see
+[`filterModuleTrees`](https://hellmann-lab.github.io/CroCoNet/reference/filterModuleTrees.md)),
+the actual–random comparison mainly serves as a diagnostic check to
+verify whether the preservation statistics are informative for the
+dataset at all. The phylogenetic signal is more directly related to the
+downstream module conservation analysis and should therefore be the
+primary criterion when choosing the most suitable preservation
+statistic.
 
 ## See also
 

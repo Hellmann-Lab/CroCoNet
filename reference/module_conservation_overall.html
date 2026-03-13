@@ -82,14 +82,20 @@
 <dt>residual</dt>
 <dd><p>Numeric, the residual of the module in the linear model. It is calculated as the difference between the observed and expected (fitted) total tree lengths.</p></dd>
 
-<dt>weight</dt>
-<dd><p>Numeric, the weight of the module in the linear regression, inversely proportional to the variance of total tree lengths.</p></dd>
+<dt>studentized_residual</dt>
+<dd><p>Numeric, the externally studentized residual of the module. This statistic measures how strongly a module deviates from the fitted regression line relative to the expected variability.</p></dd>
 
-<dt>t_score</dt>
-<dd><p>Numeric, the t-score of the module. It is calculated as the residual normalized by the standard error of the total tree length prediction at the given within-species diversity value.</p></dd>
+<dt>p_value</dt>
+<dd><p>Numeric, two-sided p-value associated with the externally studentized residual.</p></dd>
 
-<dt>conservation</dt>
-<dd><p>Character, "not_significant" if the module falls inside the prediction interval of the fit, "diverged" if a module has a higher total tree length than the upper boundary of the prediction interval, and "conserved" if a module has a lower total tree length than the lower boundary of the prediction interval.</p></dd>
+<dt>fdr</dt>
+<dd><p>Numeric, false discovery rate obtained by adjusting the p-values across all modules using the Benjamini–Hochberg method.</p></dd>
+
+<dt>category</dt>
+<dd><p>Character, classification of the module based on the prediction interval: "diverged" if a module has a higher total tree length than the upper boundary of the prediction interval, "conserved" if a module has a lower total tree length than the lower boundary of the prediction interval, and "within_expectation" otherwise.</p></dd>
+
+<dt>robust</dt>
+<dd><p>Logical, indicates whether the module passes an additional robustness filter based on the false discovery rate (FDR). Modules with an FDR below <code>fdr_cutoff</code> are marked as <code>TRUE</code>.</p></dd>
 
 
 </dl></div>
