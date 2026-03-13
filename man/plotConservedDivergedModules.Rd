@@ -8,6 +8,7 @@ plotConservedDivergedModules(
   module_conservation,
   N = 5L,
   rank_by = "residual",
+  robust_only = FALSE,
   colors = NULL,
   font_size = 14,
   label_size = 3.5
@@ -23,15 +24,16 @@ Columns required in case the focus of interest is conservation and overall diver
 \item{total_tree_length}{Numeric, total tree length per module (typically the median across all jackknife versions of the module).}
 \item{lwr_total_tree_length}{Numeric, the lower bound of the confidence interval of the total tree length calculated based on the jackknifed versions of the module (optional, only needed for plotting error bars later on).}
 \item{upr_total_tree_length}{Numeric, the upper bound of the confidence interval of the total tree length calculated based on the jackknifed versions of the module (optional, only needed for plotting error bars later on).}
-\item{within_species_diversity}{Numeric, within-species diveristy per module (typically the median across all jackknife versions of the module).}
+\item{within_species_diversity}{Numeric, within-species diversity per module (typically the median across all jackknife versions of the module).}
 \item{lwr_within_species_diversity}{Numeric, the lower bound of the confidence interval of the within-species diversity calculated based on the jackknifed versions of the module (optional, only needed for plotting error bars later on).}
 \item{upr_within_species_diversity}{Numeric, the upper bound of the confidence interval of the within-species diversity calculated based on the jackknifed versions of the module (optional, only needed for plotting error bars later on).}
 \item{fit}{Numeric, the fitted total tree length at the within-species diversity value of the module.}
 \item{lwr_fit}{Numeric, the lower bound of the prediction interval of the fit.}
 \item{upr_fit}{Numeric, the upper bound of the prediction interval of the fit.}
 \item{residual}{Numeric, the residual of the module in the linear model. It is calculated as the difference between the observed and expected (fitted) total tree lengths.}
-\item{t_score}{Numeric, the t-score of the module. It is calculated as the residual normalized by the standard error of the total tree length prediction at the given within-species diversity value}
-\item{conservation}{Character, "not_significant" if the module falls inside the prediction interval of the fit, "diverged" if a module has a higher total tree length than the upper boundary of the prediction interval, and "conserved" if a module has a lower total tree length than the lower boundary of the prediction interval}
+\item{studentized_residual}{Numeric, the externally studentized residual of the module. This statistic measures how strongly a module deviates from the fitted regression line relative to the expected variability.}
+\item{category}{Character, classification of the module based on the prediction interval: "within_expectation" if the module falls inside the prediction interval of the fit, "diverged" if a module has a higher total tree length than the upper boundary of the prediction interval, and "conserved" if a module has a lower total tree length than the lower boundary of the prediction interval (only for the overall analysis).}
+\item{robust}{Logical, indicates whether the module passes an additional robustness filter based on the false discovery rate (FDR). Modules with an FDR below \code{fdr_cutoff} are marked as \code{TRUE}.}
 }
 Columns required in case the focus of interest is species-specific divergence:
 \describe{
@@ -40,20 +42,23 @@ Columns required in case the focus of interest is species-specific divergence:
 \item{\{\{species\}\}_subtree_length}{Numeric, the subtree length of the species per module (typically the median across all jackknife versions of the module).}
 \item{lwr_\{\{species\}\}_subtree_length}{Numeric, the lower bound of the confidence interval of the species subtree length calculated based on the jackknifed versions of the module (optional, only needed for plotting error bars later on).}
 \item{upr_\{\{species\}\}_subtree_length}{Numeric, the upper bound of the confidence interval of the species subtree length calculated based on the jackknifed versions of the module (optional, only needed for plotting error bars later on).}
-\item{\{\{species\}\}_diversity}{Numeric, the diveristy of the species of interest per module (typically the median across all jackknife versions of the module).}
+\item{\{\{species\}\}_diversity}{Numeric, the diversity of the species of interest per module (typically the median across all jackknife versions of the module).}
 \item{lwr_\{\{species\}\}_diversity}{Numeric, the lower bound of the confidence interval of the species-specific diversity calculated based on the jackknifed versions of the module (optional, only needed for plotting error bars later on).}
 \item{upr_\{\{species\}\}_diversity}{Numeric, the upper bound of the confidence interval of the species-specific diversity calculated based on the jackknifed versions of the module (optional, only needed for plotting error bars later on).}
 \item{fit}{Numeric, the fitted subtree length of a species.}
 \item{lwr_fit}{Numeric, the lower bound of the prediction interval of the fit.}
 \item{upr_fit}{Numeric, the upper bound of the prediction interval of the fit.}
 \item{residual}{Numeric, the residual of the module in the linear model. It is calculated as the difference between the observed and expected (fitted) subtree length of a species.}
-\item{t_score}{Numeric, the t-score of the module. It is calculated as the residual normalized by the standard error of the species subtree length prediction.}
-\item{conservation}{Character, 'not_significant' if the module falls inside the prediction interval of the fit, 'diverged' if a module has a higher species subtree length than the upper boundary of the prediction interval, and 'conserved' if a module has a lower species subtree length than the lower boundary of the prediction interval.}
+\item{studentized_residual}{Numeric, the externally studentized residual of the module. This statistic measures how strongly a module deviates from the fitted regression line relative to the expected variability.}
+\item{category}{Character, classification of the module based on the prediction interval: "diverged" if a module has a higher subtree length for the species of interest than the upper boundary of the prediction interval, "within_expectation" otherwise.}
+\item{robust}{Logical, indicates whether the module passes an additional robustness filter based on the false discovery rate (FDR). Modules with an FDR below \code{fdr_cutoff} are marked as \code{TRUE}.}
 }}
 
 \item{N}{Integer, the number of top conserved and diverged modules to label.}
 
-\item{rank_by}{Character, one of "residual" and "t_score". The name of the variable to rank the by when selecting the top N conserved and diverged modules to label.}
+\item{rank_by}{Character, the name of the variable used to rank modules when selecting the top N conserved and diverged modules to label. Options are "residual" (default) and "studentized_residual".}
+
+\item{robust_only}{Logical, if \code{TRUE}, the top conserved and diverged modules are selected only among modules that pass the robustness filter (\code{robust == TRUE}). If \code{FALSE} (default), the top modules are selected among all modules regardless of robustness.}
 
 \item{colors}{(Named) character vector of length 2, the colors for the diverged and conserved modules.}
 
@@ -65,14 +70,14 @@ Columns required in case the focus of interest is species-specific divergence:
 A \code{\link{ggplot}} object.
 }
 \description{
-Plots the tree-bases statistics that characterize the cross-species conservation of the modules and marks the modules that were found to be conserved/diverged.
+Plots the tree-based statistics that characterize the cross-species conservation of the modules and marks the modules that were found to be conserved/diverged.
 }
 \details{
-To determine whether a module as whole is conserved, diverged overall or diverged on a specific lineage, the CroCoNet approach relies on module trees reconstructed from pairwise preservation scores between replicates and statistics calculated based on these trees (total tree length, subtree lengths of the species, overall within-species and species-specific diversity, for details please see \code{\link{calculatePresStats}}, \code{\link{reconstructTrees}}, \code{\link{calculateTreeStats}} and \code{\link{findConservedDivergedModules}}).
+To determine whether a module as a whole is conserved, diverged overall or diverged on a specific lineage, the CroCoNet approach relies on module trees reconstructed from pairwise preservation scores between replicates and statistics calculated based on these trees (total tree length, subtree lengths of the species, overall within-species and species-specific diversity, for details please see \code{\link{calculatePresStats}}, \code{\link{reconstructTrees}}, \code{\link{calculateTreeStats}} and \code{\link{findConservedDivergedModules}}).
 
 The function plots each input module along the regression line that captures the relationship between total tree length and within-species diversity (in case the focus of interest is conservation and overall divergence) or between the subtree length and diversity of a species (in case the focus of interest is divergence between this particular species and all others). A module is considered diverged overall/in a species-specific manner if it falls above the prediction interval of the regression line, while a module is considered conserved if it falls below the prediction interval of the regression line.
 
-The regression line is drawn in dark grey, and the 95\% prediction interval of the line is shown as a light grey area. If the focus of interest is conservation and overall divergence, the conserved modules are colored green, the diverged modules are colored red, and the top 'N' conserved and diverged modules based on the variable specified in \code{rank_by} are labelled. If the focus of interest is divergence between a particular species and all others, only the diverged modules are colored and labelled, the modules below the prediction interval are not meaningful and thus not highlighted. If confidence intervals are provided for the variables, each module is plotted with error bars.
+The regression line is drawn in dark grey, and the 95\% prediction interval of the line is shown as a light grey area. If the focus of interest is conservation and overall divergence, the conserved modules are colored green, the diverged modules are colored red, and the top \code{N} conserved and diverged modules based on the variable specified in \code{rank_by} are labelled. If \code{robust_only = TRUE}, only modules that pass the robustness filter (\code{robust == TRUE}) are considered when selecting the top modules to label. If the focus of interest is divergence between a particular species and all others, only the diverged modules are colored and labelled. Modules below the prediction interval are not meaningful in this context and are therefore not highlighted.
 }
 \examples{
 plotConservedDivergedModules(module_conservation_overall)

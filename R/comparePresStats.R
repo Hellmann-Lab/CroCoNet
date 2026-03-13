@@ -7,7 +7,9 @@
 #' The function plots two distributions for both cor_adj and cor_kIM:
 #' 1) the difference in preservation between each actual and corresponding random module, and
 #' 2) the inverse correlation between preservation and phylogenetic distance for each actual module (if \code{tree} is provided) or the difference in preservation between the within-species and cross-species groups for each actual module (if \code{tree} is not provided).
-#' The higher these values are, the better the preservation statistic perfoms, since the actual modules are expected to be more preserved than the random modules, and all modules, but especially the actual ones, are expected to be more preserved between closely related species than between phylogenetically distant species. By comparing the distributions between cor_adj and cor_kIM, the user can select the better preservation statistic for the downstream steps of the workflow (tree reconstruction and quantification of module conservation).
+#' The higher these values are, the better the preservation statistic performs, since the actual modules are expected to be more preserved than the random modules, and all modules, but especially the actual ones, are expected to be more preserved between closely related species than between phylogenetically distant species.
+#'
+#' Since modules that are too similar to random are excluded in a later step of the worklow (see \code{\link{filterModuleTrees}}), the actual–random comparison mainly serves as a diagnostic check to verify whether the preservation statistics are informative for the dataset at all. The phylogenetic signal is more directly related to the downstream module conservation analysis and should therefore be the primary criterion when choosing the most suitable preservation statistic.
 #'
 #' @param pres_stats Data frame of the preservation statistics for the actual (pruned) modules. Required columns:
 #' \describe{
@@ -90,7 +92,7 @@ comparePresStats <- function(pres_stats, random_pres_stats, tree = NULL, colors 
     ggplot2::theme(axis.title.x = ggplot2::element_blank(),
                    axis.text.x = ggplot2::element_text(color = "black", size = 14)) +
     ggplot2::ylab(expression(Delta * ~preservation~score[~actual - random])) +
-    ggpubr::geom_signif(comparisons = list(c("cor_kIM", "cor_adj")), map_signif_level = c("***"=0.001, "**"=0.01, "*"=0.05, "n.s." =1), textsize = 4, tip_length = 0.01, size = 0.3, vjust = 0.3)  +
+    ggpubr::geom_signif(comparisons = list(c("cor_kIM", "cor_adj")), test.args = list(paired = TRUE), map_signif_level = c("***"=0.001, "**"=0.01, "*"=0.05, "n.s." =1), textsize = 4, tip_length = 0.01, size = 0.3, vjust = 0.3)  +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.08)))
 
   # if "tree" is provided, plot the correlations between preservation and phylogenetic distance
@@ -126,7 +128,7 @@ comparePresStats <- function(pres_stats, random_pres_stats, tree = NULL, colors 
              ggplot2::theme(axis.title.x = ggplot2::element_blank(),
                             axis.text.x = ggplot2::element_text(color = "black", size = 14)) +
              ggplot2::ylab(expression(-italic(r)[preservation~score * ", " * phylogenetic~distance])))  +
-      ggpubr::geom_signif(comparisons = list(c("cor_kIM", "cor_adj")), map_signif_level = c("***"=0.001, "**"=0.01, "*"=0.05, "n.s." =1), textsize = 4, tip_length = 0.01, size = 0.3, vjust = 0.3)  +
+      ggpubr::geom_signif(comparisons = list(c("cor_kIM", "cor_adj")), test.args = list(paired = TRUE), map_signif_level = c("***"=0.001, "**"=0.01, "*"=0.05, "n.s." =1), textsize = 4, tip_length = 0.01, size = 0.3, vjust = 0.3)  +
       ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.08)))
 
   } else {
@@ -154,6 +156,7 @@ comparePresStats <- function(pres_stats, random_pres_stats, tree = NULL, colors 
                      axis.text.x  = ggplot2::element_text(color = "black", size = font_size)) +
       ggplot2::ylab(expression(Delta * ~preservation~score[~within-secpies - cross-species])) +
       ggpubr::geom_signif(comparisons = list(c("cor_kIM", "cor_adj")),
+                          test.args = list(paired = TRUE),
                           map_signif_level = c("***"=0.001, "**"=0.01, "*"=0.05, "n.s."=1),
                           textsize = 4, tip_length = 0.01, size = 0.3, vjust = 0.3) +
       ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0.05, 0.08)))

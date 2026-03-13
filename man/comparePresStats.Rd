@@ -49,7 +49,9 @@ As part of the CroCoNet approach, pairwise module preservation scores are calcul
 The function plots two distributions for both cor_adj and cor_kIM:
 1) the difference in preservation between each actual and corresponding random module, and
 2) the inverse correlation between preservation and phylogenetic distance for each actual module (if \code{tree} is provided) or the difference in preservation between the within-species and cross-species groups for each actual module (if \code{tree} is not provided).
-The higher these values are, the better the preservation statistic perfoms, since the actual modules are expected to be more preserved than the random modules, and all modules, but especially the actual ones, are expected to be more preserved between closely related species than between phylogenetically distant species. By comparing the distributions between cor_adj and cor_kIM, the user can select the better preservation statistic for the downstream steps of the workflow (tree reconstruction and quantification of module conservation).
+The higher these values are, the better the preservation statistic performs, since the actual modules are expected to be more preserved than the random modules, and all modules, but especially the actual ones, are expected to be more preserved between closely related species than between phylogenetically distant species.
+
+Since modules that are too similar to random are excluded in a later step of the worklow (see \code{\link{filterModuleTrees}}), the actual–random comparison mainly serves as a diagnostic check to verify whether the preservation statistics are informative for the dataset at all. The phylogenetic signal is more directly related to the downstream module conservation analysis and should therefore be the primary criterion when choosing the most suitable preservation statistic.
 }
 \examples{
 comparePresStats(pres_stats, random_pres_stats, tree)

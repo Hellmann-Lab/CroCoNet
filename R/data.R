@@ -529,9 +529,11 @@
 #' \item{lwr_fit}{Numeric, the lower bound of the prediction interval of the fit.}
 #' \item{upr_fit}{Numeric, the upper bound of the prediction interval of the fit.}
 #' \item{residual}{Numeric, the residual of the module in the linear model. It is calculated as the difference between the observed and expected (fitted) total tree lengths.}
-#' \item{weight}{Numeric, the weight of the module in the linear regression, inversely proportional to the variance of total tree lengths.}
-#' \item{t_score}{Numeric, the t-score of the module. It is calculated as the residual normalized by the standard error of the total tree length prediction at the given within-species diversity value.}
-#' \item{conservation}{Character, "not_significant" if the module falls inside the prediction interval of the fit, "diverged" if a module has a higher total tree length than the upper boundary of the prediction interval, and "conserved" if a module has a lower total tree length than the lower boundary of the prediction interval.}
+#' \item{studentized_residual}{Numeric, the externally studentized residual of the module. This statistic measures how strongly a module deviates from the fitted regression line relative to the expected variability.}
+#' \item{p_value}{Numeric, two-sided p-value associated with the externally studentized residual.}
+#' \item{fdr}{Numeric, false discovery rate obtained by adjusting the p-values across all modules using the Benjamini–Hochberg method.}
+#' \item{category}{Character, classification of the module based on the prediction interval: "diverged" if a module has a higher total tree length than the upper boundary of the prediction interval, "conserved" if a module has a lower total tree length than the lower boundary of the prediction interval, and "within_expectation" otherwise.}
+#' \item{robust}{Logical, indicates whether the module passes an additional robustness filter based on the false discovery rate (FDR). Modules with an FDR below \code{fdr_cutoff} are marked as \code{TRUE}.}
 #' }
 "module_conservation_overall"
 
