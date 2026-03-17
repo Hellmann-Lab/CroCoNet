@@ -115,6 +115,10 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
     xlab <- paste0(focus, " diversity")
     ylab <- paste0(focus, " subtree length")
   }
+  x_lwr <- paste0("lwr_", x_var)
+  x_upr <- paste0("upr_", x_var)
+  y_lwr <- paste0("lwr_", y_var)
+  y_upr <- paste0("upr_", y_var)
 
   if (is.null(colors)) {
 
@@ -182,8 +186,21 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
     ggplot2::ylab(ylab) +
     ggplot2::theme(legend.title=ggplot2::element_blank())
 
-  # Labels
-  p <- p +
+  if (all(c(x_lwr, x_upr, y_lwr, y_upr) %in% colnames(module_conservation))) {
+
+    p <- p +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(xmin = .data[[x_lwr]], xmax = .data[[x_upr]], color = .data$category),
+        linewidth = 0.2
+      ) +
+      ggplot2::geom_errorbar(
+        ggplot2::aes(ymin = .data[[y_lwr]], ymax = .data[[y_upr]], color = .data$category),
+        linewidth = 0.2
+      )
+
+  }
+
+  p +
     ggrepel::geom_label_repel(
       data = label_data,
       ggplot2::aes(label=.data$regulator, color=.data$category),
@@ -197,7 +214,5 @@ plotConservedDivergedModules <- function(module_conservation, N = 5L, rank_by = 
       max.overlaps=20,
       show.legend=FALSE
     )
-
-  p
 
 }
